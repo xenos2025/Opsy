@@ -72,7 +72,7 @@ Commands:
   summarize-data [--project <path>] [--output <path>] [--apply] [--json]
   refresh-404 [--project <path>] [--output <path>] [--apply] [--json]
   guard-mutation --operation <name> --variables <file> [--json]
-  check-response --response <file> [--json]
+  check-response --operation <name> --response <file> [--json]
 `;
 }
 
@@ -183,6 +183,7 @@ async function main() {
 
   if (command === "check-response") {
     const result = validateGraphqlResponseFile(
+      requireOption(options, "operation"),
       path.resolve(requireOption(options, "response")),
     );
     output(result, asJson);

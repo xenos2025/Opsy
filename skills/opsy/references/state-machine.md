@@ -24,7 +24,7 @@ Do not create anything until the plan is shown. For an existing `_project/` with
 Evidence:
 
 - workspace exists; and
-- `connection.status` is not `connected`, or the read-only smoke test is not `passed`.
+- the connection validation is incomplete or inconsistent, including missing timestamps, CLI/API evidence, granted scopes, read-only smoke evidence, or a mismatch between `connection.store_domain` and `store.myshopify_domain`.
 
 Banner:
 
@@ -43,8 +43,8 @@ Do not run Admin reads, full audits, data analysis, or Shopify writes.
 
 Evidence:
 
-- connection and smoke test passed; and
-- `profile.status` is not `complete`.
+- the full connection validation passed; and
+- the lightweight profile validation is incomplete, even if `profile.status` was manually set to `complete`.
 
 Banner:
 
@@ -62,17 +62,17 @@ Allow only reads needed for the profile. Do not perform operational writes.
 
 Evidence:
 
-- connection and read-only smoke test passed;
-- lightweight profile is complete; and
-- the profile is still valid for the intended operation.
+- connection identity, timestamps, scopes, and read-only smoke evidence passed validation;
+- all required lightweight profile fields passed validation; and
+- a per-workflow capability map was calculated from current scopes and profile evidence.
 
 Banner:
 
 > 运营写入就绪
 
-Show the six-item main menu from `SKILL.md`.
+Show the six-item main menu from `SKILL.md` plus each relevant `write_capabilities.*.write_ready` result. The base state does not override a false capability. Show the capability's exact `missing` list and permit only local preparation or prerequisite refresh until it passes.
 
-Before a write, downgrade to `profile_required` if the target store, scopes, theme, publications, blog, metafield definitions, languages, or markets relevant to that write changed or cannot be verified.
+Before a write, downgrade to `connection_required` or `profile_required` if the validated base evidence changed. Keep the base state but block only the affected workflow when a workflow-specific scope, publication, Blog, or metafield definition is missing.
 
 ## `approval_pending`
 

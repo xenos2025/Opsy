@@ -214,6 +214,251 @@ function safeReadJson(filePath) {
   }
 }
 
+function isNonEmptyString(value) {
+  return typeof value === "string" && value.trim().length > 0;
+}
+
+function isIsoDateTime(value) {
+  return (
+    isNonEmptyString(value) &&
+    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?(?:Z|[+-]\d{2}:\d{2})$/.test(
+      value,
+    ) &&
+    !Number.isNaN(Date.parse(value))
+  );
+}
+
+function addMissing(missing, pathName, condition) {
+  if (!condition) missing.push(pathName);
+}
+
+export function validateConnectionProfile(profile) {
+  const missing = [];
+  const errors = [];
+  const storeDomain = profile?.store?.myshopify_domain;
+  const connectionDomain = profile?.connection?.store_domain;
+
+  addMissing(
+    missing,
+    "schema_version",
+    profile?.schema_version === "opsy-store-profile-v1",
+  );
+  addMissing(missing, "store.myshopify_domain", isNonEmptyString(storeDomain));
+  addMissing(
+    missing,
+    "connection.status",
+    profile?.connection?.status === "connected",
+  );
+  addMissing(
+    missing,
+    "connection.store_domain",
+    isNonEmptyString(connectionDomain),
+  );
+  addMissing(
+    missing,
+    "connection.authenticated_at",
+    isIsoDateTime(profile?.connection?.authenticated_at),
+  );
+  addMissing(
+    missing,
+    "connection.verified_at",
+    isIsoDateTime(profile?.connection?.verified_at),
+  );
+  addMissing(
+    missing,
+    "connection.cli_version",
+    isNonEmptyString(profile?.connection?.cli_version),
+  );
+  addMissing(
+    missing,
+    "connection.api_version",
+    isNonEmptyString(profile?.connection?.api_version),
+  );
+  addMissing(
+    missing,
+    "connection.scopes",
+    Array.isArray(profile?.connection?.scopes) &&
+      profile.connection.scopes.length > 0,
+  );
+  addMissing(
+    missing,
+    "connection.smoke_test.status",
+    profile?.connection?.smoke_test?.status === "passed",
+  );
+  addMissing(
+    missing,
+    "connection.smoke_test.verified_at",
+    isIsoDateTime(profile?.connection?.smoke_test?.verified_at),
+  );
+
+  if (
+    isNonEmptyString(storeDomain) &&
+    !/^[a-z0-9][a-z0-9-]*\.myshopify\.com$/i.test(storeDomain)
+  ) {
+    errors.push("store.myshopify_domain must be a valid myshopify.com domain");
+  }
+  if (
+    isNonEmptyString(connectionDomain) &&
+    !/^[a-z0-9][a-z0-9-]*\.myshopify\.com$/i.test(connectionDomain)
+  ) {
+    errors.push("connection.store_domain must be a valid myshopify.com domain");
+  }
+  if (
+    isNonEmptyString(storeDomain) &&
+    isNonEmptyString(connectionDomain) &&
+    storeDomain.toLowerCase() !== connectionDomain.toLowerCase()
+  ) {
+    errors.push(
+      "connection.store_domain must match store.myshopify_domain",
+    );
+  }
+
+  return { ok: missing.length === 0 && errors.length === 0, missing, errors };
+}
+
+export function validateLightweightProfile(profile) {
+  const missing = [];
+  const errors = [];
+
+  addMissing(missing, "store.id", isNonEmptyString(profile?.store?.id));
+  addMissing(missing, "store.name", isNonEmptyString(profile?.store?.name));
+  addMissing(
+    missing,
+    "store.primary_domain",
+    isNonEmptyString(profile?.store?.primary_domain),
+  );
+  addMissing(
+    missing,
+    "store.currency",
+    isNonEmptyString(profile?.store?.currency),
+  );
+  addMissing(
+    missing,
+    "store.iana_timezone",
+    isNonEmptyString(profile?.store?.iana_timezone),
+  );
+  addMissing(
+    missing,
+    "profile.status",
+    profile?.profile?.status === "complete",
+  );
+  addMissing(
+    missing,
+    "profile.completed_at",
+    isIsoDateTime(profile?.profile?.completed_at),
+  );
+  addMissing(
+    missing,
+    "profile.verified_at",
+    isIsoDateTime(profile?.profile?.verified_at),
+  );
+  addMissing(
+    missing,
+    "profile.languages",
+    Array.isArray(profile?.profile?.languages) &&
+      profile.profile.languages.length > 0,
+  );
+  addMissing(
+    missing,
+    "profile.markets",
+    Array.isArray(profile?.profile?.markets) &&
+      profile.profile.markets.length > 0,
+  );
+  addMissing(
+    missing,
+    "profile.primary_inquiry_cta",
+    isNonEmptyString(profile?.profile?.primary_inquiry_cta),
+  );
+  addMissing(
+    missing,
+    "profile.publications",
+    Array.isArray(profile?.profile?.publications),
+  );
+  addMissing(
+    missing,
+    "profile.blogs",
+    Array.isArray(profile?.profile?.blogs),
+  );
+  addMissing(
+    missing,
+    "profile.metafield_definitions",
+    Array.isArray(profile?.profile?.metafield_definitions),
+  );
+  addMissing(
+    missing,
+    "profile.publication_policy",
+    isNonEmptyString(profile?.profile?.publication_policy),
+  );
+
+  if (
+    isNonEmptyString(profile?.store?.id) &&
+    !profile.store.id.startsWith("gid://shopify/Shop/")
+  ) {
+    errors.push("store.id must be a Shopify Shop GID");
+  }
+
+  return { ok: missing.length === 0 && errors.length === 0, missing, errors };
+}
+
+function capability(requiredScopes, scopes, requiredEvidence = []) {
+  const missing = [
+    ...requiredScopes
+      .filter((scope) => !scopes.has(scope))
+      .map((scope) => `connection.scopes:${scope}`),
+    ...requiredEvidence
+      .filter(({ ok }) => !ok)
+      .map(({ path: pathName }) => pathName),
+  ];
+  return { write_ready: missing.length === 0, missing };
+}
+
+export function summarizeWriteCapabilities(profile) {
+  const scopes = new Set(
+    Array.isArray(profile?.connection?.scopes)
+      ? profile.connection.scopes.filter(isNonEmptyString)
+      : [],
+  );
+  const productScopes = ["read_products", "write_products"];
+
+  const products = capability(productScopes, scopes);
+  products.publication = capability(
+    [...productScopes, "read_publications", "write_publications"],
+    scopes,
+    [
+      {
+        path: "profile.publications",
+        ok:
+          Array.isArray(profile?.profile?.publications) &&
+          profile.profile.publications.length > 0,
+      },
+    ],
+  );
+
+  return {
+    products,
+    blog: capability(["read_content", "write_content"], scopes, [
+      {
+        path: "profile.blogs",
+        ok:
+          Array.isArray(profile?.profile?.blogs) &&
+          profile.profile.blogs.length > 0,
+      },
+    ]),
+    redirects: capability(
+      ["read_online_store_navigation", "write_online_store_navigation"],
+      scopes,
+    ),
+    metafields: capability(productScopes, scopes, [
+      {
+        path: "profile.metafield_definitions",
+        ok:
+          Array.isArray(profile?.profile?.metafield_definitions) &&
+          profile.profile.metafield_definitions.length > 0,
+      },
+    ]),
+  };
+}
+
 export function inspectState(projectPath) {
   let project;
   try {
@@ -267,14 +512,12 @@ export function inspectState(projectPath) {
   }
 
   const profile = parsed.value;
-  const connectionReady =
-    profile?.connection?.status === "connected" &&
-    profile?.connection?.smoke_test?.status === "passed";
-  const profileReady = profile?.profile?.status === "complete";
+  const connectionValidation = validateConnectionProfile(profile);
+  const profileValidation = validateLightweightProfile(profile);
   const manifestPath = path.join(project.workspaceRoot, "data-center", "manifest.json");
   const manifest = fs.existsSync(manifestPath) ? safeReadJson(manifestPath).value : null;
 
-  if (!connectionReady) {
+  if (!connectionValidation.ok) {
     return {
       ok: true,
       state: "connection_required",
@@ -282,11 +525,12 @@ export function inspectState(projectPath) {
       project_root: project.projectRoot,
       workspace_root: project.workspaceRoot,
       store: profile?.store?.myshopify_domain ?? null,
+      connection_validation: connectionValidation,
       choices: ["业务问卷", "公开站点检查", "连接与店铺档案", "检查运营项目文件夹"],
     };
   }
 
-  if (!profileReady) {
+  if (!profileValidation.ok) {
     return {
       ok: true,
       state: "profile_required",
@@ -295,10 +539,13 @@ export function inspectState(projectPath) {
       workspace_root: project.workspaceRoot,
       store: profile?.store?.myshopify_domain ?? null,
       profile_verified_at: profile?.profile?.verified_at ?? null,
+      connection_validation: connectionValidation,
+      profile_validation: profileValidation,
       choices: ["完成轻量店铺建档", "刷新店铺连接", "查看缺失档案字段"],
     };
   }
 
+  const writeCapabilities = summarizeWriteCapabilities(profile);
   return {
     ok: true,
     state: "write_ready",
@@ -309,6 +556,9 @@ export function inspectState(projectPath) {
     store_timezone: profile?.store?.iana_timezone ?? null,
     profile_verified_at: profile?.profile?.verified_at ?? null,
     data_updated_at: manifest?.updated_at ?? null,
+    connection_validation: connectionValidation,
+    profile_validation: profileValidation,
+    write_capabilities: writeCapabilities,
     choices: [
       "运营周报",
       "商品运营",

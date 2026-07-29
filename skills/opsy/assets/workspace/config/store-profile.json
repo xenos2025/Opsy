@@ -10,6 +10,7 @@
   },
   "connection": {
     "status": "not_connected",
+    "store_domain": null,
     "authenticated_at": null,
     "verified_at": null,
     "cli_version": null,

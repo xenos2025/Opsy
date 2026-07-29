@@ -57,6 +57,20 @@ For an approved mutation, add:
 
 Mutations are disabled by default by Shopify CLI. Never add the flag before the exact operation is approved.
 
+Before presenting an approval preview, validate the saved variables:
+
+```text
+node <skill-root>/scripts/opsy.mjs guard-mutation --operation <name> --variables <variables.json> --json
+```
+
+Supported operation names are `product-create-draft`, `product-update`, `product-activate`, `article-create-draft`, `article-update`, `article-publish`, `article-schedule`, `publishable-publish`, `url-redirect-create`, and `metafields-set`. Do not relabel one operation as another to bypass a guard.
+
+After execution, validate the saved response against the same operation:
+
+```text
+node <skill-root>/scripts/opsy.mjs check-response --operation <name> --response <response.json> --json
+```
+
 ## Verify
 
 Treat all of these as failure:
@@ -65,7 +79,7 @@ Treat all of these as failure:
 - wrong store or version;
 - top-level GraphQL `errors`;
 - non-empty operation `userErrors`;
-- missing returned object;
+- missing operation-specific returned object or identifier;
 - readback mismatch.
 
 For asynchronous product media, verify the returned media state and report pending processing honestly.

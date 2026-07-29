@@ -18,6 +18,54 @@ function cleanup(directory) {
   fs.rmSync(directory, { recursive: true, force: true });
 }
 
+function completeConnection(profile) {
+  profile.store.myshopify_domain = "example.myshopify.com";
+  profile.connection.status = "connected";
+  profile.connection.store_domain = "example.myshopify.com";
+  profile.connection.authenticated_at = "2026-07-29T00:00:00Z";
+  profile.connection.verified_at = "2026-07-29T00:05:00Z";
+  profile.connection.cli_version = "4.5.2";
+  profile.connection.scopes = [
+    "read_products",
+    "write_products",
+    "read_content",
+    "write_content",
+    "read_online_store_navigation",
+    "write_online_store_navigation",
+    "read_publications",
+    "write_publications",
+  ];
+  profile.connection.smoke_test.status = "passed";
+  profile.connection.smoke_test.verified_at = "2026-07-29T00:05:00Z";
+}
+
+function completeProfile(profile) {
+  profile.store.id = "gid://shopify/Shop/1";
+  profile.store.name = "Example";
+  profile.store.primary_domain = "example.com";
+  profile.store.currency = "USD";
+  profile.store.iana_timezone = "Asia/Shanghai";
+  profile.profile.status = "complete";
+  profile.profile.completed_at = "2026-07-29T00:10:00Z";
+  profile.profile.verified_at = "2026-07-29T00:10:00Z";
+  profile.profile.languages = ["en"];
+  profile.profile.markets = ["United States"];
+  profile.profile.primary_inquiry_cta = "Request a quote";
+  profile.profile.publications = [
+    { id: "gid://shopify/Publication/1", name: "Online Store" },
+  ];
+  profile.profile.blogs = [{ id: "gid://shopify/Blog/1", name: "News" }];
+  profile.profile.metafield_definitions = [
+    {
+      owner_type: "PRODUCT",
+      namespace: "custom",
+      key: "material",
+      type: "single_line_text_field",
+    },
+  ];
+  profile.profile.publication_policy = "Draft first; publish after separate approval";
+}
+
 test("new project preview is read-only and apply creates the minimal workspace", () => {
   const project = tempProject();
   try {
@@ -85,20 +133,21 @@ test("connection and profile gates unlock writes in order", () => {
       "store-profile.json",
     );
     const profile = readJson(profilePath);
-    profile.store.myshopify_domain = "example.myshopify.com";
-    profile.connection.status = "connected";
-    profile.connection.smoke_test.status = "passed";
+    completeConnection(profile);
     writeJson(profilePath, profile);
 
     assert.equal(inspectState(project).state, "profile_required");
 
-    profile.profile.status = "complete";
-    profile.profile.verified_at = "2026-07-29T00:00:00Z";
+    completeProfile(profile);
     writeJson(profilePath, profile);
 
     const ready = inspectState(project);
     assert.equal(ready.state, "write_ready");
     assert.equal(ready.banner, "运营写入就绪");
+    assert.equal(ready.profile_validation.ok, true);
+    assert.equal(ready.write_capabilities.products.write_ready, true);
+    assert.equal(ready.write_capabilities.blog.write_ready, true);
+    assert.equal(ready.write_capabilities.redirects.write_ready, true);
     assert.deepEqual(ready.choices, [
       "运营周报",
       "商品运营",
@@ -107,6 +156,87 @@ test("connection and profile gates unlock writes in order", () => {
       "上月数据查询 / 数据更新",
       "连接与店铺档案",
     ]);
+  } finally {
+    cleanup(project);
+  }
+});
+
+test("profile status strings cannot unlock writes without required evidence", () => {
+  const project = tempProject();
+  try {
+    initializeWorkspace({ projectPath: project, agents: "auto", apply: true });
+    const profilePath = path.join(
+      project,
+      "shopify-ops",
+      "config",
+      "store-profile.json",
+    );
+    const profile = readJson(profilePath);
+    completeConnection(profile);
+    profile.profile.status = "complete";
+    profile.profile.verified_at = "2026-07-29T00:10:00Z";
+    writeJson(profilePath, profile);
+
+    const state = inspectState(project);
+    assert.equal(state.state, "profile_required");
+    assert.equal(state.profile_validation.ok, false);
+    assert.ok(state.profile_validation.missing.includes("store.id"));
+    assert.ok(state.profile_validation.missing.includes("profile.languages"));
+    assert.ok(state.profile_validation.missing.includes("profile.publication_policy"));
+  } finally {
+    cleanup(project);
+  }
+});
+
+test("connection store domain must match the profiled store", () => {
+  const project = tempProject();
+  try {
+    initializeWorkspace({ projectPath: project, agents: "auto", apply: true });
+    const profilePath = path.join(
+      project,
+      "shopify-ops",
+      "config",
+      "store-profile.json",
+    );
+    const profile = readJson(profilePath);
+    completeConnection(profile);
+    completeProfile(profile);
+    profile.connection.store_domain = "other.myshopify.com";
+    writeJson(profilePath, profile);
+
+    const state = inspectState(project);
+    assert.equal(state.state, "connection_required");
+    assert.ok(
+      state.connection_validation.errors.includes(
+        "connection.store_domain must match store.myshopify_domain",
+      ),
+    );
+  } finally {
+    cleanup(project);
+  }
+});
+
+test("connection evidence requires explicit ISO timestamps", () => {
+  const project = tempProject();
+  try {
+    initializeWorkspace({ projectPath: project, agents: "auto", apply: true });
+    const profilePath = path.join(
+      project,
+      "shopify-ops",
+      "config",
+      "store-profile.json",
+    );
+    const profile = readJson(profilePath);
+    completeConnection(profile);
+    completeProfile(profile);
+    profile.connection.verified_at = "yesterday";
+    writeJson(profilePath, profile);
+
+    const state = inspectState(project);
+    assert.equal(state.state, "connection_required");
+    assert.ok(
+      state.connection_validation.missing.includes("connection.verified_at"),
+    );
   } finally {
     cleanup(project);
   }

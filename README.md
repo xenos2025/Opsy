@@ -6,6 +6,28 @@ Opsy 是面向 Shopify 初学者和兼职运营者的单入口 Skill，兼容 Co
 
 “操作简单”不代表取消安全控制。Opsy 在连接前只允许业务问卷和公开站点检查；连接后必须先完成轻量店铺建档；所有 Shopify 写入都要经过预览、明确批准、执行和同通道回读。
 
+## 为什么配套交付的独立站体验更完整
+
+Opsy 可以用于符合 V1 范围的 Shopify 独立站；如果站点在建站阶段已经按配套规范完成配置，更多运营能力可以在连接和建档后直接启用。它的优势不是绑定某个站点，而是让建站时建立的结构持续成为运营输入：
+
+- **元字段可以直接、安全地填写**：建站阶段已经定义好 namespace、key、类型和校验规则，运营者只需要逐项补充业务值，不必理解或修改底层定义。
+- **月度数据可以直接查询和分析**：标准化的数据导出进入带 manifest、日期范围和归档记录的 `data-center/`，即使客户没有 Google 密钥，Opsy 也能基于服务方每月交付的数据生成可追溯的摘要和证据。
+- **商品与内容写入更少临时配置**：店铺档案可以复用已确认的发布渠道、Blog、市场、语言、主 CTA 和对象结构，减少初学者在每次操作中重新判断。
+- **运营记录可以持续积累**：统一工作区保存素材、数据快照、周报、写前备份和操作记录，方便客户自己从 GitHub 更新，或接收服务方发送的数据包。
+
+### 功能与前置配置
+
+| 功能 | 必要条件 | 条件未满足时 |
+|---|---|---|
+| 业务问卷、公开站点检查 | 可访问的公开站点 | 仍可完成问卷；明确标示无法检查的页面 |
+| 商品、Blog 草稿与发布 | Shopify CLI 已连接；轻量店铺档案有效；目标 Blog/发布渠道已确认 | 保持只读或准备本地草稿，不写入店铺 |
+| 元字段填写 | 店铺已有匹配的元字段定义及校验规则 | 只跳过受影响字段，并生成建站配置处理项 |
+| 上月数据查询与分析 | 有效的 `data-center/manifest.json` 和对应月份数据快照 | 显示数据缺失或过期，不生成无依据结论 |
+| 月度数据更新 | 可快进的 GitHub 更新，或服务方提供的本地数据包 | 保留现有快照，提示选择更新来源 |
+| 404 候选补充 | 选填的 `gsc_not_found.csv`、历史记录或已知 handle 变化 | 仍可处理已有候选，不假装已经覆盖 GSC 数据 |
+
+其他 Shopify 独立站也可以安装 Opsy。连接后的轻量建档会先验证店铺身份和必填证据，再按商品、Blog、404 和元字段能力分别识别 scope 与对象配置：满足条件的写入先开放，缺少的部分形成明确的补配置清单；本地草稿准备不受无关能力缺失影响。Opsy 不会在基础运营中擅自创建元字段定义，也不会在没有有效导出数据时虚构分析结果。
+
 ## 安装
 
 完整 Shopify 写入流程需要：
@@ -108,4 +130,4 @@ Skill 内只包含项目无关的说明、工具和模板，不包含客户数�
 
 ## 官方平台依据
 
-Opsy V1 于 2026-07-29 按 Shopify 官方 [CLI 要求](https://shopify.dev/docs/api/shopify-cli)、[Store 认证](https://shopify.dev/docs/api/shopify-cli/store/store-auth)、[Store execute](https://shopify.dev/docs/api/shopify-cli/store/store-execute) 和 [Admin GraphQL 2026-07](https://shopify.dev/docs/api/admin-graphql/2026-07) 完成校验。所有 GraphQL 模板已通过 Shopify 官方 schema 验证器。
+Opsy V1 于 2026-07-29 按 Shopify 官方 [CLI 要求](https://shopify.dev/docs/api/shopify-cli)、[Store 认证](https://shopify.dev/docs/api/shopify-cli/store/store-auth)、[Store execute](https://shopify.dev/docs/api/shopify-cli/store/store-execute) 和 [Admin GraphQL 2026-07](https://shopify.dev/docs/api/admin-graphql/2026-07) 建立基线。仓库会检查模板结构、operation 契约和安全守卫；每次真实写入前仍须按所选 API 版本用当前官方 schema 或受信任店铺工具重新验证对应模板。
