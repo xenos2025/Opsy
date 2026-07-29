@@ -1,0 +1,14 @@
+{
+  "name": "opsy",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Opsy — Guided Shopify Operations",
+  "scripts": {
+    "test": "node --test",
+    "validate": "node scripts/validate-repo.mjs"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  }
+}

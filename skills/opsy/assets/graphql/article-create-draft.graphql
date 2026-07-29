@@ -1,0 +1,17 @@
+mutation OpsyArticleCreateDraft($article: ArticleCreateInput!) {
+  articleCreate(article: $article) {
+    article {
+      id
+      title
+      handle
+      isPublished
+      publishedAt
+      updatedAt
+    }
+    userErrors {
+      code
+      field
+      message
+    }
+  }
+}

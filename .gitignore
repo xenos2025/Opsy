@@ -1,0 +1,9 @@
+node_modules/
+.tmp/
+coverage/
+release/
+*.zip
+*.tar.gz
+*.log
+.DS_Store
+Thumbs.db

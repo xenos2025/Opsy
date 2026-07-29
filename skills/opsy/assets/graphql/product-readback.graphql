@@ -1,0 +1,45 @@
+query OpsyProductReadback($id: ID!) {
+  product(id: $id) {
+    id
+    title
+    handle
+    descriptionHtml
+    status
+    vendor
+    productType
+    tags
+    seo {
+      title
+      description
+    }
+    options {
+      id
+      name
+      position
+      values
+    }
+    variants(first: 100) {
+      nodes {
+        id
+        title
+        sku
+        price
+        selectedOptions {
+          name
+          value
+        }
+      }
+    }
+    metafields(first: 100) {
+      nodes {
+        id
+        namespace
+        key
+        type
+        value
+        compareDigest
+      }
+    }
+    updatedAt
+  }
+}

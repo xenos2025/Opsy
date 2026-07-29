@@ -1,0 +1,18 @@
+query OpsyProductMetafieldDefinitions($first: Int = 100) {
+  metafieldDefinitions(ownerType: PRODUCT, first: $first) {
+    nodes {
+      id
+      name
+      namespace
+      key
+      description
+      type {
+        name
+      }
+      validations {
+        name
+        value
+      }
+    }
+  }
+}

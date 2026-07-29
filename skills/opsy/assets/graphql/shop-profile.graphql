@@ -1,0 +1,13 @@
+query OpsyShopProfile {
+  shop {
+    id
+    name
+    myshopifyDomain
+    primaryDomain {
+      host
+      url
+    }
+    currencyCode
+    ianaTimezone
+  }
+}

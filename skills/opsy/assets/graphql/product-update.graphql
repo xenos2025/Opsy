@@ -1,0 +1,18 @@
+mutation OpsyProductUpdate(
+  $product: ProductUpdateInput!
+  $media: [CreateMediaInput!]
+) {
+  productUpdate(product: $product, media: $media) {
+    product {
+      id
+      title
+      handle
+      status
+      updatedAt
+    }
+    userErrors {
+      field
+      message
+    }
+  }
+}

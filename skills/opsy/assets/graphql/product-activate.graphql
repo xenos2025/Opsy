@@ -1,0 +1,15 @@
+mutation OpsyProductActivate($product: ProductUpdateInput!) {
+  productUpdate(product: $product) {
+    product {
+      id
+      title
+      handle
+      status
+      updatedAt
+    }
+    userErrors {
+      field
+      message
+    }
+  }
+}

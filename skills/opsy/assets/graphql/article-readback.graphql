@@ -1,0 +1,25 @@
+query OpsyArticleReadback($id: ID!) {
+  article(id: $id) {
+    id
+    title
+    handle
+    body
+    summary
+    tags
+    isPublished
+    publishedAt
+    updatedAt
+    blog {
+      id
+      title
+      handle
+    }
+    author {
+      name
+    }
+    image {
+      altText
+      url
+    }
+  }
+}

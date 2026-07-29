@@ -1,0 +1,18 @@
+mutation OpsyMetafieldsSet($metafields: [MetafieldsSetInput!]!) {
+  metafieldsSet(metafields: $metafields) {
+    metafields {
+      id
+      namespace
+      key
+      type
+      value
+      compareDigest
+      updatedAt
+    }
+    userErrors {
+      code
+      field
+      message
+    }
+  }
+}

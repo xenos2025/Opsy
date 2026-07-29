@@ -1,0 +1,13 @@
+query OpsyProductMediaReadback($id: ID!) {
+  product(id: $id) {
+    id
+    media(first: 100) {
+      nodes {
+        id
+        alt
+        mediaContentType
+        status
+      }
+    }
+  }
+}

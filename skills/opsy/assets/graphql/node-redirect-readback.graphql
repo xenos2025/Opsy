@@ -1,0 +1,9 @@
+query OpsyUrlRedirectReadback($id: ID!) {
+  node(id: $id) {
+    ... on UrlRedirect {
+      id
+      path
+      target
+    }
+  }
+}

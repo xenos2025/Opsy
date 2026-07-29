@@ -1,0 +1,9 @@
+query OpsyBlogs($first: Int = 50) {
+  blogs(first: $first) {
+    nodes {
+      id
+      title
+      handle
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "article": {
+    "blogId": "gid://shopify/Blog/REPLACE",
+    "title": "Confirmed article title",
+    "author": {
+      "name": "Confirmed author"
+    },
+    "body": "<p>Confirmed article body.</p>",
+    "isPublished": false
+  }
+}

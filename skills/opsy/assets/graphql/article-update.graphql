@@ -1,0 +1,20 @@
+mutation OpsyArticleUpdate(
+  $id: ID!
+  $article: ArticleUpdateInput!
+) {
+  articleUpdate(id: $id, article: $article) {
+    article {
+      id
+      title
+      handle
+      isPublished
+      publishedAt
+      updatedAt
+    }
+    userErrors {
+      code
+      field
+      message
+    }
+  }
+}

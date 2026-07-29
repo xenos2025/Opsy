@@ -1,0 +1,19 @@
+mutation OpsyPublishablePublish(
+  $id: ID!
+  $input: [PublicationInput!]!
+) {
+  publishablePublish(id: $id, input: $input) {
+    publishable {
+      availablePublicationsCount {
+        count
+      }
+      resourcePublicationsCount {
+        count
+      }
+    }
+    userErrors {
+      field
+      message
+    }
+  }
+}

@@ -1,0 +1,6 @@
+inbox/
+outputs/
+backups/
+tmp/
+
+!.gitignore

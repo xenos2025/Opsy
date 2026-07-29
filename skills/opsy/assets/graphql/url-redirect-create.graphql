@@ -1,0 +1,13 @@
+mutation OpsyUrlRedirectCreate($urlRedirect: UrlRedirectInput!) {
+  urlRedirectCreate(urlRedirect: $urlRedirect) {
+    urlRedirect {
+      id
+      path
+      target
+    }
+    userErrors {
+      field
+      message
+    }
+  }
+}

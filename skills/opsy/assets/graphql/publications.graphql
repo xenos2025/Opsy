@@ -1,0 +1,10 @@
+query OpsyPublications($first: Int = 50) {
+  publications(first: $first) {
+    nodes {
+      id
+      catalog {
+        title
+      }
+    }
+  }
+}

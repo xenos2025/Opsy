@@ -1,0 +1,21 @@
+mutation OpsyProductCreateDraft(
+  $product: ProductCreateInput!
+  $media: [CreateMediaInput!]
+) {
+  productCreate(product: $product, media: $media) {
+    product {
+      id
+      title
+      handle
+      status
+      vendor
+      productType
+      tags
+      updatedAt
+    }
+    userErrors {
+      field
+      message
+    }
+  }
+}

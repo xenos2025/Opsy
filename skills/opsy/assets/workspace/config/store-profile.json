@@ -1,0 +1,37 @@
+{
+  "schema_version": "opsy-store-profile-v1",
+  "store": {
+    "id": null,
+    "name": null,
+    "myshopify_domain": null,
+    "primary_domain": null,
+    "currency": null,
+    "iana_timezone": null
+  },
+  "connection": {
+    "status": "not_connected",
+    "authenticated_at": null,
+    "verified_at": null,
+    "cli_version": null,
+    "api_version": "2026-07",
+    "scopes": [],
+    "smoke_test": {
+      "status": "not_run",
+      "verified_at": null
+    }
+  },
+  "profile": {
+    "status": "not_started",
+    "completed_at": null,
+    "verified_at": null,
+    "languages": [],
+    "markets": [],
+    "main_theme": null,
+    "primary_inquiry_cta": null,
+    "publications": [],
+    "blogs": [],
+    "metafield_definitions": [],
+    "publication_policy": null,
+    "notes": []
+  }
+}
