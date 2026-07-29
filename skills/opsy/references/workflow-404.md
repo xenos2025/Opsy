@@ -42,6 +42,6 @@ Never redirect unrelated URLs to the home page.
 
 ## Write selected redirects
 
-Show only verified `redirect` candidates with exact `path → target` pairs. Let the operator select the precise set. After explicit approval, create each redirect with `assets/graphql/url-redirect-create.graphql`, inspect `userErrors`, and read back the returned ID using `assets/graphql/node-redirect-readback.graphql`.
+Show only verified `redirect` candidates with exact `path → target` pairs. Let the operator select the precise set. Pass each saved pair through the `url-redirect-create` variable guard before requesting approval. After explicit approval, create each redirect with `assets/graphql/url-redirect-create.graphql`, pass the matching response check, and read back the returned ID using `assets/graphql/node-redirect-readback.graphql`.
 
 Record successes and failures per item. One failure must not imply the rest succeeded.

@@ -56,7 +56,7 @@ If prerequisites are satisfied and CLI is missing, show the pinned installation 
 
 Normalize and reconfirm the target `*.myshopify.com` domain. Choose the smallest scope pack required for the next operations. Run interactive `shopify store auth`; never automate credential entry.
 
-After authentication, run a read-only smoke query. Record only store domain, granted scope names, CLI/API versions, timestamp, and pass/fail. Do not store tokens or credential-file paths.
+After authentication, run a read-only smoke query. Record the authenticated domain in `connection.store_domain`, the same canonical domain in `store.myshopify_domain`, granted scope names, CLI/API versions, authentication and verification timestamps, and smoke pass/fail. Do not store tokens or credential-file paths. The two recorded domains must match before the connection gate can pass.
 
 ## Build the lightweight profile
 
@@ -71,7 +71,7 @@ Read and record only facts required for safe operations:
 - existing metafield definitions needed by supported objects;
 - approval and publication policy.
 
-Save the source and verification timestamp for each live section. Mark `profile.status: complete` only when required fields are present and the target store matches the connection.
+Save the source and verification timestamp for each live section. Mark `profile.status: complete` only when required fields are present and the target store matches the connection. Run the status helper again and use its `profile_validation.missing`, `profile_validation.errors`, and `write_capabilities.*.missing` arrays as the authoritative completion list.
 
 Connection alone does not enable writes.
 

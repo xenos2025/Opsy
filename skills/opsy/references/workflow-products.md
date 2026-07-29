@@ -42,17 +42,19 @@ Show item-level errors. Let the operator choose only `passed` items for draft cr
 
 Read current definitions for the correct owner type. Match namespace, key, type, and validations before preparing values. Omit and hand off any field with a missing or incompatible definition. Never create, update, pin, migrate, or delete a definition.
 
+Read the current metafield value and use its `compareDigest` for updates. Use explicit `null` only when the approved intent is create-if-absent. Run the `metafields-set` variable guard before approval and the matching response check after execution.
+
 ## Create new products
 
 1. Save the local product package and field preview.
-2. Ask Approval A for the exact selected candidates.
-3. Use `assets/graphql/product-create-draft.graphql` with `status: DRAFT`.
-4. Read each product back with the core `product-readback.graphql`. If media was supplied, validate the extra media-read scopes, then use `product-media-readback.graphql` to verify asynchronous media state.
-5. Ask Approval B for exact status and publication targets.
-6. Activate with a reviewed product update, then publish only to the approved publications.
+2. Prepare variables with `status: DRAFT` and pass the `product-create-draft` guard.
+3. Ask Approval A for the exact selected candidates.
+4. Execute `assets/graphql/product-create-draft.graphql`, pass the matching response check, then read each product back with the core `product-readback.graphql`. If media was supplied, validate the extra media-read scopes, then use `product-media-readback.graphql` to verify asynchronous media state.
+5. Prepare and guard the exact activation (`product-activate`) and publication (`publishable-publish`) variables, then ask Approval B for those status and publication targets.
+6. Execute only the approved operations, check each response under its own operation name, and read back status and publications.
 
 Approval A never authorizes Approval B.
 
 ## Update an existing product
 
-Read and back up the current product. Show a field-level diff, including tags, SEO, status, handle, media, variants, and metafield values. Obtain approval for the exact diff, execute, read back, and add old paths to 404 handling when a handle changes.
+Read and back up the current product. Show a field-level diff, including tags, SEO, handle, media, variants, and metafield values. Keep activation separate. Pass the `product-update` variable guard, obtain approval for the exact diff, execute, pass the matching response check, read back, and add old paths to 404 handling when a handle changes.

@@ -46,12 +46,16 @@ Approve only the selected, individually verified `path → target` pairs. Do not
 ## Execution rules
 
 - Use the same Shopify CLI Store channel for pre-read, mutation, and readback.
+- Before requesting approval, run `guard-mutation` against the exact saved variables and the operation name defined in [shopify-cli.md](shopify-cli.md).
 - Pass `--allow-mutations` only after explicit approval.
 - Save query, variables, and sanitized response under `<workspace>/tmp/opsy/<operation-id>/`.
+- Immediately after execution, run `check-response` with the same operation name. A zero CLI exit alone is not success.
 - Save existing-object snapshots under `<workspace>/backups/<operation-id>/`.
 - Record outcome, not credentials, in `<workspace>/ai-log/operations-log.md`.
 - Stop on CLI failure, top-level GraphQL errors, mutation `userErrors`, store mismatch, scope mismatch, or readback mismatch.
 - Do not retry a mutation blindly. Read current state before deciding whether a retry is safe.
+
+For `metafields-set`, read the current value and carry its returned `compareDigest` into the approved variables. Use explicit `null` only for a confirmed create-if-absent operation. A missing digest is never accepted.
 
 ## Credential hygiene
 

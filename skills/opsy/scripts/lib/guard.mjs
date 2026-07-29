@@ -1,5 +1,19 @@
 import fs from "node:fs";
 
+function isNonEmptyString(value) {
+  return typeof value === "string" && value.trim().length > 0;
+}
+
+function isIsoDateTime(value) {
+  return (
+    isNonEmptyString(value) &&
+    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?(?:Z|[+-]\d{2}:\d{2})$/.test(
+      value,
+    ) &&
+    !Number.isNaN(Date.parse(value))
+  );
+}
+
 export function validateMutationVariables(operation, variables) {
   const errors = [];
 
@@ -27,6 +41,30 @@ export function validateMutationVariables(operation, variables) {
     ) {
       errors.push("article-create-draft must not include a publishDate");
     }
+  } else if (operation === "product-update") {
+    if (!variables.product || typeof variables.product !== "object") {
+      errors.push("product-update requires product input");
+    }
+    if (!variables.product?.id) {
+      errors.push("product-update requires product.id");
+    }
+    if (Object.prototype.hasOwnProperty.call(variables.product ?? {}, "status")) {
+      errors.push("product-update must not change status; use product-activate");
+    }
+  } else if (operation === "article-update") {
+    if (!variables.id) errors.push("article-update requires id");
+    if (!variables.article || typeof variables.article !== "object") {
+      errors.push("article-update requires article input");
+    }
+    if (variables.article?.isPublished === true) {
+      errors.push("article-update must not publish; use article-publish");
+    }
+    if (
+      Object.prototype.hasOwnProperty.call(variables.article ?? {}, "publishDate") &&
+      variables.article.publishDate !== null
+    ) {
+      errors.push("article-update must not schedule; use article-schedule");
+    }
   } else if (operation === "product-activate") {
     if (variables.product?.status !== "ACTIVE") {
       errors.push("product-activate requires product.status = ACTIVE");
@@ -34,10 +72,36 @@ export function validateMutationVariables(operation, variables) {
     if (!variables.product?.id) {
       errors.push("product-activate requires product.id");
     }
+  } else if (operation === "article-publish") {
+    if (!variables.id) errors.push("article-publish requires id");
+    if (variables.article?.isPublished !== true) {
+      errors.push("article-publish requires article.isPublished = true");
+    }
+    if (
+      Object.prototype.hasOwnProperty.call(variables.article ?? {}, "publishDate") &&
+      variables.article.publishDate !== null
+    ) {
+      errors.push("article-publish must not include a publishDate");
+    }
+  } else if (operation === "article-schedule") {
+    if (!variables.id) errors.push("article-schedule requires id");
+    if (!isIsoDateTime(variables.article?.publishDate)) {
+      errors.push("article-schedule requires an ISO article.publishDate");
+    }
+    if (variables.article?.isPublished === false) {
+      errors.push("article-schedule must not set article.isPublished = false");
+    }
   } else if (operation === "publishable-publish") {
     if (!variables.id) errors.push("publishable-publish requires id");
     if (!Array.isArray(variables.input) || variables.input.length === 0) {
       errors.push("publishable-publish requires at least one approved publication");
+    }
+    for (const [index, publication] of (variables.input ?? []).entries()) {
+      if (!isNonEmptyString(publication?.publicationId)) {
+        errors.push(
+          `publishable-publish input[${index}].publicationId is required`,
+        );
+      }
     }
   } else if (operation === "url-redirect-create") {
     const redirect = variables.urlRedirect;
@@ -56,6 +120,25 @@ export function validateMutationVariables(operation, variables) {
     }
     if ((variables.metafields?.length ?? 0) > 25) {
       errors.push("metafields-set supports at most 25 values per request");
+    }
+    for (const [index, metafield] of (variables.metafields ?? []).entries()) {
+      for (const key of ["ownerId", "namespace", "key", "value"]) {
+        if (!isNonEmptyString(metafield?.[key])) {
+          errors.push(`metafields[${index}].${key} is required`);
+        }
+      }
+      if (!Object.prototype.hasOwnProperty.call(metafield ?? {}, "compareDigest")) {
+        errors.push(
+          `metafields[${index}].compareDigest is required; use null only for create-if-absent`,
+        );
+      } else if (
+        metafield.compareDigest !== null &&
+        !isNonEmptyString(metafield.compareDigest)
+      ) {
+        errors.push(
+          `metafields[${index}].compareDigest must be a non-empty string or null`,
+        );
+      }
     }
   } else {
     errors.push(`unknown guarded operation: ${operation}`);
@@ -85,17 +168,66 @@ function collectUserErrors(value, location = "$", found = []) {
   return found;
 }
 
-export function validateGraphqlResponse(response) {
+const responseContracts = {
+  "product-create-draft": "data.productCreate.product.id",
+  "product-update": "data.productUpdate.product.id",
+  "product-activate": "data.productUpdate.product.id",
+  "article-create-draft": "data.articleCreate.article.id",
+  "article-update": "data.articleUpdate.article.id",
+  "article-publish": "data.articleUpdate.article.id",
+  "article-schedule": "data.articleUpdate.article.id",
+  "publishable-publish": "data.publishablePublish.publishable",
+  "url-redirect-create": "data.urlRedirectCreate.urlRedirect.id",
+  "metafields-set": "data.metafieldsSet.metafields",
+};
+
+function valueAtPath(value, dottedPath) {
+  return dottedPath
+    .split(".")
+    .reduce(
+      (current, part) =>
+        current !== null && current !== undefined ? current[part] : undefined,
+      value,
+    );
+}
+
+function fulfillsContract(value, dottedPath) {
+  const found = valueAtPath(value, dottedPath);
+  if (dottedPath.endsWith(".metafields")) {
+    return Array.isArray(found) && found.length > 0;
+  }
+  if (dottedPath.endsWith(".id")) {
+    return isNonEmptyString(found);
+  }
+  return found !== null && found !== undefined;
+}
+
+export function validateGraphqlResponse(response, operation) {
   const topLevelErrors = Array.isArray(response?.errors) ? response.errors : [];
   const userErrors = collectUserErrors(response);
+  const expectedPath = responseContracts[operation];
+  const contractErrors = [];
+  if (!expectedPath) {
+    contractErrors.push(`unknown response contract: ${operation}`);
+  } else if (!fulfillsContract(response, expectedPath)) {
+    contractErrors.push(`expected ${expectedPath} in GraphQL response`);
+  }
   return {
-    ok: topLevelErrors.length === 0 && userErrors.length === 0,
+    ok:
+      topLevelErrors.length === 0 &&
+      userErrors.length === 0 &&
+      contractErrors.length === 0,
     top_level_errors: topLevelErrors,
     user_errors: userErrors,
+    contract_errors: contractErrors,
   };
 }
 
-export function validateGraphqlResponseFile(responsePath) {
+export function validateGraphqlResponseFile(operation, responsePath) {
   const response = JSON.parse(fs.readFileSync(responsePath, "utf8"));
-  return { response_path: responsePath, ...validateGraphqlResponse(response) };
+  return {
+    operation,
+    response_path: responsePath,
+    ...validateGraphqlResponse(response, operation),
+  };
 }

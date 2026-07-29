@@ -1,13 +1,17 @@
 ---
 name: opsy
-description: Guided Shopify operations for beginner and part-time B2B store operators in Codex or WorkBuddy. Use when setting up or locating an Opsy workspace, checking connection/profile readiness, preparing an operations weekly report, creating or updating products, drafting or revising Shopify blog articles, triaging 404 URLs and approved redirects, validating or querying monthly data-center snapshots, filling existing metafields, or executing approved Shopify Admin GraphQL operations through Shopify CLI.
+description: Guides beginner and part-time B2B store operators through evidence-based Shopify operations in Codex or WorkBuddy. Use when setting up or locating an Opsy workspace, checking connection/profile readiness, preparing an operations weekly report, creating or updating products, drafting or revising Shopify blog articles, triaging 404 URLs and approved redirects, validating or querying monthly data-center snapshots, filling existing metafields, or executing approved Shopify Admin GraphQL operations through Shopify CLI.
 ---
 
 # Opsy
 
 Operate a B2B inquiry-focused Shopify store through one state-aware entry point. Keep the interaction beginner-friendly while preserving evidence, approval, backup, execution, and readback controls.
 
-## Start every request
+## When to use
+
+Use this entry point for the supported workspace, connection, reporting, product, Blog, redirect, monthly-data, metafield-value, and approved Admin GraphQL tasks named in the description.
+
+Start every request as follows:
 
 1. Find the project root from the working directory. Prefer the nearest `shopify-ops.json`; otherwise use the repository root.
 2. Read the project `AGENTS.md` when present. Never replace or weaken existing project rules.
@@ -45,7 +49,7 @@ Allow only the reads required to complete or refresh the lightweight store profi
 
 ### Write ready
 
-Display **“运营写入就绪”**, the target store, profile freshness, and monthly-data freshness. Offer:
+Display **“运营写入就绪”**, the target store, profile freshness, monthly-data freshness, and `write_capabilities` from the status helper. Offer:
 
 1. 运营周报
 2. 商品运营
@@ -62,6 +66,8 @@ Load only the selected workflow:
 - [workflow-404.md](references/workflow-404.md)
 - [workflow-monthly-data.md](references/workflow-monthly-data.md)
 - [workflow-connection-profile.md](references/workflow-connection-profile.md)
+
+`write_ready` means the base connection and lightweight profile passed validation. Before a workflow writes, require that workflow's capability to be `write_ready: true`. If it is false, show its `missing` list and allow only local preparation or the reads needed to refresh those prerequisites.
 
 ## Guide the operator
 
@@ -80,15 +86,16 @@ For every write:
 1. Reconfirm the target `myshopify.com` domain and current profile state.
 2. Read the current object through the same Shopify CLI Store channel.
 3. Save a pre-write snapshot for existing objects.
-4. Show an exact field-level preview or diff, expected effect, and readback plan.
-5. Obtain explicit approval for the exact operation set.
-6. Execute a pinned-version GraphQL mutation with `shopify store execute --allow-mutations`.
-7. Treat top-level GraphQL errors or non-empty mutation `userErrors` as failure.
-8. Read the affected object back through the same channel and record the verified result.
+4. Save the exact query and variables, then run `scripts/opsy.mjs guard-mutation --operation <name> --variables <file> --json`. Stop if it fails.
+5. Show an exact field-level preview or diff, expected effect, and readback plan.
+6. Obtain explicit approval for that exact operation set.
+7. Execute the already-guarded variables with pinned-version `shopify store execute --allow-mutations`.
+8. Run `scripts/opsy.mjs check-response --operation <name> --response <file> --json`. Treat any helper failure as mutation failure.
+9. Read the affected object back through the same channel and record the verified result.
 
 New products and new articles require two separate approvals: first create a non-public draft; then, only after successful readback, request a second approval to publish or schedule. Never interpret approval to draft as approval to publish.
 
-## Preserve scope
+## When not to use
 
 V1 supports B2B inquiry-site operations. Do not operate orders, refunds, checkout, accounts, inventory replenishment, discounts, tax, logistics, or ads. Do not create, modify, or delete metafield definitions. Fill values only after reading and matching existing definitions.
 
@@ -98,5 +105,32 @@ Do not broaden a public check into an audit. Do not fabricate real-time Google d
 
 - Initialize or inspect a workspace with `scripts/opsy.mjs`; read [project-layout.md](references/project-layout.md).
 - Validate or summarize monthly snapshots with `scripts/opsy.mjs`; read [data-contract.md](references/data-contract.md).
+- Guard mutation variables and verify saved mutation responses with `scripts/opsy.mjs`; read [safety-and-approvals.md](references/safety-and-approvals.md).
 - Use GraphQL operations from `assets/graphql/` as reviewed starting points. Verify them against current official Shopify documentation and the selected API version before a live write.
 - Use workspace templates from `assets/workspace/`; never copy the Skill folder into a client project.
+
+## Verification
+
+Before claiming completion, verify:
+
+- [ ] the mutation command exited successfully;
+- [ ] the operation-specific response check passed;
+- [ ] the same-channel readback matches the approved change;
+- [ ] the sanitized outcome is recorded;
+- [ ] each promised local artifact exists and its relevant validator passed.
+
+Report partial success per object; never turn an unverified mutation attempt into a success claim.
+
+## Common rationalizations
+
+- “It is only a draft” does not bypass store identity, capability, variable-guard, preview, or approval checks.
+- “The CLI exited successfully” is incomplete evidence until the response contract and readback pass.
+- “The field is already in the variables” does not make a metafield update safe without the current `compareDigest`.
+
+## Red flags
+
+Stop and refresh evidence when the target domain differs, a required scope or configured object is missing, profile evidence is stale, variables changed after approval, or the returned object is absent.
+
+## Example: guarded product draft
+
+Run `status`, require `write_capabilities.products.write_ready`, prepare `status: DRAFT` variables, run the `product-create-draft` guard, show the exact preview, obtain Approval A, execute the reviewed template, check the saved response under the same operation name, and read the product back. Activation and publication remain a separate Approval B.
