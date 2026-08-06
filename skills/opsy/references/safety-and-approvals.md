@@ -18,14 +18,21 @@ Show the files and locations first. A workspace initializer may add only missing
 
 ### New product
 
-1. Present the validated product package.
+1. Present the validated product package and a shared PDP buyer-decision brief
+   with all five checks at `pass`.
 2. Approval A creates only a Shopify `DRAFT`.
 3. Read back ID, title, handle, status, fields, metafields, and media state.
 4. Approval B activates and publishes to the exact selected publications.
 
 ### New article
 
-1. Present the validated article package.
+1. Present the validated article package, a shared Blog buyer-decision brief
+   with all five checks at `pass`, **and** the craft scorecard from
+   `workflow-blog-content.md` (writer role from `profile.content_voice`, topic,
+   body, images, table, links/CTA). Do not offer Approval A when
+   `content_voice` is not `ready`, or for encyclopedia-style drafts that lack
+   a scene, commercial target, or write-ready media when a Shopify write is
+   requested.
 2. Approval A creates with `isPublished: false`.
 3. Read back ID, blog, title, handle, publication state, body, summary, tags, and image.
 4. Approval B publishes immediately or schedules the exact displayed time.
@@ -36,6 +43,10 @@ Show the files and locations first. A workspace initializer may add only missing
 2. Show an exact before/after diff.
 3. Obtain one approval for that exact diff.
 4. Update and read back.
+
+Material buyer-visible Product or Blog copy changes must re-run the matching
+decision-brief check before approval. Metadata-only or operational changes do
+not need a new brief unless they change the buyer promise or next step.
 
 Treat product or article handle changes as a separate risk operation and add the old path to 404 handling.
 

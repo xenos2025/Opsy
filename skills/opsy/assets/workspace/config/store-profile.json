@@ -33,6 +33,18 @@
     "blogs": [],
     "metafield_definitions": [],
     "publication_policy": null,
-    "notes": []
+    "notes": [],
+    "content_voice": {
+      "status": "not_started",
+      "role": null,
+      "expertise": [],
+      "buyer_relationship": null,
+      "tone": [],
+      "must_do": [],
+      "must_not": [],
+      "signature_proof": [],
+      "example_phrasing": null,
+      "updated_at": null
+    }
   }
 }

@@ -1,6 +1,6 @@
 ---
 name: opsy
-description: Guides beginner and part-time B2B store operators through evidence-based Shopify operations in Codex or WorkBuddy. Use when setting up or locating an Opsy workspace, checking connection/profile readiness, preparing an operations weekly report, creating or updating products, drafting or revising Shopify blog articles, triaging 404 URLs and approved redirects, validating or querying monthly data-center snapshots, filling existing metafields, or executing approved Shopify Admin GraphQL operations through Shopify CLI.
+description: Guides beginner and part-time B2B store operators through evidence-based Shopify operations in Codex or WorkBuddy. Use when setting up or locating an Opsy workspace, checking connection/profile readiness, preparing an operations weekly report, creating or updating products, drafting or revising Shopify blog articles with store-profile content_voice seller role plus scene-led content jobs and image/table/internal-link craft checks, triaging 404 URLs and approved redirects, validating or querying monthly data-center snapshots, filling existing metafields, or executing approved Shopify Admin GraphQL operations through Shopify CLI.
 ---
 
 # Opsy
@@ -61,8 +61,11 @@ Display **“运营写入就绪”**, the target store, profile freshness, month
 Load only the selected workflow:
 
 - [workflow-weekly-report.md](references/workflow-weekly-report.md)
-- [workflow-products.md](references/workflow-products.md)
-- [workflow-blog.md](references/workflow-blog.md)
+- [workflow-products.md](references/workflow-products.md) and
+  [workflow-buyer-decision.md](references/workflow-buyer-decision.md)
+- [workflow-blog.md](references/workflow-blog.md) and, for Blog drafts,
+  [workflow-blog-content.md](references/workflow-blog-content.md), plus
+  [workflow-buyer-decision.md](references/workflow-buyer-decision.md)
 - [workflow-404.md](references/workflow-404.md)
 - [workflow-monthly-data.md](references/workflow-monthly-data.md)
 - [workflow-connection-profile.md](references/workflow-connection-profile.md)
@@ -101,10 +104,16 @@ V1 supports B2B inquiry-site operations. Do not operate orders, refunds, checkou
 
 Do not broaden a public check into an audit. Do not fabricate real-time Google data. Do not auto-merge Git changes, redirect all 404s, publish content, or expose credentials.
 
+Do not replace the agency **monthly-loop** suite (Shopify Operations Skill / client `*-data-agent`, `*-blog-seo-geo-agent`, keyword scoring, Inquiry Review, Ops Coach). Those agents own deep diagnosis, scored topic queues, and service-provider coaching. Opsy owns the beginner menus: 周报、商品、Blog、404、上月数据、连接建档. If a repo already runs that multi-agent loop under `_project/skills/`, keep using it for agency work unless the operator explicitly asks for `$opsy`.
+
 ## Use bundled helpers
 
 - Initialize or inspect a workspace with `scripts/opsy.mjs`; read [project-layout.md](references/project-layout.md).
-- Validate or summarize monthly snapshots with `scripts/opsy.mjs`; read [data-contract.md](references/data-contract.md).
+- Validate, summarize, or derive Product/Blog keyword suggestions from monthly
+  snapshots with `scripts/opsy.mjs`; read [data-contract.md](references/data-contract.md).
+- Validate the shared Product/Blog buyer-decision brief with
+  `scripts/opsy.mjs`; read
+  [workflow-buyer-decision.md](references/workflow-buyer-decision.md).
 - Guard mutation variables and verify saved mutation responses with `scripts/opsy.mjs`; read [safety-and-approvals.md](references/safety-and-approvals.md).
 - Use GraphQL operations from `assets/graphql/` as reviewed starting points. Verify them against current official Shopify documentation and the selected API version before a live write.
 - Use workspace templates from `assets/workspace/`; never copy the Skill folder into a client project.
@@ -118,6 +127,7 @@ Before claiming completion, verify:
 - [ ] the same-channel readback matches the approved change;
 - [ ] the sanitized outcome is recorded;
 - [ ] each promised local artifact exists and its relevant validator passed.
+- [ ] Product/Blog buyer-decision readiness is `pass` before Approval A.
 
 Report partial success per object; never turn an unverified mutation attempt into a success claim.
 

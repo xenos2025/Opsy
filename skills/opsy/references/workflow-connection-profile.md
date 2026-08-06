@@ -23,7 +23,11 @@ Ask one question at a time and propose a default. Capture only operational facts
 - product and content owners;
 - publication policy and approver;
 - known data-delivery route;
-- known restrictions.
+- known restrictions;
+- **content voice / seller role** for Blog and buyer-facing copy (who is speaking:
+  role, expertise, buyer relationship, tone, must-do / must-not). Save under
+  `profile.content_voice` when confirmed — see
+  [workflow-blog-content.md](workflow-blog-content.md).
 
 Save confirmed answers in the workspace README or profile notes. Do not claim they were verified in Shopify Admin.
 
@@ -69,7 +73,9 @@ Read and record only facts required for safe operations:
 - publication IDs and names used for product publishing;
 - Blog IDs and names used for articles;
 - existing metafield definitions needed by supported objects;
-- approval and publication policy.
+- approval and publication policy;
+- `profile.content_voice` when the operator can confirm it (optional for
+  connection unlock; required before Blog draft Approval A).
 
 Save the source and verification timestamp for each live section. Mark `profile.status: complete` only when required fields are present and the target store matches the connection. Run the status helper again and use its `profile_validation.missing`, `profile_validation.errors`, and `write_capabilities.*.missing` arrays as the authoritative completion list.
 

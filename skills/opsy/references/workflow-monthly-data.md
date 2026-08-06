@@ -45,9 +45,13 @@ Run:
 ```text
 node <skill-root>/scripts/opsy.mjs validate-data --project <project-root> --json
 node <skill-root>/scripts/opsy.mjs summarize-data --project <project-root>
+node <skill-root>/scripts/opsy.mjs suggest-keywords --project <project-root>
 ```
 
-The first command validates without changing files. The second previews a one-page summary; add `--apply` only after confirming the output path.
+All three commands preview without changing files. The second previews a
+one-page summary. The third previews a Product/Blog suggestion queue derived
+from observed GSC demand and optional GA4 landing-page support. Add `--apply`
+only after confirming each output path.
 
 The summary contains:
 
@@ -57,6 +61,24 @@ The summary contains:
 - explicit inquiry evidence when a relevant field exists;
 - at most three operational prompts;
 - comparison only when a compatible prior snapshot is present.
+
+The keyword queue is saved, when approved, as:
+
+```text
+<workspace>/outputs/monthly/keyword-suggestions-YYYY-MM.csv
+```
+
+It records the observed query, `route_hint` (`product`, `blog`, or `review`),
+suggested action, owned page/surface, GSC metrics, optional joined GA4 landing
+metrics, evidence references, source period, and merchant decision fields.
+GSC supplies demand evidence. GA4 only describes how an already-owned landing
+page was used. Neither source proves product capability, certification,
+commercial terms, or buyer outcome. Ads planner data is not required.
+
+Every row starts as `selection_status: suggested`. Product and Blog workflows
+must still check store fit, duplication, claim evidence, and buyer decision
+before an operator selects it. Generating the queue never authorizes content
+creation or a Shopify write.
 
 After a successful update, refresh the read-only 404 queue. Read [data-contract.md](data-contract.md) for the exact manifest contract.
 

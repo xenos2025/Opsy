@@ -5,6 +5,7 @@ import path from "node:path";
 import test from "node:test";
 import {
   build404Queue,
+  buildKeywordSuggestions,
   buildMonthlySummary,
   validateDataCenter,
 } from "../skills/opsy/scripts/lib/data-center.mjs";
@@ -134,6 +135,105 @@ test("monthly summary uses verified fields and does not invent inquiry evidence"
     assert.match(summary.markdown, /10 sessions/);
     assert.match(summary.markdown, /询盘证据：Unavailable/);
     assert.match(summary.markdown, /不提供环比/);
+  } finally {
+    cleanup(project);
+  }
+});
+
+test("keyword suggestions route observed demand without auto-approving content", () => {
+  const { project, dataCenter } = fixture();
+  try {
+    fs.writeFileSync(
+      path.join(dataCenter, "gsc_queries.csv"),
+      [
+        "clicks,ctr,impressions,position,query",
+        "4,0.02,200,6,commercial panel sample",
+        "1,0.01,150,12,how to compare panel finishes",
+        "0,0,80,18,custom project options",
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+    fs.writeFileSync(
+      path.join(dataCenter, "gsc_query_page.csv"),
+      [
+        "clicks,ctr,impressions,position,query,page",
+        "4,0.02,200,6,commercial panel sample,https://example.com/products/panel-sample",
+        "1,0.01,150,12,how to compare panel finishes,https://example.com/blogs/news/compare-finishes",
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+    fs.writeFileSync(
+      path.join(dataCenter, "ga4_landing_pages.csv"),
+      [
+        "landingPagePlusQueryString,sessions,engagedSessions,averageSessionDuration",
+        "/products/panel-sample,20,12,45",
+        "/blogs/news/compare-finishes,10,7,60",
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+    writeJson(path.join(dataCenter, "manifest.json"), {
+      schema_version: "data-center-manifest-v1",
+      datasets: {
+        gsc_queries: dataset("gsc_queries.csv", 3, [
+          "clicks",
+          "ctr",
+          "impressions",
+          "position",
+          "query",
+        ]),
+        gsc_query_page: dataset("gsc_query_page.csv", 2, [
+          "clicks",
+          "ctr",
+          "impressions",
+          "position",
+          "query",
+          "page",
+        ]),
+        ga4_landing_pages: dataset("ga4_landing_pages.csv", 2, [
+          "landingPagePlusQueryString",
+          "sessions",
+          "engagedSessions",
+          "averageSessionDuration",
+        ]),
+      },
+      updated_at: "2026-07-01T08:00:00+08:00",
+    });
+
+    const result = buildKeywordSuggestions(dataCenter);
+    assert.equal(result.ok, true);
+    assert.equal(result.status, "ready");
+    assert.equal(result.rows.length, 3);
+    assert.equal(result.rows[0].route_hint, "product");
+    assert.equal(result.rows[0].suggested_action, "strengthen_product_or_listing");
+    assert.equal(result.rows[0].ga4_sessions, "20");
+    assert.equal(result.rows[0].selection_status, "suggested");
+    assert.equal(result.rows[1].route_hint, "blog");
+    assert.equal(result.rows[1].suggested_action, "update_existing_blog");
+    assert.equal(result.rows[2].route_hint, "review");
+    assert.match(result.csv, /source_period/);
+    assert.doesNotMatch(result.csv, /approved|selected_for_write/i);
+  } finally {
+    cleanup(project);
+  }
+});
+
+test("keyword suggestions fail closed when GSC query evidence is absent", () => {
+  const { project, dataCenter } = fixture();
+  try {
+    writeJson(path.join(dataCenter, "manifest.json"), {
+      schema_version: "data-center-manifest-v1",
+      datasets: {},
+      updated_at: "2026-07-01T08:00:00+08:00",
+    });
+
+    const result = buildKeywordSuggestions(dataCenter);
+    assert.equal(result.ok, false);
+    assert.equal(result.status, "blocked");
+    assert.deepEqual(result.rows, []);
+    assert.match(result.errors.join(" "), /gsc_queries/);
   } finally {
     cleanup(project);
   }

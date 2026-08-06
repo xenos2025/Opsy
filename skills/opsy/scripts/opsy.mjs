@@ -5,11 +5,13 @@ import path from "node:path";
 import process from "node:process";
 import {
   build404Queue,
+  buildKeywordSuggestions,
   buildMonthlySummary,
   dataCenterFromProject,
   validateDataCenter,
 } from "./lib/data-center.mjs";
 import { inspectEnvironment } from "./lib/environment.mjs";
+import { validateDecisionBriefFile } from "./lib/buyer-decision.mjs";
 import {
   validateGraphqlResponseFile,
   validateMutationFile,
@@ -17,6 +19,7 @@ import {
 import {
   initializeWorkspace,
   inspectState,
+  readJson,
   readProject,
 } from "./lib/workspace.mjs";
 
@@ -70,7 +73,9 @@ Commands:
   init --project <path> [--workspace <name>] [--agents auto|yes|no] [--apply] [--json]
   validate-data [--project <path>] [--json]
   summarize-data [--project <path>] [--output <path>] [--apply] [--json]
+  suggest-keywords [--project <path>] [--limit <1-200>] [--output <path>] [--apply] [--json]
   refresh-404 [--project <path>] [--output <path>] [--apply] [--json]
+  validate-decision-brief --file <path> [--surface page|pdp|blog] [--project <path>] [--json]
   guard-mutation --operation <name> --variables <file> [--json]
   check-response --operation <name> --response <file> [--json]
 `;
@@ -151,6 +156,56 @@ async function main() {
     return;
   }
 
+  if (command === "suggest-keywords") {
+    const project = readProject(projectPath(options));
+    if (!project.workspaceRoot) throw new Error("No workspace is configured");
+    const limit = Number(options.limit ?? 50);
+    if (!Number.isInteger(limit) || limit < 1 || limit > 200) {
+      throw new Error("--limit must be an integer from 1 to 200");
+    }
+    const result = buildKeywordSuggestions(
+      path.join(project.workspaceRoot, "data-center"),
+      { limit },
+    );
+    const target = path.resolve(
+      options.output ??
+        path.join(
+          project.workspaceRoot,
+          "outputs",
+          "monthly",
+          `keyword-suggestions-${result.period ?? "unknown"}.csv`,
+        ),
+    );
+    if (!result.ok) {
+      output(result, asJson);
+      process.exitCode = 2;
+      return;
+    }
+    if (options.apply) {
+      fs.mkdirSync(path.dirname(target), { recursive: true });
+      fs.writeFileSync(target, result.csv, "utf8");
+    }
+    if (asJson) {
+      const { csv: _csv, ...jsonResult } = result;
+      output(
+        {
+          ...jsonResult,
+          applied: Boolean(options.apply),
+          output_path: target,
+        },
+        true,
+      );
+    } else {
+      output(
+        options.apply
+          ? `Saved ${result.rows.length} suggestion(s): ${target}`
+          : result.csv,
+        false,
+      );
+    }
+    return;
+  }
+
   if (command === "refresh-404") {
     const project = readProject(projectPath(options));
     if (!project.workspaceRoot) throw new Error("No workspace is configured");
@@ -168,6 +223,29 @@ async function main() {
           : result.csv,
       asJson,
     );
+    return;
+  }
+
+  if (command === "validate-decision-brief") {
+    const filePath = path.resolve(requireOption(options, "file"));
+    let approvedCtaLabel = null;
+    const project = readProject(projectPath(options));
+    if (project.workspaceRoot) {
+      const profilePath = path.join(
+        project.workspaceRoot,
+        "config",
+        "store-profile.json",
+      );
+      if (fs.existsSync(profilePath)) {
+        approvedCtaLabel = readJson(profilePath)?.profile?.primary_inquiry_cta ?? null;
+      }
+    }
+    const result = validateDecisionBriefFile(filePath, {
+      expectedSurface: options.surface ?? null,
+      approvedCtaLabel,
+    });
+    output(result, asJson);
+    process.exitCode = result.ok ? 0 : 2;
     return;
   }
 

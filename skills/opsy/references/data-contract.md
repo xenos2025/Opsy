@@ -62,6 +62,34 @@ Each dataset path must be relative and remain inside `data-center/`. Validate:
 
 Treat a missing archive copy as a warning when the active dataset is otherwise valid. Additional trailing CSV columns are also a warning so monthly exports can add dynamic fields without blocking the core contract. Treat path escape, missing active file, missing/reordered declared headers, or row-count mismatch as an error.
 
+## Derived Product/Blog keyword queue
+
+`keyword-suggestions-YYYY-MM.csv` is a derived operating artifact under
+`outputs/monthly/`; it is not an active manifest dataset and must not be copied
+back into `data-center/`. Generate it from a valid `gsc_queries` dataset with:
+
+```text
+node <skill-root>/scripts/opsy.mjs suggest-keywords --project <project-root>
+```
+
+Required GSC columns are `query`, `clicks`, `ctr`, `impressions`, and
+`position`. When present, `gsc_query_page` maps a query to its strongest owned
+page and `ga4_landing_pages` adds landing sessions and engaged sessions for
+that path.
+
+Stable output columns are:
+
+```text
+query,route_hint,suggested_action,evidence_reason,owned_page,owned_surface,
+clicks,impressions,ctr,position,ga4_sessions,ga4_engaged_sessions,
+evidence_refs,source_period,selection_status,merchant_decision
+```
+
+`route_hint` is triage, not topic approval. Owned Product/Collection demand is
+routed to Product; owned Blog demand is routed to Blog updates; existing Page
+or Home intent is protected for review; question-like unowned demand may be
+routed to Blog. Ambiguous demand remains `review`.
+
 ## Optional 404 data
 
 `gsc_not_found.csv` follows the same manifest rules. Prefer columns such as:

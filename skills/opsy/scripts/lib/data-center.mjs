@@ -415,6 +415,225 @@ function csvText(headers, rows) {
     .join("\n")}\n`;
 }
 
+function queryKey(value) {
+  return String(value ?? "").trim().toLocaleLowerCase();
+}
+
+function pagePath(value) {
+  const raw = String(value ?? "").trim();
+  if (!raw) return "";
+  try {
+    if (/^https?:\/\//i.test(raw)) return new URL(raw).pathname;
+  } catch {
+    return "";
+  }
+  return raw.split("?", 1)[0];
+}
+
+function pageSurface(value) {
+  const pathname = pagePath(value).toLocaleLowerCase();
+  if (/\/products\//.test(pathname)) return "product";
+  if (/\/collections\//.test(pathname)) return "collection";
+  if (/\/blogs?\//.test(pathname)) return "blog";
+  if (/\/pages\//.test(pathname)) return "page";
+  if (pathname === "/") return "home";
+  return pathname ? "other" : "none";
+}
+
+function questionLike(value) {
+  return /^(?:how|what|why|which|when|where|can|should|is|are|do|does)\b|\b(?:guide|vs|versus|difference|compare|comparison)\b|(?:怎么|如何|什么|为什么|区别|对比|比较|指南)/i.test(
+    String(value ?? "").trim(),
+  );
+}
+
+function sourcePeriod(dataset) {
+  const start = dataset?.meta?.date_range?.start_date;
+  const end = dataset?.meta?.date_range?.end_date;
+  return start && end ? `${start} → ${end}` : "";
+}
+
+function metricText(value) {
+  const number = numberValue(value);
+  return Number.isInteger(number) ? String(number) : String(Number(number.toFixed(4)));
+}
+
+export function buildKeywordSuggestions(dataCenterPath, { limit = 50 } = {}) {
+  const root = path.resolve(dataCenterPath);
+  const validation = validateDataCenter(root);
+  const empty = {
+    ok: false,
+    status: "blocked",
+    period: null,
+    rows: [],
+    csv: "",
+    errors: [],
+    warnings: validation.warnings,
+    validation,
+  };
+  if (!validation.ok) {
+    return { ...empty, errors: validation.errors };
+  }
+
+  const manifest = readJson(path.join(root, "manifest.json"));
+  const gscQueries = loadNamedDataset(root, manifest, "gsc_queries");
+  if (!gscQueries) {
+    return { ...empty, errors: ["gsc_queries is required for keyword suggestions"] };
+  }
+
+  const required = ["query", "clicks", "ctr", "impressions", "position"];
+  const missing = required.filter((field) => !gscQueries.headers.includes(field));
+  if (missing.length > 0) {
+    return {
+      ...empty,
+      errors: [`gsc_queries is missing required columns: ${missing.join(", ")}`],
+    };
+  }
+
+  const queryPage = loadNamedDataset(root, manifest, "gsc_query_page");
+  const ga4Landing = loadNamedDataset(root, manifest, "ga4_landing_pages");
+  const pageByQuery = new Map();
+  if (
+    queryPage?.headers.includes("query") &&
+    queryPage.headers.includes("page")
+  ) {
+    for (const row of queryPage.rows) {
+      const key = queryKey(row.query);
+      if (!key || !row.page) continue;
+      const current = pageByQuery.get(key);
+      if (
+        !current ||
+        numberValue(row.impressions) > numberValue(current.impressions) ||
+        (numberValue(row.impressions) === numberValue(current.impressions) &&
+          numberValue(row.clicks) > numberValue(current.clicks))
+      ) {
+        pageByQuery.set(key, row);
+      }
+    }
+  }
+
+  const landingByPath = new Map();
+  if (ga4Landing?.headers.includes("landingPagePlusQueryString")) {
+    for (const row of ga4Landing.rows) {
+      const pathname = pagePath(row.landingPagePlusQueryString);
+      if (!pathname) continue;
+      const current = landingByPath.get(pathname) ?? { sessions: 0, engagedSessions: 0 };
+      current.sessions += numberValue(row.sessions);
+      current.engagedSessions += numberValue(row.engagedSessions);
+      landingByPath.set(pathname, current);
+    }
+  }
+
+  const candidates = new Map();
+  for (const row of gscQueries.rows) {
+    const query = String(row.query ?? "").trim();
+    const key = queryKey(query);
+    const impressions = numberValue(row.impressions);
+    if (!key || impressions <= 0) continue;
+    const current = candidates.get(key);
+    if (
+      !current ||
+      impressions > numberValue(current.impressions) ||
+      (impressions === numberValue(current.impressions) &&
+        numberValue(row.clicks) > numberValue(current.clicks))
+    ) {
+      candidates.set(key, { ...row, query });
+    }
+  }
+
+  const rows = [...candidates.values()]
+    .sort(
+      (left, right) =>
+        numberValue(right.impressions) - numberValue(left.impressions) ||
+        numberValue(right.clicks) - numberValue(left.clicks) ||
+        numberValue(left.position) - numberValue(right.position),
+    )
+    .slice(0, Math.max(1, Number(limit) || 50))
+    .map((row) => {
+      const owned = pageByQuery.get(queryKey(row.query));
+      const ownedPage = String(owned?.page ?? "").trim();
+      const ownedSurface = pageSurface(ownedPage);
+      const landing = landingByPath.get(pagePath(ownedPage));
+      let routeHint = "review";
+      let suggestedAction = "match_to_product_or_blog";
+      if (ownedSurface === "product" || ownedSurface === "collection") {
+        routeHint = "product";
+        suggestedAction = "strengthen_product_or_listing";
+      } else if (ownedSurface === "blog") {
+        routeHint = "blog";
+        suggestedAction = "update_existing_blog";
+      } else if (ownedSurface === "page" || ownedSurface === "home") {
+        suggestedAction = "protect_existing_page_intent";
+      } else if (questionLike(row.query)) {
+        routeHint = "blog";
+        suggestedAction = "consider_blog";
+      }
+
+      const reasonCodes = [];
+      const clicks = numberValue(row.clicks);
+      const ctr = numberValue(row.ctr);
+      const position = numberValue(row.position);
+      if (clicks > 0) reasonCodes.push("observed_clicks");
+      if (ctr < 0.03) reasonCodes.push("low_ctr");
+      if (position > 3 && position <= 20) reasonCodes.push("position_4_20");
+      if (ownedSurface !== "none") reasonCodes.push(`owned_${ownedSurface}`);
+      if (reasonCodes.length === 0) reasonCodes.push("observed_impressions");
+
+      return {
+        query: row.query,
+        route_hint: routeHint,
+        suggested_action: suggestedAction,
+        evidence_reason: reasonCodes.join(";"),
+        owned_page: ownedPage,
+        owned_surface: ownedSurface,
+        clicks: metricText(row.clicks),
+        impressions: metricText(row.impressions),
+        ctr: metricText(row.ctr),
+        position: metricText(row.position),
+        ga4_sessions: metricText(landing?.sessions ?? 0),
+        ga4_engaged_sessions: metricText(landing?.engagedSessions ?? 0),
+        evidence_refs: [
+          "gsc_queries",
+          owned ? "gsc_query_page" : null,
+          landing ? "ga4_landing_pages" : null,
+        ]
+          .filter(Boolean)
+          .join(";"),
+        source_period: sourcePeriod(gscQueries),
+        selection_status: "suggested",
+        merchant_decision: "",
+      };
+    });
+
+  const headers = [
+    "query",
+    "route_hint",
+    "suggested_action",
+    "evidence_reason",
+    "owned_page",
+    "owned_surface",
+    "clicks",
+    "impressions",
+    "ctr",
+    "position",
+    "ga4_sessions",
+    "ga4_engaged_sessions",
+    "evidence_refs",
+    "source_period",
+    "selection_status",
+    "merchant_decision",
+  ];
+  return {
+    ok: true,
+    status: rows.length > 0 ? "ready" : "insufficient_data",
+    period: gscQueries.meta.date_range?.end_date?.slice(0, 7) ?? null,
+    rows,
+    csv: csvText(headers, rows),
+    errors: [],
+    warnings: validation.warnings,
+    validation,
+  };
+}
+
 function normalizeCandidate(value) {
   const raw = String(value ?? "").trim();
   if (!raw) return null;
