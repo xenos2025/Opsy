@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 780" width="1200" height="780" role="img" aria-label="Opsy skill versus workspace layout">
+<defs>
+<marker id="arrow2" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#C15F3C"/></marker>
+<style>
+.label { fill: #1F1E1D; font-family: Helvetica, Arial, "PingFang SC", "Microsoft YaHei", sans-serif; font-weight: 600; }
+.label-sub { fill: #6B6560; font-family: Helvetica, Arial, "PingFang SC", "Microsoft YaHei", sans-serif; font-weight: 400; }
+.label-tiny { fill: #8A8279; font-family: Helvetica, Arial, "PingFang SC", "Microsoft YaHei", sans-serif; font-weight: 400; }
+.label-accent { fill: #C15F3C; font-family: Helvetica, Arial, "PingFang SC", "Microsoft YaHei", sans-serif; font-weight: 600; }
+.mono { font-family: Consolas, Menlo, "Microsoft YaHei", monospace; }
+</style>
+</defs>
+<rect width="1200" height="780" rx="2" fill="#FAF7F2" stroke="#E5DFD6" stroke-width="1"/>
+<rect x="0" y="0" width="4" height="48" fill="#C15F3C"/>
+<line x1="0" y1="48" x2="1200" y2="48" stroke="#C15F3C" stroke-width="1.5"/>
+<text x="20" y="29" fill="#6B6560" font-size="13" class="mono">opsy / docs/diagrams / 02-project-layout.svg</text>
+<rect x="1164" y="18" width="16" height="12" fill="#C15F3C"/>
+
+<text x="600" y="84" text-anchor="middle" class="label" font-size="22">Skill 通用包 / 客户工作区</text>
+<text x="600" y="108" text-anchor="middle" class="label-sub" font-size="14">升级 Skill 不动客户数据；永不把 skills/opsy 复制进客户仓库</text>
+
+<rect x="60" y="130" width="480" height="430" rx="4" fill="#FFFFFF" stroke="#E5DFD6" stroke-width="1.4"/>
+<rect x="60" y="130" width="480" height="44" fill="#F3E6DF"/>
+<text x="300" y="158" text-anchor="middle" class="label" font-size="16">Skill 安装目录（只读通用）</text>
+<text x="90" y="200" class="label-tiny mono" font-size="13">skills/opsy/</text>
+<rect x="90" y="218" width="420" height="40" rx="2" fill="#FAF7F2" stroke="#E5DFD6"/>
+<text x="300" y="244" text-anchor="middle" class="label" font-size="14">SKILL.md · references/ · scripts/</text>
+<rect x="90" y="270" width="420" height="52" rx="2" fill="#F3E6DF" stroke="#C15F3C" stroke-width="1.6"/>
+<text x="300" y="292" text-anchor="middle" class="label" font-size="14">scripts/opsy.mjs</text>
+<text x="300" y="312" text-anchor="middle" class="label-tiny" font-size="11">status · init · guard · data · 404</text>
+<rect x="90" y="336" width="420" height="40" rx="2" fill="#FAF7F2" stroke="#E5DFD6"/>
+<text x="300" y="362" text-anchor="middle" class="label" font-size="14">assets/graphql · workspace 模板</text>
+<rect x="90" y="388" width="420" height="40" rx="2" fill="#FAF7F2" stroke="#E5DFD6"/>
+<text x="300" y="414" text-anchor="middle" class="label" font-size="14">assets/toolchain.json</text>
+<text x="300" y="470" text-anchor="middle" class="label-sub" font-size="13">禁止写入客户数据、凭证、导出原文</text>
+<text x="300" y="498" text-anchor="middle" class="label-tiny" font-size="12">install.ps1 / install.sh · Codex / WorkBuddy</text>
+<text x="300" y="530" text-anchor="middle" class="label-tiny" font-size="12">升级：旧 Skill 归档 · 不动运营工作区</text>
+
+<line x1="560" y1="296" x2="640" y2="296" stroke="#C15F3C" stroke-width="2.2" marker-end="url(#arrow2)"/>
+<text x="600" y="278" text-anchor="middle" class="label-accent" font-size="12">init 模板</text>
+
+<rect x="660" y="130" width="480" height="430" rx="4" fill="#FFFFFF" stroke="#C15F3C" stroke-width="1.8"/>
+<rect x="660" y="130" width="480" height="44" fill="#C15F3C"/>
+<text x="900" y="158" text-anchor="middle" class="label" font-size="16" fill="#FAF7F2">客户项目（每店一份）</text>
+<text x="690" y="200" class="label-tiny mono" font-size="13">project/ · shopify-ops.json → workspace</text>
+
+<rect x="690" y="218" width="200" height="78" rx="2" fill="#F3E6DF" stroke="#C15F3C"/>
+<text x="790" y="246" text-anchor="middle" class="label" font-size="14">config/</text>
+<text x="790" y="268" text-anchor="middle" class="label-tiny" font-size="11">store-profile.json</text>
+<text x="790" y="286" text-anchor="middle" class="label-tiny" font-size="11">questionnaire</text>
+
+<rect x="910" y="218" width="200" height="78" rx="2" fill="#F3E6DF" stroke="#C15F3C"/>
+<text x="1010" y="246" text-anchor="middle" class="label" font-size="14">data-center/</text>
+<text x="1010" y="268" text-anchor="middle" class="label-tiny" font-size="11">manifest · snapshots</text>
+<text x="1010" y="286" text-anchor="middle" class="label-tiny" font-size="11">archive/</text>
+
+<rect x="690" y="314" width="200" height="70" rx="2" fill="#FAF7F2" stroke="#E5DFD6"/>
+<text x="790" y="342" text-anchor="middle" class="label" font-size="14">inbox/</text>
+<text x="790" y="364" text-anchor="middle" class="label-tiny" font-size="11">products · content · data</text>
+
+<rect x="910" y="314" width="200" height="70" rx="2" fill="#FAF7F2" stroke="#E5DFD6"/>
+<text x="1010" y="342" text-anchor="middle" class="label" font-size="14">outputs/ · backups/</text>
+<text x="1010" y="364" text-anchor="middle" class="label-tiny" font-size="11">草稿 · 写前快照</text>
+
+<rect x="690" y="404" width="420" height="56" rx="2" fill="#FFFFFF" stroke="#B54A3A" stroke-dasharray="5 4"/>
+<text x="900" y="429" text-anchor="middle" class="label" font-size="14" fill="#B54A3A">已有 AGENTS.md · 永不覆盖</text>
+<text x="900" y="450" text-anchor="middle" class="label-tiny" font-size="11">已有 _project/ 可只补 shopify-ops.json</text>
+<text x="900" y="530" text-anchor="middle" class="label-sub" font-size="13">gitignore：inbox / outputs / backups / tmp</text>
+
+<rect x="60" y="590" width="1080" height="130" rx="4" fill="#FFFFFF" stroke="#C15F3C" stroke-width="1.6"/>
+<text x="90" y="622" class="label-accent" font-size="14">SETUP · 进入运营菜单之前</text>
+<text x="90" y="652" class="label" font-size="14">1. 定位或预览工作区</text>
+<text x="360" y="652" class="label" font-size="14">2. init --apply（确认后）</text>
+<text x="680" y="652" class="label" font-size="14">3. CLI 连接 + 建档</text>
+<text x="940" y="652" class="label" font-size="14">4. write_ready</text>
+<text x="90" y="688" class="label-tiny" font-size="12">opsy.mjs init 只补缺失文件 · doctor 检查 Node/Git/CLI · 连接与档案见 07-connection-profile.svg</text>
+
+<text x="1180" y="760" text-anchor="end" class="label-tiny mono" font-size="11">02 / layout / terracotta</text>
+</svg>

@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1320 820" width="1320" height="820" role="img" aria-label="Opsy write safety and approval ladder">
+<defs>
+<marker id="arrow3" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#C15F3C"/></marker><marker id="arrowOk" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#4A6B54"/></marker><marker id="arrowFail" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#B54A3A"/></marker>
+<style>
+.label { fill: #1F1E1D; font-family: Helvetica, Arial, "PingFang SC", "Microsoft YaHei", sans-serif; font-weight: 600; }
+.label-sub { fill: #6B6560; font-family: Helvetica, Arial, "PingFang SC", "Microsoft YaHei", sans-serif; font-weight: 400; }
+.label-tiny { fill: #8A8279; font-family: Helvetica, Arial, "PingFang SC", "Microsoft YaHei", sans-serif; font-weight: 400; }
+.label-accent { fill: #C15F3C; font-family: Helvetica, Arial, "PingFang SC", "Microsoft YaHei", sans-serif; font-weight: 600; }
+.mono { font-family: Consolas, Menlo, "Microsoft YaHei", monospace; }
+</style>
+</defs>
+<rect width="1320" height="820" rx="2" fill="#FAF7F2" stroke="#E5DFD6" stroke-width="1"/>
+<rect x="0" y="0" width="4" height="48" fill="#C15F3C"/>
+<line x1="0" y1="48" x2="1320" y2="48" stroke="#C15F3C" stroke-width="1.5"/>
+<text x="20" y="29" fill="#6B6560" font-size="13" class="mono">opsy / docs/diagrams / 03-write-safety.svg</text>
+<rect x="1284" y="18" width="16" height="12" fill="#C15F3C"/>
+
+<text x="660" y="84" text-anchor="middle" class="label" font-size="22">Shopify 写入安全阶梯</text>
+<text x="660" y="108" text-anchor="middle" class="label-sub" font-size="14">预览 → 明确批准 → 执行 → 同通道回读 · CLI 退出码 0 不等于成功</text>
+
+<rect x="480" y="130" width="360" height="52" rx="26" fill="#C15F3C"/>
+<text x="660" y="162" text-anchor="middle" class="label" font-size="15" fill="#FAF7F2">准备一次确切写入</text>
+<line x1="660" y1="182" x2="660" y2="214" stroke="#C15F3C" stroke-width="2" marker-end="url(#arrow3)"/>
+
+<rect x="60" y="220" width="1200" height="200" rx="4" fill="#FFFFFF" stroke="#E5DFD6"/>
+<text x="90" y="252" class="label-accent" font-size="13">HARD GATES · 批准前必须全部通过</text>
+<rect x="90" y="270" width="210" height="64" rx="2" fill="#F3E6DF" stroke="#C15F3C"/>
+<text x="195" y="298" text-anchor="middle" class="label" font-size="13">目标店域一致</text>
+<text x="195" y="318" text-anchor="middle" class="label-tiny" font-size="11">myshopify.com</text>
+<rect x="320" y="270" width="210" height="64" rx="2" fill="#F3E6DF" stroke="#C15F3C"/>
+<text x="425" y="298" text-anchor="middle" class="label" font-size="13">capability ready</text>
+<text x="425" y="318" text-anchor="middle" class="label-tiny" font-size="11">该工作流 write_ready</text>
+<rect x="550" y="270" width="210" height="64" rx="2" fill="#F3E6DF" stroke="#C15F3C"/>
+<text x="655" y="298" text-anchor="middle" class="label" font-size="13">同通道预读</text>
+<text x="655" y="318" text-anchor="middle" class="label-tiny" font-size="11">CLI Store channel</text>
+<rect x="780" y="270" width="210" height="64" rx="2" fill="#F3E6DF" stroke="#C15F3C"/>
+<text x="885" y="298" text-anchor="middle" class="label" font-size="13">写前快照</text>
+<text x="885" y="318" text-anchor="middle" class="label-tiny" font-size="11">backups/&lt;op-id&gt;/</text>
+<rect x="1010" y="270" width="220" height="64" rx="2" fill="#F3E6DF" stroke="#C15F3C"/>
+<text x="1120" y="298" text-anchor="middle" class="label" font-size="13">guard-mutation</text>
+<text x="1120" y="318" text-anchor="middle" class="label-tiny" font-size="11">operation + variables</text>
+<rect x="90" y="350" width="550" height="50" rx="2" fill="#FAF7F2" stroke="#E5DFD6"/>
+<text x="365" y="380" text-anchor="middle" class="label" font-size="13">字段级预览 / diff · 期望效果 · 回读计划</text>
+<rect x="660" y="350" width="570" height="50" rx="2" fill="#FAF7F2" stroke="#E5DFD6"/>
+<text x="945" y="380" text-anchor="middle" class="label" font-size="13">tmp/opsy/&lt;op-id&gt;/ · query · variables · response</text>
+
+<line x1="660" y1="420" x2="660" y2="456" stroke="#C15F3C" stroke-width="2" marker-end="url(#arrow3)"/>
+<rect x="420" y="462" width="480" height="56" rx="4" fill="#FFFFFF" stroke="#C15F3C" stroke-width="1.8"/>
+<text x="660" y="486" text-anchor="middle" class="label" font-size="15">明确批准 · 仅对已展示集合生效</text>
+<text x="660" y="506" text-anchor="middle" class="label-tiny" font-size="11">目标/字段/值/发布时间变更 → 批准作废</text>
+<line x1="660" y1="518" x2="660" y2="552" stroke="#C15F3C" stroke-width="2" marker-end="url(#arrow3)"/>
+
+<rect x="60" y="558" width="1200" height="120" rx="4" fill="#FFFFFF" stroke="#E5DFD6"/>
+<text x="90" y="588" class="label-accent" font-size="13">EXECUTE · 批准之后</text>
+<rect x="90" y="604" width="250" height="52" rx="2" fill="#F3E6DF" stroke="#C15F3C"/>
+<text x="215" y="626" text-anchor="middle" class="label" font-size="13">store execute</text>
+<text x="215" y="644" text-anchor="middle" class="label-tiny" font-size="10">--allow-mutations</text>
+<line x1="350" y1="630" x2="390" y2="630" stroke="#C15F3C" stroke-width="2" marker-end="url(#arrow3)"/>
+<rect x="400" y="604" width="250" height="52" rx="2" fill="#F3E6DF" stroke="#C15F3C"/>
+<text x="525" y="626" text-anchor="middle" class="label" font-size="13">check-response</text>
+<text x="525" y="644" text-anchor="middle" class="label-tiny" font-size="10">同 operation name</text>
+<line x1="660" y1="630" x2="700" y2="630" stroke="#C15F3C" stroke-width="2" marker-end="url(#arrow3)"/>
+<rect x="710" y="604" width="250" height="52" rx="2" fill="#F3E6DF" stroke="#C15F3C"/>
+<text x="835" y="626" text-anchor="middle" class="label" font-size="13">同通道回读</text>
+<text x="835" y="644" text-anchor="middle" class="label-tiny" font-size="10">readback 模板</text>
+<line x1="970" y1="630" x2="1010" y2="630" stroke="#C15F3C" stroke-width="2" marker-end="url(#arrow3)"/>
+<rect x="1020" y="604" width="210" height="52" rx="2" fill="#E8F0EA" stroke="#4A6B54"/>
+<text x="1125" y="626" text-anchor="middle" class="label" font-size="13" fill="#4A6B54">记入 operations-log</text>
+<text x="1125" y="644" text-anchor="middle" class="label-tiny" font-size="10">无凭证</text>
+
+<rect x="60" y="700" width="580" height="70" rx="4" fill="#F3E6DF" stroke="#C15F3C" stroke-width="1.4"/>
+<text x="350" y="728" text-anchor="middle" class="label" font-size="14">新品 / 新文章：Approval A ≠ Approval B</text>
+<text x="350" y="750" text-anchor="middle" class="label-tiny" font-size="11">A = 非公开草稿 · B = 激活/发布（回读成功后）</text>
+<rect x="660" y="700" width="600" height="70" rx="4" fill="#F8E8E4" stroke="#B54A3A"/>
+<text x="960" y="728" text-anchor="middle" class="label" font-size="14" fill="#B54A3A">停止条件</text>
+<text x="960" y="750" text-anchor="middle" class="label-tiny" font-size="11">userErrors · 店域/scope 不一致 · 回读不匹配 · 盲目重试禁止</text>
+<text x="1300" y="800" text-anchor="end" class="label-tiny mono" font-size="11">03 / write safety / terracotta</text>
+</svg>

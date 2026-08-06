@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1320 780" width="1320" height="780" role="img" aria-label="Opsy 404 triage and selected redirects">
+<defs>
+<marker id="a08" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#C15F3C"/></marker><marker id="a08Fail" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#B54A3A"/></marker>
+<style>
+.label { fill: #1F1E1D; font-family: Helvetica, Arial, "PingFang SC", "Microsoft YaHei", sans-serif; font-weight: 600; }
+.label-sub { fill: #6B6560; font-family: Helvetica, Arial, "PingFang SC", "Microsoft YaHei", sans-serif; font-weight: 400; }
+.label-tiny { fill: #8A8279; font-family: Helvetica, Arial, "PingFang SC", "Microsoft YaHei", sans-serif; font-weight: 400; }
+.label-accent { fill: #C15F3C; font-family: Helvetica, Arial, "PingFang SC", "Microsoft YaHei", sans-serif; font-weight: 600; }
+.mono { font-family: Consolas, Menlo, "Microsoft YaHei", monospace; }
+</style>
+</defs>
+<rect width="1320" height="780" rx="2" fill="#FAF7F2" stroke="#E5DFD6" stroke-width="1"/>
+<rect x="0" y="0" width="4" height="48" fill="#C15F3C"/>
+<line x1="0" y1="48" x2="1320" y2="48" stroke="#C15F3C" stroke-width="1.5"/>
+<text x="20" y="29" fill="#6B6560" font-size="13" class="mono">opsy / docs/diagrams / 08-404-redirect.svg</text>
+<rect x="1284" y="18" width="16" height="12" fill="#C15F3C"/>
+
+<text x="660" y="84" text-anchor="middle" class="label" font-size="22">404 分诊 · 选中跳转才写入</text>
+<text x="660" y="108" text-anchor="middle" class="label-sub" font-size="14">refresh 只建本地队列 · 永不默认全量跳首页 · 批准集合外无写入</text>
+
+<rect x="40" y="130" width="1240" height="100" rx="4" fill="#FFFFFF" stroke="#E5DFD6"/>
+<text x="60" y="158" class="label-accent" font-size="13">队列来源</text>
+<rect x="60" y="174" width="270" height="40" rx="2" fill="#FAF7F2" stroke="#E5DFD6"/>
+<text x="195" y="198" text-anchor="middle" class="label" font-size="12">gsc_not_found.csv（选填）</text>
+<rect x="350" y="174" width="270" height="40" rx="2" fill="#FAF7F2" stroke="#E5DFD6"/>
+<text x="485" y="198" text-anchor="middle" class="label" font-size="12">历史未决队列</text>
+<rect x="640" y="174" width="270" height="40" rx="2" fill="#FAF7F2" stroke="#E5DFD6"/>
+<text x="775" y="198" text-anchor="middle" class="label" font-size="12">handle-changes.csv</text>
+<rect x="930" y="174" width="320" height="40" rx="2" fill="#FAF7F2" stroke="#E5DFD6"/>
+<text x="1090" y="198" text-anchor="middle" class="label" font-size="12">运营者显式提供的 URL</text>
+
+<line x1="660" y1="230" x2="660" y2="260" stroke="#C15F3C" stroke-width="2" marker-end="url(#a08)"/>
+<rect x="420" y="266" width="480" height="48" rx="24" fill="#C15F3C"/>
+<text x="660" y="296" text-anchor="middle" class="label" font-size="15" fill="#FAF7F2">opsy.mjs refresh-404 · 默认预览</text>
+<line x1="660" y1="314" x2="660" y2="344" stroke="#C15F3C" stroke-width="2" marker-end="url(#a08)"/>
+
+<rect x="40" y="350" width="1240" height="160" rx="4" fill="#FFFFFF" stroke="#E5DFD6"/>
+<text x="60" y="380" class="label-accent" font-size="13">逐条核实后分类</text>
+<rect x="60" y="400" width="220" height="80" rx="2" fill="#E8F0EA" stroke="#4A6B54"/>
+<text x="170" y="434" text-anchor="middle" class="label" font-size="14" fill="#4A6B54">redirect</text>
+<text x="170" y="456" text-anchor="middle" class="label-tiny" font-size="11">等价替代存在</text>
+<rect x="300" y="400" width="220" height="80" rx="2" fill="#F3E6DF" stroke="#C15F3C"/>
+<text x="410" y="434" text-anchor="middle" class="label" font-size="14">fix_source</text>
+<text x="410" y="456" text-anchor="middle" class="label-tiny" font-size="11">修内链 / sitemap</text>
+<rect x="540" y="400" width="220" height="80" rx="2" fill="#FAF7F2" stroke="#E5DFD6"/>
+<text x="650" y="434" text-anchor="middle" class="label" font-size="14">keep_gone</text>
+<text x="650" y="456" text-anchor="middle" class="label-tiny" font-size="11">应保持 404/410</text>
+<rect x="780" y="400" width="220" height="80" rx="2" fill="#FAF7F2" stroke="#E5DFD6"/>
+<text x="890" y="434" text-anchor="middle" class="label" font-size="14">ignore_junk</text>
+<text x="890" y="456" text-anchor="middle" class="label-tiny" font-size="11">探针 / 无业务价值</text>
+<rect x="1020" y="400" width="240" height="80" rx="2" fill="#F8E8E4" stroke="#B54A3A"/>
+<text x="1140" y="434" text-anchor="middle" class="label" font-size="14" fill="#B54A3A">needs_review</text>
+<text x="1140" y="456" text-anchor="middle" class="label-tiny" font-size="11">证据不足 · 不写</text>
+
+<rect x="40" y="540" width="800" height="160" rx="4" fill="#FFFFFF" stroke="#C15F3C" stroke-width="1.6"/>
+<text x="60" y="572" class="label-accent" font-size="13">仅 redirect · 运营者勾选的 path → target</text>
+<rect x="60" y="590" width="170" height="80" rx="2" fill="#F3E6DF" stroke="#C15F3C"/>
+<text x="145" y="622" text-anchor="middle" class="label" font-size="12">精确对展示</text>
+<text x="145" y="642" text-anchor="middle" class="label-tiny" font-size="10">逐对核实</text>
+<line x1="240" y1="630" x2="270" y2="630" stroke="#C15F3C" stroke-width="2" marker-end="url(#a08)"/>
+<rect x="280" y="590" width="170" height="80" rx="2" fill="#F3E6DF" stroke="#C15F3C"/>
+<text x="365" y="622" text-anchor="middle" class="label" font-size="12">guard</text>
+<text x="365" y="642" text-anchor="middle" class="label-tiny" font-size="10">url-redirect-create</text>
+<line x1="460" y1="630" x2="490" y2="630" stroke="#C15F3C" stroke-width="2" marker-end="url(#a08)"/>
+<rect x="500" y="590" width="150" height="80" rx="2" fill="#FFFFFF" stroke="#E5DFD6"/>
+<text x="575" y="622" text-anchor="middle" class="label" font-size="12">明确批准</text>
+<text x="575" y="642" text-anchor="middle" class="label-tiny" font-size="10">仅该集合</text>
+<line x1="660" y1="630" x2="690" y2="630" stroke="#C15F3C" stroke-width="2" marker-end="url(#a08)"/>
+<rect x="700" y="590" width="120" height="80" rx="2" fill="#E8F0EA" stroke="#4A6B54"/>
+<text x="760" y="622" text-anchor="middle" class="label" font-size="12" fill="#4A6B54">执行</text>
+<text x="760" y="642" text-anchor="middle" class="label-tiny" font-size="10">+ 回读</text>
+
+<rect x="860" y="540" width="420" height="160" rx="4" fill="#F8E8E4" stroke="#B54A3A"/>
+<text x="1070" y="580" text-anchor="middle" class="label" font-size="15" fill="#B54A3A">硬禁止</text>
+<text x="1070" y="612" text-anchor="middle" class="label" font-size="13">把无关 404 一律跳首页</text>
+<text x="1070" y="640" text-anchor="middle" class="label" font-size="13">批准队列外的自动写入</text>
+<text x="1070" y="668" text-anchor="middle" class="label-tiny" font-size="11">一项失败 ≠ 其余成功</text>
+
+<text x="660" y="740" text-anchor="middle" class="label-tiny" font-size="12">--apply 只保存本地队列 · Shopify 写入仍须 guard + 批准 + check-response + node-redirect-readback</text>
+<text x="1300" y="760" text-anchor="end" class="label-tiny mono" font-size="11">08 / 404 / terracotta</text>
+</svg>

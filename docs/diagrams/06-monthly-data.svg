@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 860" width="1400" height="860" role="img" aria-label="Opsy monthly data and keyword suggestions">
+<defs>
+<marker id="a06" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#C15F3C"/></marker><marker id="a06Ok" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#4A6B54"/></marker>
+<style>
+.label { fill: #1F1E1D; font-family: Helvetica, Arial, "PingFang SC", "Microsoft YaHei", sans-serif; font-weight: 600; }
+.label-sub { fill: #6B6560; font-family: Helvetica, Arial, "PingFang SC", "Microsoft YaHei", sans-serif; font-weight: 400; }
+.label-tiny { fill: #8A8279; font-family: Helvetica, Arial, "PingFang SC", "Microsoft YaHei", sans-serif; font-weight: 400; }
+.label-accent { fill: #C15F3C; font-family: Helvetica, Arial, "PingFang SC", "Microsoft YaHei", sans-serif; font-weight: 600; }
+.mono { font-family: Consolas, Menlo, "Microsoft YaHei", monospace; }
+</style>
+</defs>
+<rect width="1400" height="860" rx="2" fill="#FAF7F2" stroke="#E5DFD6" stroke-width="1"/>
+<rect x="0" y="0" width="4" height="48" fill="#C15F3C"/>
+<line x1="0" y1="48" x2="1400" y2="48" stroke="#C15F3C" stroke-width="1.5"/>
+<text x="20" y="29" fill="#6B6560" font-size="13" class="mono">opsy / docs/diagrams / 06-monthly-data.svg</text>
+<rect x="1364" y="18" width="16" height="12" fill="#C15F3C"/>
+
+<text x="700" y="84" text-anchor="middle" class="label" font-size="22">上月数据 · 更新 · 关键词建议</text>
+<text x="700" y="108" text-anchor="middle" class="label-sub" font-size="14">服务方交付快照 · 不伪造实时 Google · 建议队列需人工确认后才进商品/Blog</text>
+
+<rect x="40" y="130" width="640" height="220" rx="4" fill="#FFFFFF" stroke="#E5DFD6"/>
+<rect x="40" y="130" width="640" height="44" fill="#F3E6DF"/>
+<text x="360" y="158" text-anchor="middle" class="label" font-size="15">路径 A · Git 快进更新</text>
+<rect x="60" y="192" width="180" height="56" rx="2" fill="#F3E6DF" stroke="#C15F3C"/>
+<text x="150" y="216" text-anchor="middle" class="label" font-size="12">status + fetch</text>
+<text x="150" y="234" text-anchor="middle" class="label-tiny" font-size="10">只读预览</text>
+<line x1="250" y1="220" x2="280" y2="220" stroke="#C15F3C" stroke-width="2" marker-end="url(#a06)"/>
+<rect x="290" y="192" width="180" height="56" rx="2" fill="#F3E6DF" stroke="#C15F3C"/>
+<text x="380" y="216" text-anchor="middle" class="label" font-size="12">预览 commits</text>
+<text x="380" y="234" text-anchor="middle" class="label-tiny" font-size="10">dirty → 停止</text>
+<line x1="480" y1="220" x2="510" y2="220" stroke="#C15F3C" stroke-width="2" marker-end="url(#a06)"/>
+<rect x="520" y="192" width="140" height="56" rx="2" fill="#E8F0EA" stroke="#4A6B54"/>
+<text x="590" y="216" text-anchor="middle" class="label" font-size="12" fill="#4A6B54">批准后 pull</text>
+<text x="590" y="234" text-anchor="middle" class="label-tiny" font-size="10">无 stash/force</text>
+<text x="360" y="290" text-anchor="middle" class="label-tiny" font-size="12">非数据变更（主题/规则/Skill）须单独披露</text>
+<text x="360" y="320" text-anchor="middle" class="label-tiny" font-size="12">非快进更新一律拒绝自动合并</text>
+
+<rect x="720" y="130" width="640" height="220" rx="4" fill="#FFFFFF" stroke="#E5DFD6"/>
+<rect x="720" y="130" width="640" height="44" fill="#F3E6DF"/>
+<text x="1040" y="158" text-anchor="middle" class="label" font-size="15">路径 B · 本地数据包</text>
+<rect x="740" y="192" width="180" height="56" rx="2" fill="#F3E6DF" stroke="#C15F3C"/>
+<text x="830" y="216" text-anchor="middle" class="label" font-size="12">检查 package</text>
+<text x="830" y="234" text-anchor="middle" class="label-tiny" font-size="10">manifest 兼容</text>
+<line x1="930" y1="220" x2="960" y2="220" stroke="#C15F3C" stroke-width="2" marker-end="url(#a06)"/>
+<rect x="970" y="192" width="180" height="56" rx="2" fill="#F3E6DF" stroke="#C15F3C"/>
+<text x="1060" y="216" text-anchor="middle" class="label" font-size="12">归档旧快照</text>
+<text x="1060" y="234" text-anchor="middle" class="label-tiny" font-size="10">archive/YYYY-MM</text>
+<line x1="1160" y1="220" x2="1190" y2="220" stroke="#C15F3C" stroke-width="2" marker-end="url(#a06)"/>
+<rect x="1200" y="192" width="140" height="56" rx="2" fill="#E8F0EA" stroke="#4A6B54"/>
+<text x="1270" y="216" text-anchor="middle" class="label" font-size="12" fill="#4A6B54">复制 + 校验</text>
+<text x="1270" y="234" text-anchor="middle" class="label-tiny" font-size="10">失败保留证据</text>
+<text x="1040" y="290" text-anchor="middle" class="label-tiny" font-size="12">只复制批准文件 · 永不从包中带入凭证</text>
+<text x="1040" y="320" text-anchor="middle" class="label-tiny" font-size="12">客户可无 Google 密钥</text>
+
+<rect x="40" y="380" width="1320" height="200" rx="4" fill="#FFFFFF" stroke="#C15F3C" stroke-width="1.6"/>
+<text x="60" y="412" class="label-accent" font-size="13">HELPER 三连 · 默认只预览 · --apply 才落盘</text>
+<rect x="60" y="432" width="380" height="120" rx="2" fill="#F3E6DF" stroke="#C15F3C" stroke-width="1.4"/>
+<text x="250" y="468" text-anchor="middle" class="label" font-size="15">validate-data</text>
+<text x="250" y="494" text-anchor="middle" class="label-tiny" font-size="12">manifest · 列 · 行数</text>
+<text x="250" y="516" text-anchor="middle" class="label-tiny" font-size="12">日期范围 · 时区 · pulled_at</text>
+<rect x="470" y="432" width="380" height="120" rx="2" fill="#F3E6DF" stroke="#C15F3C" stroke-width="1.4"/>
+<text x="660" y="468" text-anchor="middle" class="label" font-size="15">summarize-data</text>
+<text x="660" y="494" text-anchor="middle" class="label-tiny" font-size="12">一页摘要 · 可追溯指标</text>
+<text x="660" y="516" text-anchor="middle" class="label-tiny" font-size="12">最多 3 条运营提示</text>
+<rect x="880" y="432" width="450" height="120" rx="2" fill="#F3E6DF" stroke="#C15F3C" stroke-width="1.4"/>
+<text x="1105" y="468" text-anchor="middle" class="label" font-size="15">suggest-keywords</text>
+<text x="1105" y="494" text-anchor="middle" class="label-tiny" font-size="12">GSC 需求 + 可选 GA4 落地页</text>
+<text x="1105" y="516" text-anchor="middle" class="label-tiny" font-size="12">route_hint: product / blog / review</text>
+
+<rect x="40" y="610" width="1320" height="180" rx="4" fill="#FFFFFF" stroke="#E5DFD6"/>
+<text x="60" y="642" class="label-accent" font-size="13">建议队列 · 不是授权写稿</text>
+<rect x="60" y="660" width="300" height="100" rx="2" fill="#FAF7F2" stroke="#E5DFD6"/>
+<text x="210" y="700" text-anchor="middle" class="label" font-size="13">keyword-suggestions-YYYY-MM.csv</text>
+<text x="210" y="724" text-anchor="middle" class="label-tiny" font-size="11">outputs/monthly/</text>
+<text x="210" y="744" text-anchor="middle" class="label-tiny" font-size="11">selection_status=suggested</text>
+<line x1="380" y1="710" x2="430" y2="710" stroke="#C15F3C" stroke-width="2" marker-end="url(#a06)"/>
+<rect x="440" y="660" width="280" height="100" rx="2" fill="#FFFFFF" stroke="#E5DFD6"/>
+<text x="580" y="700" text-anchor="middle" class="label" font-size="13">运营者确认适配</text>
+<text x="580" y="724" text-anchor="middle" class="label-tiny" font-size="11">最多 3 个相关 query</text>
+<text x="580" y="744" text-anchor="middle" class="label-tiny" font-size="11">记录 evidence_refs</text>
+<line x1="740" y1="710" x2="790" y2="710" stroke="#C15F3C" stroke-width="2" marker-end="url(#a06)"/>
+<rect x="800" y="660" width="250" height="100" rx="2" fill="#F3E6DF" stroke="#C15F3C"/>
+<text x="925" y="700" text-anchor="middle" class="label" font-size="13">商品 / Blog 工作流</text>
+<text x="925" y="724" text-anchor="middle" class="label-tiny" font-size="11">仍要决策简报</text>
+<text x="925" y="744" text-anchor="middle" class="label-tiny" font-size="11">见 04 / 05</text>
+<line x1="1070" y1="710" x2="1120" y2="710" stroke="#4A6B54" stroke-width="2" marker-end="url(#a06Ok)"/>
+<rect x="1130" y="660" width="200" height="100" rx="2" fill="#F8E8E4" stroke="#B54A3A"/>
+<text x="1230" y="700" text-anchor="middle" class="label" font-size="13" fill="#B54A3A">禁止</text>
+<text x="1230" y="724" text-anchor="middle" class="label-tiny" font-size="11">无依据自动选题</text>
+<text x="1230" y="744" text-anchor="middle" class="label-tiny" font-size="11">冒充产品事实</text>
+<text x="1380" y="840" text-anchor="end" class="label-tiny mono" font-size="11">06 / monthly data / terracotta</text>
+</svg>

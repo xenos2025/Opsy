@@ -98,6 +98,45 @@ Opsy 会寻找 `shopify-ops.json`、判断当前状态，并只展示现在可�
 
 新商品和新文章默认先创建非公开草稿；回读验证后，必须第二次确认才能正式发布。
 
+## 核心流程
+
+下图与文字同源：状态、写入安全与各工作流的完整示意见 [`docs/diagrams/`](docs/diagrams/)。权威规则仍在 `skills/opsy/SKILL.md` 与 `references/`。
+
+| 流程 | 说明 | 图 |
+|---|---|---|
+| 单入口与状态机 | `$opsy` → `opsy.mjs status` → 横幅 → 仅展示当前可执行选项；不让运营者选内部 Agent | [01](docs/diagrams/01-entry-state-menu.svg) |
+| Skill / 工作区 | 升级 Skill 不动客户数据；`init` 只补缺失文件；永不把 Skill 复制进客户仓库 | [02](docs/diagrams/02-project-layout.svg) |
+| 写入安全阶梯 | 店域与 capability → 预读与快照 → `guard-mutation` → 明确批准 → `execute` → `check-response` → 同通道回读 | [03](docs/diagrams/03-write-safety.svg) |
+| 商品双批准 | inbox 校验 → 买家决策简报五检查 → Approval A（`DRAFT`）→ 回读 → Approval B（激活/发布） | [04](docs/diagrams/04-product-publish.svg) |
+| Blog 双门 | `content_voice` + 决策简报 + craft 记分卡 → A 未发布草稿 → B 发布或定时 | [05](docs/diagrams/05-blog-publish.svg) |
+| 上月数据 | Git 快进或本地包更新 → validate / summarize / suggest-keywords；建议队列须人工确认后才进商品/Blog | [06](docs/diagrams/06-monthly-data.svg) |
+| 连接与建档 | 问卷与公开检查 → CLI 连接与只读 smoke → 轻量档案 → 按工作流拆分 `write_capabilities` | [07](docs/diagrams/07-connection-profile.svg) |
+| 404 分诊 | `refresh-404` 只建本地队列；仅运营者勾选的 `path → target` 才 guard 并写入；禁止无关 URL 跳首页 | [08](docs/diagrams/08-404-redirect.svg) |
+
+### 状态推进（摘要）
+
+```text
+workspace_missing → connection_required → profile_required → write_ready
+```
+
+- **连接未完成**：只允许问卷、公开站点检查、CLI 连接引导、工作区预览/初始化。
+- **建档未完成**：只允许为轻量档案做必要读取与确认；手填 `complete` 不算通过。
+- **写入就绪**：展示六项菜单；写入前仍须该工作流 `write_capabilities.*.write_ready` 为真，否则只显示 `missing` 并允许本地准备。
+
+### 每次 Shopify 写入（摘要）
+
+1. 确认目标 `myshopify.com` 与当前档案状态。
+2. 同通道预读；既有对象先写 `backups/`。
+3. 保存 query/variables，跑 `guard-mutation`；展示字段级预览后取得**对该集合**的明确批准。
+4. `shopify store execute --allow-mutations` → `check-response` → 同通道回读 → 记入 `ai-log/operations-log.md`（无凭证）。
+5. 新品/新文章：Approval A ≠ Approval B；批准草稿不等于批准发布。
+
+### 数据与建议（摘要）
+
+- 月度快照来自服务方交付的 `data-center/`，不是实时 Google API。
+- `suggest-keywords` 产出 `selection_status: suggested` 队列；商品/Blog 仍要决策简报与运营者确认。
+- GSC/GA4 是需求证据，不能冒充产品事实、认证或商业条款。
+
 ## 项目兼容
 
 - 全新项目：默认创建 `shopify-ops/` 和根目录 `shopify-ops.json`。
@@ -111,6 +150,7 @@ Opsy 会寻找 `shopify-ops.json`、判断当前状态，并只展示现在可�
 skills/opsy/       可分发的唯一主 Skill
 tests/             状态、数据、写入保护和契约测试
 docs/adr/          产品决策记录
+docs/diagrams/     流程说明图（SVG）
 install.ps1        Windows 双宿主安装器
 install.sh         macOS/Linux 双宿主安装器
 ```

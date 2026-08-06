@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1480 880" width="1480" height="880" role="img" aria-label="Opsy blog draft and publish flow">
+<defs>
+<marker id="a05" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#C15F3C"/></marker>
+<style>
+.label { fill: #1F1E1D; font-family: Helvetica, Arial, "PingFang SC", "Microsoft YaHei", sans-serif; font-weight: 600; }
+.label-sub { fill: #6B6560; font-family: Helvetica, Arial, "PingFang SC", "Microsoft YaHei", sans-serif; font-weight: 400; }
+.label-tiny { fill: #8A8279; font-family: Helvetica, Arial, "PingFang SC", "Microsoft YaHei", sans-serif; font-weight: 400; }
+.label-accent { fill: #C15F3C; font-family: Helvetica, Arial, "PingFang SC", "Microsoft YaHei", sans-serif; font-weight: 600; }
+.mono { font-family: Consolas, Menlo, "Microsoft YaHei", monospace; }
+</style>
+</defs>
+<rect width="1480" height="880" rx="2" fill="#FAF7F2" stroke="#E5DFD6" stroke-width="1"/>
+<rect x="0" y="0" width="4" height="48" fill="#C15F3C"/>
+<line x1="0" y1="48" x2="1480" y2="48" stroke="#C15F3C" stroke-width="1.5"/>
+<text x="20" y="29" fill="#6B6560" font-size="13" class="mono">opsy / docs/diagrams / 05-blog-publish.svg</text>
+<rect x="1444" y="18" width="16" height="12" fill="#C15F3C"/>
+
+<text x="740" y="84" text-anchor="middle" class="label" font-size="22">Blog 与内容 · 决策 + 工艺双门</text>
+<text x="740" y="108" text-anchor="middle" class="label-sub" font-size="14">content_voice 就绪 · 场景向选题 · 决策简报 · craft 记分卡 · A 草稿 · B 发布/定时</text>
+<rect x="40" y="128" width="1400" height="40" rx="3" fill="#F3E6DF" stroke="#C15F3C" stroke-width="1.4"/>
+<text x="60" y="153" class="label-accent" font-size="13">百科式无场景稿、无商业目标稿、媒体未就绪稿：不进入 Approval A（若请求写 Shopify）</text>
+
+<rect x="40" y="188" width="260" height="480" rx="4" fill="#FFFFFF" stroke="#E5DFD6"/>
+<rect x="40" y="188" width="260" height="48" fill="#F3E6DF"/>
+<text x="170" y="208" text-anchor="middle" class="label-tiny" font-size="11">STEP 1</text>
+<text x="170" y="226" text-anchor="middle" class="label" font-size="14">选题与声音</text>
+<rect x="52" y="254" width="236" height="52" rx="2" fill="#F3E6DF" stroke="#C15F3C" stroke-width="1.4"/>
+<text x="170" y="276" text-anchor="middle" class="label" font-size="12">profile.content_voice</text>
+<text x="170" y="294" text-anchor="middle" class="label-tiny" font-size="10">seller role · ready</text>
+<rect x="52" y="318" width="236" height="52" rx="2" fill="#F3E6DF" stroke="#C15F3C" stroke-width="1.4"/>
+<text x="170" y="340" text-anchor="middle" class="label" font-size="12">suggest-keywords</text>
+<text x="170" y="358" text-anchor="middle" class="label-tiny" font-size="10">route_hint=blog</text>
+<rect x="52" y="382" width="236" height="52" rx="2" fill="#FFFFFF" stroke="#E5DFD6"/>
+<text x="170" y="404" text-anchor="middle" class="label" font-size="12">场景 / 商业目标</text>
+<text x="170" y="422" text-anchor="middle" class="label-tiny" font-size="10">非百科堆砌</text>
+<rect x="52" y="446" width="236" height="52" rx="2" fill="#FAF7F2" stroke="#E5DFD6"/>
+<text x="170" y="468" text-anchor="middle" class="label" font-size="12">inbox/content/</text>
+<text x="170" y="486" text-anchor="middle" class="label-tiny" font-size="10">素材与提纲</text>
+
+<rect x="320" y="188" width="260" height="480" rx="4" fill="#FFFFFF" stroke="#C15F3C" stroke-width="1.8"/>
+<rect x="320" y="188" width="260" height="48" fill="#C15F3C"/>
+<text x="450" y="208" text-anchor="middle" class="label" font-size="11" fill="#FAF7F2">STEP 2</text>
+<text x="450" y="226" text-anchor="middle" class="label" font-size="14" fill="#FAF7F2">决策简报</text>
+<rect x="332" y="254" width="236" height="52" rx="2" fill="#F3E6DF" stroke="#C15F3C" stroke-width="1.6"/>
+<text x="450" y="276" text-anchor="middle" class="label" font-size="12">decision-brief.json</text>
+<text x="450" y="294" text-anchor="middle" class="label-tiny" font-size="10">surface=blog</text>
+<rect x="332" y="318" width="236" height="52" rx="2" fill="#F3E6DF" stroke="#C15F3C" stroke-width="1.6"/>
+<text x="450" y="340" text-anchor="middle" class="label" font-size="12">五检查全 pass</text>
+<text x="450" y="358" text-anchor="middle" class="label-tiny" font-size="10">与 PDP 同契约</text>
+<rect x="332" y="382" width="236" height="52" rx="2" fill="#FFFFFF" stroke="#E5DFD6"/>
+<text x="450" y="404" text-anchor="middle" class="label" font-size="12">主张需 claim 证据</text>
+<text x="450" y="422" text-anchor="middle" class="label-tiny" font-size="10">需求≠产品能力</text>
+<rect x="332" y="446" width="236" height="52" rx="2" fill="#FFFFFF" stroke="#E5DFD6"/>
+<text x="450" y="468" text-anchor="middle" class="label" font-size="12">主 CTA / 下一步</text>
+<text x="450" y="486" text-anchor="middle" class="label-tiny" font-size="10">档案确认值</text>
+
+<rect x="600" y="188" width="260" height="480" rx="4" fill="#FFFFFF" stroke="#C15F3C" stroke-width="1.8"/>
+<rect x="600" y="188" width="260" height="48" fill="#C15F3C"/>
+<text x="730" y="208" text-anchor="middle" class="label" font-size="11" fill="#FAF7F2">STEP 3</text>
+<text x="730" y="226" text-anchor="middle" class="label" font-size="14" fill="#FAF7F2">内容工艺记分卡</text>
+<rect x="612" y="254" width="236" height="52" rx="2" fill="#F3E6DF" stroke="#C15F3C" stroke-width="1.6"/>
+<text x="730" y="276" text-anchor="middle" class="label" font-size="12">writer role</text>
+<text x="730" y="294" text-anchor="middle" class="label-tiny" font-size="10">content_voice</text>
+<rect x="612" y="318" width="236" height="52" rx="2" fill="#F3E6DF" stroke="#C15F3C" stroke-width="1.6"/>
+<text x="730" y="340" text-anchor="middle" class="label" font-size="12">topic · body</text>
+<text x="730" y="358" text-anchor="middle" class="label-tiny" font-size="10">场景驱动</text>
+<rect x="612" y="382" width="236" height="52" rx="2" fill="#F3E6DF" stroke="#C15F3C" stroke-width="1.6"/>
+<text x="730" y="404" text-anchor="middle" class="label" font-size="12">images · table</text>
+<text x="730" y="422" text-anchor="middle" class="label-tiny" font-size="10">写前媒体就绪</text>
+<rect x="612" y="446" width="236" height="52" rx="2" fill="#F3E6DF" stroke="#C15F3C" stroke-width="1.6"/>
+<text x="730" y="468" text-anchor="middle" class="label" font-size="12">内链 · CTA</text>
+<text x="730" y="486" text-anchor="middle" class="label-tiny" font-size="10">workflow-blog-content</text>
+
+<rect x="880" y="188" width="260" height="480" rx="4" fill="#FFFFFF" stroke="#E5DFD6"/>
+<rect x="880" y="188" width="260" height="48" fill="#F3E6DF"/>
+<text x="1010" y="208" text-anchor="middle" class="label-tiny" font-size="11">STEP 4</text>
+<text x="1010" y="226" text-anchor="middle" class="label" font-size="14">Approval A</text>
+<rect x="892" y="254" width="236" height="52" rx="2" fill="#F3E6DF" stroke="#C15F3C" stroke-width="1.6"/>
+<text x="1010" y="276" text-anchor="middle" class="label" font-size="12">isPublished: false</text>
+<text x="1010" y="294" text-anchor="middle" class="label-tiny" font-size="10">article-create-draft</text>
+<rect x="892" y="318" width="236" height="52" rx="2" fill="#F3E6DF" stroke="#C15F3C" stroke-width="1.6"/>
+<text x="1010" y="340" text-anchor="middle" class="label" font-size="12">guard → execute</text>
+<text x="1010" y="358" text-anchor="middle" class="label-tiny" font-size="10">check-response</text>
+<rect x="892" y="382" width="236" height="52" rx="2" fill="#E8F0EA" stroke="#4A6B54"/>
+<text x="1010" y="404" text-anchor="middle" class="label" font-size="12" fill="#4A6B54">回读验证</text>
+<text x="1010" y="422" text-anchor="middle" class="label-tiny" font-size="10">blog / title / body / tags</text>
+<rect x="892" y="446" width="236" height="52" rx="2" fill="#FFFFFF" stroke="#E5DFD6"/>
+<text x="1010" y="468" text-anchor="middle" class="label" font-size="12">已有文章修订</text>
+<text x="1010" y="486" text-anchor="middle" class="label-tiny" font-size="10">快照 + 精确 diff</text>
+
+<rect x="1160" y="188" width="280" height="480" rx="4" fill="#FFFFFF" stroke="#E5DFD6"/>
+<rect x="1160" y="188" width="280" height="48" fill="#F3E6DF"/>
+<text x="1300" y="208" text-anchor="middle" class="label-tiny" font-size="11">STEP 5</text>
+<text x="1300" y="226" text-anchor="middle" class="label" font-size="14">Approval B</text>
+<rect x="1172" y="254" width="256" height="64" rx="2" fill="#F3E6DF" stroke="#C15F3C" stroke-width="1.6"/>
+<text x="1300" y="280" text-anchor="middle" class="label" font-size="13">立即发布</text>
+<text x="1300" y="300" text-anchor="middle" class="label-tiny" font-size="10">或展示的精确定时</text>
+<rect x="1172" y="334" width="256" height="64" rx="2" fill="#FFFFFF" stroke="#E5DFD6"/>
+<text x="1300" y="360" text-anchor="middle" class="label" font-size="13">二次确认 ≠ 草稿批准</text>
+<text x="1300" y="380" text-anchor="middle" class="label-tiny" font-size="10">A 永不隐含 B</text>
+<rect x="1172" y="414" width="256" height="64" rx="2" fill="#E8F0EA" stroke="#4A6B54"/>
+<text x="1300" y="440" text-anchor="middle" class="label" font-size="13" fill="#4A6B54">回读发表状态</text>
+<text x="1300" y="460" text-anchor="middle" class="label-tiny" font-size="10">记入 operations-log</text>
+<rect x="1172" y="494" width="256" height="64" rx="2" fill="#FAF7F2" stroke="#E5DFD6"/>
+<text x="1300" y="520" text-anchor="middle" class="label" font-size="13">outputs/blog/&lt;handle&gt;/</text>
+<text x="1300" y="540" text-anchor="middle" class="label-tiny" font-size="10">package · brief · craft</text>
+
+<line x1="300" y1="400" x2="318" y2="400" stroke="#C15F3C" stroke-width="2" marker-end="url(#a05)"/>
+<line x1="580" y1="400" x2="598" y2="400" stroke="#C15F3C" stroke-width="2" marker-end="url(#a05)"/>
+<line x1="860" y1="400" x2="878" y2="400" stroke="#C15F3C" stroke-width="2" marker-end="url(#a05)"/>
+<line x1="1140" y1="400" x2="1158" y2="400" stroke="#C15F3C" stroke-width="2" marker-end="url(#a05)"/>
+
+<rect x="40" y="692" width="1400" height="130" rx="4" fill="#FFFFFF" stroke="#E5DFD6"/>
+<text x="60" y="724" class="label-accent" font-size="13">与商品共用买家决策层 · 与服务商 Blog SEO/GEO Agent 分工</text>
+<text x="60" y="754" class="label" font-size="13">Opsy：可执行的草稿/修订/发布菜单 + craft 门槛 · 深度评分队列与 GEO 诊断仍归客户仓库 monthly-loop</text>
+<text x="60" y="784" class="label-tiny" font-size="12">权威：workflow-blog.md · workflow-blog-content.md · workflow-buyer-decision.md</text>
+<text x="1460" y="860" text-anchor="end" class="label-tiny mono" font-size="11">05 / blog / terracotta</text>
+</svg>
