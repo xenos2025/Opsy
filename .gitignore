@@ -1,9 +1,15 @@
+# Dependencies and generated outputs
 node_modules/
 .tmp/
 coverage/
 release/
+
+# Local-only marketing and design records
 promo/
+docs/adr/
 .workbuddy/
+
+# Generated archives and platform residue
 *.zip
 *.tar.gz
 *.log

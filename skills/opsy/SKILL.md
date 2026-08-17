@@ -1,6 +1,6 @@
 ---
 name: opsy
-description: Guides beginner and part-time B2B store operators through evidence-based Shopify operations in Codex or WorkBuddy. Use when setting up or locating an Opsy workspace, checking connection/profile readiness, preparing an operations weekly report, creating or updating products, drafting or revising Shopify blog articles with store-profile content_voice seller role plus scene-led content jobs and image/table/internal-link craft checks, triaging 404 URLs and approved redirects, validating or querying monthly data-center snapshots, filling existing metafields, or executing approved Shopify Admin GraphQL operations through Shopify CLI.
+description: Guides beginner and part-time B2B store operators through evidence-based Shopify operations in Codex or WorkBuddy. Use when setting up or locating an Opsy workspace, checking connection/profile readiness, importing reviewed agency task handoffs, preparing an operations weekly report, creating or updating products, drafting or revising Shopify blog articles with store-profile content_voice seller role plus scene-led content jobs and image/table/internal-link craft checks, triaging 404 URLs and approved redirects, validating or querying monthly data-center snapshots, filling existing metafields, or executing approved Shopify Admin GraphQL operations through Shopify CLI.
 ---
 
 # Opsy
@@ -14,7 +14,7 @@ Use this entry point for the supported workspace, connection, reporting, product
 Start every request as follows:
 
 1. Find the project root from the working directory. Prefer the nearest `shopify-ops.json`; otherwise use the repository root.
-2. Read the project `AGENTS.md` when present. Never replace or weaken existing project rules.
+2. Read the project `AGENTS.md` when present and preserve every existing project rule.
 3. Run:
 
    ```text
@@ -24,13 +24,20 @@ Start every request as follows:
 4. If Node or the helper is unavailable, inspect `shopify-ops.json` and `<workspace>/config/store-profile.json` manually and apply the same rules from [state-machine.md](references/state-machine.md).
 5. State what was verified, show the exact current-state banner, then show only currently allowed choices.
 
-Do not ask the operator to choose an internal Skill or Agent. Accept either a menu number or a natural-language goal.
+Present choices as operator goals rather than internal Skill or Agent names. Accept either a menu number or a natural-language goal.
 
 ## Route by current state
 
 ### Store connection incomplete
 
-Display **“店铺连接未完成”** prominently.
+Normally display **“店铺连接未完成”** prominently.
+
+If status returns `workspace_overlay: agency_workspace`, display
+**“已识别服务商工作区；Opsy 尚未启用”** instead. Read
+[agency-handoff.md](references/agency-handoff.md). Allow local import of
+reviewed merchant tasks, preview of an Opsy-compatible profile plan, or return
+to Shopify Operations Skill. Keep the current profile unchanged and Shopify in
+read-only mode.
 
 Allow only:
 
@@ -39,13 +46,13 @@ Allow only:
 - connection guidance;
 - project/workspace inspection or initialization.
 
-Do not run any other audit, infer Admin state, or write to Shopify. Read [workflow-connection-profile.md](references/workflow-connection-profile.md).
+Limit this state to connection/profile evidence and local project inspection; Shopify remains read-only. Read [workflow-connection-profile.md](references/workflow-connection-profile.md).
 
 ### Connected, profile incomplete
 
 Display **“轻量店铺建档未完成”** prominently.
 
-Allow only the reads required to complete or refresh the lightweight store profile. Do not enable operational writes. Read [workflow-connection-profile.md](references/workflow-connection-profile.md).
+Allow only the reads required to complete or refresh the lightweight store profile. Keep operational writes disabled. Read [workflow-connection-profile.md](references/workflow-connection-profile.md).
 
 ### Write ready
 
@@ -80,6 +87,17 @@ Load only the selected workflow:
 - Prefer chat attachments and workspace folders over asking beginners to format JSON.
 - Keep reports and previews in the workspace; keep the Skill itself project-neutral.
 
+## Check axes
+
+Keep each selected workflow bounded to these checks:
+
+- **Readiness** — workspace, target store, profile freshness, and workflow capability.
+- **Evidence** — verified facts, assumptions, missing inputs, and source traceability.
+- **Change safety** — pre-write snapshot, guarded variables, exact approval scope, and least mutation scope.
+- **Outcome** — response contract, same-channel readback, promised artifacts, and relevant validators.
+
+Use the selected workflow reference for field-level checks and report completion against these axes.
+
 ## Control every Shopify write
 
 Read [safety-and-approvals.md](references/safety-and-approvals.md) and [shopify-cli.md](references/shopify-cli.md) before preparing a write.
@@ -96,27 +114,29 @@ For every write:
 8. Run `scripts/opsy.mjs check-response --operation <name> --response <file> --json`. Treat any helper failure as mutation failure.
 9. Read the affected object back through the same channel and record the verified result.
 
-New products and new articles require two separate approvals: first create a non-public draft; then, only after successful readback, request a second approval to publish or schedule. Never interpret approval to draft as approval to publish.
+New products and new articles require two separate approvals: first create a non-public draft; then, only after successful readback, request a second approval to publish or schedule. Approval A covers draft creation only; publication or scheduling requires Approval B.
 
 ## When not to use
 
-V1 supports B2B inquiry-site operations. Do not operate orders, refunds, checkout, accounts, inventory replenishment, discounts, tax, logistics, or ads. Do not create, modify, or delete metafield definitions. Fill values only after reading and matching existing definitions.
+V1 supports B2B inquiry-site operations. Orders, refunds, checkout, accounts, inventory replenishment, discounts, tax, logistics, and ads remain outside its operating scope. Existing metafield definitions are read-only; fill values only after reading and matching them.
 
-Do not broaden a public check into an audit. Do not fabricate real-time Google data. Do not auto-merge Git changes, redirect all 404s, publish content, or expose credentials.
+Keep public checks at the requested scope. Treat Google data as real-time only when live evidence is available. Git merges, bulk 404 redirects, content publication, and credential disclosure stay outside automatic actions.
 
-Do not replace the agency **monthly-loop** suite (Shopify Operations Skill / client `*-data-agent`, `*-blog-seo-geo-agent`, keyword scoring, Inquiry Review, Ops Coach). Those agents own deep diagnosis, scored topic queues, and service-provider coaching. Opsy owns the beginner menus: 周报、商品、Blog、404、上月数据、连接建档. If a repo already runs that multi-agent loop under `_project/skills/`, keep using it for agency work unless the operator explicitly asks for `$opsy`.
+Preserve the agency **monthly-loop** suite (Shopify Operations Skill / client `*-data-agent`, `*-blog-seo-geo-agent`, keyword scoring, Inquiry Review, Ops Coach). Those agents own deep diagnosis, scored topic queues, and service-provider coaching. Opsy owns the beginner menus: 周报、商品、Blog、404、上月数据、连接建档. If a repo already runs that multi-agent loop under `_project/skills/`, keep using it for agency work unless the operator explicitly asks for `$opsy`.
 
 ## Use bundled helpers
 
 - Initialize or inspect a workspace with `scripts/opsy.mjs`; read [project-layout.md](references/project-layout.md).
 - Validate, summarize, or derive Product/Blog keyword suggestions from monthly
   snapshots with `scripts/opsy.mjs`; read [data-contract.md](references/data-contract.md).
+- Import reviewed merchant tasks from Shopify Operations Skill without
+  inheriting write approval; read [agency-handoff.md](references/agency-handoff.md).
 - Validate the shared Product/Blog buyer-decision brief with
   `scripts/opsy.mjs`; read
   [workflow-buyer-decision.md](references/workflow-buyer-decision.md).
 - Guard mutation variables and verify saved mutation responses with `scripts/opsy.mjs`; read [safety-and-approvals.md](references/safety-and-approvals.md).
 - Use GraphQL operations from `assets/graphql/` as reviewed starting points. Verify them against current official Shopify documentation and the selected API version before a live write.
-- Use workspace templates from `assets/workspace/`; never copy the Skill folder into a client project.
+- Use workspace templates from `assets/workspace/` while keeping the Skill folder in its source package.
 
 ## Verification
 
@@ -129,7 +149,7 @@ Before claiming completion, verify:
 - [ ] each promised local artifact exists and its relevant validator passed.
 - [ ] Product/Blog buyer-decision readiness is `pass` before Approval A.
 
-Report partial success per object; never turn an unverified mutation attempt into a success claim.
+Report partial success per object and classify every unverified mutation attempt as failed or pending verification.
 
 ## Common rationalizations
 
@@ -143,4 +163,4 @@ Stop and refresh evidence when the target domain differs, a required scope or co
 
 ## Example: guarded product draft
 
-Run `status`, require `write_capabilities.products.write_ready`, prepare `status: DRAFT` variables, run the `product-create-draft` guard, show the exact preview, obtain Approval A, execute the reviewed template, check the saved response under the same operation name, and read the product back. Activation and publication remain a separate Approval B.
+Use [guarded-product-draft.md](examples/guarded-product-draft.md) to test the product route, Approval A boundary, saved-response check, and same-channel readback evidence.

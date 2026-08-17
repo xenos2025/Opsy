@@ -40,6 +40,19 @@ test("versions and UI metadata are synchronized", () => {
   assert.match(agent, /default_prompt: ".*\$opsy/);
 });
 
+test("GitHub sync excludes local-only assets and keeps tests", () => {
+  const rules = new Set(
+    fs
+      .readFileSync(path.join(root, ".gitignore"), "utf8")
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter((line) => line && !line.startsWith("#")),
+  );
+  assert.equal(rules.has("promo/"), true);
+  assert.equal(rules.has("docs/adr/"), true);
+  assert.equal(rules.has("tests/"), false);
+});
+
 test("distributable files contain no client residue or plaintext secret markers", () => {
   const forbidden = [
     /D:\\Codex\\shopify/i,

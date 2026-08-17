@@ -2,7 +2,7 @@
 
 中文名：**Opsy Shopify 引导式运营助手**
 
-Opsy 是面向 Shopify 初学者和兼职运营者的单入口 Skill，兼容 Codex 与 WorkBuddy。它主要服务 B2B 询盘站，引导完成运营周报、商品运营、Blog 与内容、404 处理、上月数据和店铺连接/建档。服务方交付的 GA4/GSC 快照可以生成 Product/Blog 需求建议；商品与文章在写入前还要通过共享的买家决策检查，避免只有关键词和字段、没有清晰购买理由。
+Opsy 是面向 Shopify 初学者和兼职运营者的单入口 Skill，兼容 Codex 与 WorkBuddy。它主要服务 B2B 询盘站，引导完成运营周报、商品运营、Blog 与内容、404 处理、上月数据和店铺连接/建档。服务方交付的 GA4/GSC 快照可以生成 Product/Blog 需求建议；Shopify Operations Skill 也可以交付已经审核的企业主任务队列，由 Opsy 导入后继续安全执行。商品与文章在写入前还要通过共享的买家决策检查，避免只有关键词和字段、没有清晰购买理由。
 
 “操作简单”不代表取消安全控制。Opsy 在连接前只允许业务问卷和公开站点检查；连接后必须先完成轻量店铺建档；所有 Shopify 写入都要经过预览、明确批准、执行和同通道回读。
 
@@ -26,6 +26,7 @@ Opsy 可以用于符合 V1 范围的 Shopify 独立站；如果站点在建站�
 | 上月数据查询、分析与关键词建议 | 有效的 `data-center/manifest.json` 和对应月份数据快照；关键词建议至少需要 `gsc_queries` | 显示数据缺失或过期，不生成无依据结论或自动选题 |
 | 月度数据更新 | 可快进的 GitHub 更新，或服务方提供的本地数据包 | 保留现有快照，提示选择更新来源 |
 | 404 候选补充 | 选填的 `gsc_not_found.csv`、历史记录或已知 handle 变化 | 仍可处理已有候选，不假装已经覆盖 GSC 数据 |
+| 服务商任务交付 | Shopify Operations Skill / Ops Coach 输出 `opsy-agency-handoff-v1` CSV | 仅导入 `ready_for_merchant`；不继承任何 Shopify 写入批准 |
 
 其他 Shopify 独立站也可以安装 Opsy。连接后的轻量建档会先验证店铺身份和必填证据，再按商品、Blog、404 和元字段能力分别识别 scope 与对象配置：满足条件的写入先开放，缺少的部分形成明确的补配置清单；本地草稿准备不受无关能力缺失影响。Opsy 不会在基础运营中擅自创建元字段定义，也不会在没有有效导出数据时虚构分析结果。
 
@@ -120,6 +121,7 @@ workspace_missing → connection_required → profile_required → write_ready
 ```
 
 - **连接未完成**：只允许问卷、公开站点检查、CLI 连接引导、工作区预览/初始化。
+- **识别到服务商工作区**：保留内部工作区，只允许导入已审核任务、预览 Opsy 兼容建档或继续使用内部 Runtime；不自动创建第二份档案。
 - **建档未完成**：只允许为轻量档案做必要读取与确认；手填 `complete` 不算通过。
 - **写入就绪**：展示六项菜单；写入前仍须该工作流 `write_capabilities.*.write_ready` 为真，否则只显示 `missing` 并允许本地准备。
 
@@ -149,7 +151,6 @@ workspace_missing → connection_required → profile_required → write_ready
 ```text
 skills/opsy/       可分发的唯一主 Skill
 tests/             状态、数据、写入保护和契约测试
-docs/adr/          产品决策记录
 docs/diagrams/     流程说明图（SVG）
 install.ps1        Windows 双宿主安装器
 install.sh         macOS/Linux 双宿主安装器

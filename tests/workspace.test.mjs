@@ -122,6 +122,34 @@ test("existing _project receives only a marker", () => {
   }
 });
 
+test("agency workspace is detected without claiming the store is disconnected", () => {
+  const project = tempProject();
+  try {
+    const workspace = path.join(project, "_project");
+    fs.mkdirSync(path.join(workspace, "config"), { recursive: true });
+    fs.mkdirSync(path.join(workspace, "ai-log"), { recursive: true });
+    fs.writeFileSync(
+      path.join(project, "shopify-ops.json"),
+      '{"workspace":"_project","layout_version":1}\n',
+      "utf8",
+    );
+    fs.writeFileSync(
+      path.join(workspace, "config", "site_profile.json"),
+      '{"schema_version":"site-profile-v1"}\n',
+      "utf8",
+    );
+
+    const state = inspectState(project);
+    assert.equal(state.state, "connection_required");
+    assert.equal(state.workspace_overlay, "agency_workspace");
+    assert.equal(state.banner, "已识别服务商工作区；Opsy 尚未启用");
+    assert.ok(state.choices.includes("导入服务商已审核任务"));
+    assert.doesNotMatch(state.banner, /店铺连接未完成/);
+  } finally {
+    cleanup(project);
+  }
+});
+
 test("connection and profile gates unlock writes in order", () => {
   const project = tempProject();
   try {

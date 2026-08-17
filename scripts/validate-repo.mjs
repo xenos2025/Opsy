@@ -7,6 +7,22 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const skillRoot = path.join(root, "skills", "opsy");
 const errors = [];
 
+const gitignoreRules = new Set(
+  fs
+    .readFileSync(path.join(root, ".gitignore"), "utf8")
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line && !line.startsWith("#")),
+);
+for (const localOnlyPath of ["promo/", "docs/adr/"]) {
+  if (!gitignoreRules.has(localOnlyPath)) {
+    errors.push(`local-only path must stay excluded from GitHub sync: ${localOnlyPath}`);
+  }
+}
+if (gitignoreRules.has("tests/")) {
+  errors.push("tests/ must remain synchronized so GitHub Actions can run npm test");
+}
+
 function requireFile(relativePath) {
   const fullPath = path.join(root, relativePath);
   if (!fs.existsSync(fullPath) || !fs.statSync(fullPath).isFile()) {

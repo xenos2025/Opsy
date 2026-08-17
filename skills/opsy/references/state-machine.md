@@ -39,6 +39,26 @@ Choices:
 
 Do not run Admin reads, full audits, data analysis, or Shopify writes.
 
+### Agency workspace overlay
+
+When the workspace contains Shopify Operations Skill context
+(`config/site_profile.json`, `config/client-store-cache.json`, or
+`ai-log/shopify-store-context.md`) but no Opsy `config/store-profile.json`,
+keep the base state `connection_required` and add:
+
+```text
+workspace_overlay: agency_workspace
+```
+
+Banner:
+
+> 已识别服务商工作区；Opsy 尚未启用
+
+Allow only local agency-handoff import, Opsy compatibility planning, or return
+to the agency Runtime. Do not report the store itself as disconnected, copy a
+Skill tree, create a second profile automatically, or perform Shopify writes.
+Read [agency-handoff.md](agency-handoff.md).
+
 ## `profile_required`
 
 Evidence:

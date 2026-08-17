@@ -10,6 +10,7 @@ import {
   dataCenterFromProject,
   validateDataCenter,
 } from "./lib/data-center.mjs";
+import { importAgencyHandoff } from "./lib/agency-handoff.mjs";
 import { inspectEnvironment } from "./lib/environment.mjs";
 import { validateDecisionBriefFile } from "./lib/buyer-decision.mjs";
 import {
@@ -74,6 +75,7 @@ Commands:
   validate-data [--project <path>] [--json]
   summarize-data [--project <path>] [--output <path>] [--apply] [--json]
   suggest-keywords [--project <path>] [--limit <1-200>] [--output <path>] [--apply] [--json]
+  import-agency-handoff --file <path> [--project <path>] [--output <path>] [--apply] [--json]
   refresh-404 [--project <path>] [--output <path>] [--apply] [--json]
   validate-decision-brief --file <path> [--surface page|pdp|blog] [--project <path>] [--json]
   guard-mutation --operation <name> --variables <file> [--json]
@@ -199,6 +201,49 @@ async function main() {
       output(
         options.apply
           ? `Saved ${result.rows.length} suggestion(s): ${target}`
+          : result.csv,
+        false,
+      );
+    }
+    return;
+  }
+
+  if (command === "import-agency-handoff") {
+    const project = readProject(projectPath(options));
+    if (!project.workspaceRoot) throw new Error("No workspace is configured");
+    const result = importAgencyHandoff(path.resolve(requireOption(options, "file")));
+    const target = path.resolve(
+      options.output ??
+        path.join(
+          project.workspaceRoot,
+          "outputs",
+          "agency-handoff",
+          `merchant-action-queue-${result.period ?? "unknown"}.csv`,
+        ),
+    );
+    if (!result.ok) {
+      output(result, asJson);
+      process.exitCode = 2;
+      return;
+    }
+    if (options.apply) {
+      fs.mkdirSync(path.dirname(target), { recursive: true });
+      fs.writeFileSync(target, result.csv, "utf8");
+    }
+    if (asJson) {
+      const { csv: _csv, ...jsonResult } = result;
+      output(
+        {
+          ...jsonResult,
+          applied: Boolean(options.apply),
+          output_path: target,
+        },
+        true,
+      );
+    } else {
+      output(
+        options.apply
+          ? `Saved ${result.rows.length} agency task(s): ${target}`
           : result.csv,
         false,
       );

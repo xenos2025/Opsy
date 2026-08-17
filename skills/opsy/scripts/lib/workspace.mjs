@@ -485,6 +485,29 @@ export function inspectState(projectPath) {
 
   const profilePath = path.join(project.workspaceRoot, "config", "store-profile.json");
   if (!fs.existsSync(profilePath)) {
+    const agencyEvidencePaths = [
+      path.join(project.workspaceRoot, "config", "site_profile.json"),
+      path.join(project.workspaceRoot, "config", "client-store-cache.json"),
+      path.join(project.workspaceRoot, "ai-log", "shopify-store-context.md"),
+    ].filter((candidate) => fs.existsSync(candidate));
+    if (agencyEvidencePaths.length > 0) {
+      return {
+        ok: true,
+        state: "connection_required",
+        banner: "已识别服务商工作区；Opsy 尚未启用",
+        workspace_overlay: "agency_workspace",
+        project_root: project.projectRoot,
+        workspace_root: project.workspaceRoot,
+        profile_path: profilePath,
+        agency_evidence_paths: agencyEvidencePaths,
+        reason: "agency workspace detected; Opsy store profile is missing",
+        choices: [
+          "导入服务商已审核任务",
+          "预览 Opsy 兼容建档方案",
+          "继续使用 Shopify Operations Skill",
+        ],
+      };
+    }
     return {
       ok: true,
       state: "connection_required",
