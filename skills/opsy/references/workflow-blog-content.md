@@ -17,6 +17,30 @@ gsm, yardage) unless the store profile’s products actually use those terms.
 Do not invent search volume, KD, rankings, or opportunity scores. Do not paste
 agency scoring CSVs into beginner flow unless the operator already has them.
 
+## Store role (before the writer role)
+
+The seller voice describes *how* the store speaks. `profile.store_role`
+describes *who it speaks to*: business model, industry, primary audience,
+primary market, content language, and conversion goal. Both are needed.
+
+Read `profile.store_role` before topic commitment. If its status is `blocked`,
+stop and run store-role intake in
+[workflow-connection-profile.md](workflow-connection-profile.md). Do not default
+the store to B2B inquiry, B2C purchase, one market, one language, or one CTA
+because of this Skill's examples.
+
+The business model decides the conversion frame:
+
+- `b2b_inquiry`: procurement, RFQ, sample, MOQ, and lead-generation framing.
+- `b2c_dtc`: product discovery, comparison, purchase, and retention framing.
+  Route transactional demand to the product or collection surface instead of
+  forcing it into a Blog article.
+- `hybrid`: label one primary audience per article. Never blend a procurement
+  decision and a consumer decision into one post.
+
+This same block also governs Product copy — see
+[workflow-product-content.md](workflow-product-content.md).
+
 ## Writer role (always first)
 
 Human tone comes from a **configured seller role**, not from the content-job
@@ -47,7 +71,7 @@ template. Before outlining or drafting any Blog article:
 | `updated_at` | ISO timestamp when the operator last confirmed |
 
 `content_voice` is **optional for connection unlock**, but **required before
-Blog draft Approval A**.
+Product and Blog draft Approval A**. The same role serves both surfaces.
 
 ### Voice intake (one question at a time)
 
@@ -213,6 +237,7 @@ Present a short craft scorecard to the operator (pass / fix / blocked):
 
 | Dimension | Pass means |
 | --- | --- |
+| Store role | `store_role.status: ready` and the article matches its audience and conversion frame |
 | Writer role | `content_voice.status: ready` and draft matches role/tone |
 | Topic fit | One content job + scene + commercial target named |
 | Body | First-paragraph answer + buyer-question H2s + claim labels |
@@ -220,6 +245,6 @@ Present a short craft scorecard to the operator (pass / fix / blocked):
 | Table | Job-matched table present, or justified skip |
 | Links + CTA | Commercial target + approved primary CTA verified |
 
-Only packages with writer role ready and the other dimensions **pass** (or
-images marked brief-only and not offered for Shopify write) may proceed to
-draft Approval A.
+Only packages with store role and writer role ready, and the other dimensions
+**pass** (or images marked brief-only and not offered for Shopify write), may
+proceed to draft Approval A.

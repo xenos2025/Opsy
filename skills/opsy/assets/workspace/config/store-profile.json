@@ -34,6 +34,16 @@
     "metafield_definitions": [],
     "publication_policy": null,
     "notes": [],
+    "store_role": {
+      "status": "not_started",
+      "business_model": null,
+      "industry": null,
+      "primary_audience": null,
+      "primary_market": null,
+      "content_language": null,
+      "conversion_goal": null,
+      "updated_at": null
+    },
     "content_voice": {
       "status": "not_started",
       "role": null,

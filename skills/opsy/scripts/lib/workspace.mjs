@@ -400,6 +400,74 @@ export function validateLightweightProfile(profile) {
   return { ok: missing.length === 0 && errors.length === 0, missing, errors };
 }
 
+const BUSINESS_MODELS = new Set(["b2b_inquiry", "b2c_dtc", "hybrid"]);
+
+export function summarizeStoreRole(profile) {
+  const role = profile?.profile?.store_role;
+  const voice = profile?.profile?.content_voice;
+  const missing = [];
+  const errors = [];
+
+  addMissing(
+    missing,
+    "profile.store_role.business_model",
+    BUSINESS_MODELS.has(role?.business_model),
+  );
+  addMissing(
+    missing,
+    "profile.store_role.industry",
+    isNonEmptyString(role?.industry),
+  );
+  addMissing(
+    missing,
+    "profile.store_role.primary_audience",
+    isNonEmptyString(role?.primary_audience),
+  );
+  addMissing(
+    missing,
+    "profile.store_role.primary_market",
+    isNonEmptyString(role?.primary_market),
+  );
+  addMissing(
+    missing,
+    "profile.store_role.content_language",
+    isNonEmptyString(role?.content_language),
+  );
+  addMissing(
+    missing,
+    "profile.store_role.conversion_goal",
+    isNonEmptyString(role?.conversion_goal),
+  );
+  addMissing(missing, "profile.store_role.status", role?.status === "ready");
+
+  if (
+    isNonEmptyString(role?.business_model) &&
+    !BUSINESS_MODELS.has(role.business_model)
+  ) {
+    errors.push(
+      "profile.store_role.business_model must be b2b_inquiry, b2c_dtc, or hybrid",
+    );
+  }
+
+  const warnings =
+    voice?.status === "ready" ? [] : ["profile.content_voice.status"];
+  const blocked = missing.length > 0 || errors.length > 0;
+
+  return {
+    status: blocked
+      ? "blocked"
+      : warnings.length > 0
+        ? "ready_with_warnings"
+        : "ready",
+    business_model: BUSINESS_MODELS.has(role?.business_model)
+      ? role.business_model
+      : null,
+    missing,
+    errors,
+    warnings,
+  };
+}
+
 function capability(requiredScopes, scopes, requiredEvidence = []) {
   const missing = [
     ...requiredScopes
@@ -419,8 +487,13 @@ export function summarizeWriteCapabilities(profile) {
       : [],
   );
   const productScopes = ["read_products", "write_products"];
+  const role = summarizeStoreRole(profile);
+  const buyerCopyEvidence = [
+    { path: "profile.store_role", ok: role.status !== "blocked" },
+    { path: "profile.content_voice.status", ok: role.warnings.length === 0 },
+  ];
 
-  const products = capability(productScopes, scopes);
+  const products = capability(productScopes, scopes, buyerCopyEvidence);
   products.publication = capability(
     [...productScopes, "read_publications", "write_publications"],
     scopes,
@@ -443,6 +516,7 @@ export function summarizeWriteCapabilities(profile) {
           Array.isArray(profile?.profile?.blogs) &&
           profile.profile.blogs.length > 0,
       },
+      ...buyerCopyEvidence,
     ]),
     redirects: capability(
       ["read_online_store_navigation", "write_online_store_navigation"],
@@ -564,6 +638,7 @@ export function inspectState(projectPath) {
       profile_verified_at: profile?.profile?.verified_at ?? null,
       connection_validation: connectionValidation,
       profile_validation: profileValidation,
+      store_role: summarizeStoreRole(profile),
       choices: ["完成轻量店铺建档", "刷新店铺连接", "查看缺失档案字段"],
     };
   }
@@ -581,6 +656,7 @@ export function inspectState(projectPath) {
     data_updated_at: manifest?.updated_at ?? null,
     connection_validation: connectionValidation,
     profile_validation: profileValidation,
+    store_role: summarizeStoreRole(profile),
     write_capabilities: writeCapabilities,
     choices: [
       "运营周报",

@@ -1,6 +1,6 @@
 ---
 name: opsy
-description: Guides beginner and part-time B2B store operators through evidence-based Shopify operations in Codex or WorkBuddy. Use when setting up or locating an Opsy workspace, checking connection/profile readiness, importing reviewed agency task handoffs, preparing an operations weekly report, creating or updating products, drafting or revising Shopify blog articles with store-profile content_voice seller role plus scene-led content jobs and image/table/internal-link craft checks, triaging 404 URLs and approved redirects, validating or querying monthly data-center snapshots, filling existing metafields, or executing approved Shopify Admin GraphQL operations through Shopify CLI.
+description: Guides beginner and part-time B2B store operators through evidence-based Shopify operations in Codex or WorkBuddy. Use when setting up or locating an Opsy workspace, checking connection/profile readiness, importing reviewed agency task handoffs, preparing an operations weekly report, creating or updating products with store-profile seller-voice descriptions plus FAQ and media-order checks, drafting or revising Shopify blog articles with scene-led content jobs, rewrite cooldown, and image/table/internal-link craft checks, triaging 404 URLs and approved redirects, validating or querying monthly data-center snapshots, filling existing metafields, or executing approved Shopify Admin GraphQL operations through Shopify CLI.
 ---
 
 # Opsy
@@ -52,7 +52,7 @@ Limit this state to connection/profile evidence and local project inspection; Sh
 
 Display **“轻量店铺建档未完成”** prominently.
 
-Allow only the reads required to complete or refresh the lightweight store profile. Keep operational writes disabled. Read [workflow-connection-profile.md](references/workflow-connection-profile.md).
+Allow only the reads required to complete or refresh the lightweight store profile. Keep operational writes disabled. Read [workflow-connection-profile.md](references/workflow-connection-profile.md), and capture `profile.store_role` and `profile.content_voice` while interviewing the operator so Product and Blog work is not blocked later.
 
 ### Write ready
 
@@ -68,7 +68,9 @@ Display **“运营写入就绪”**, the target store, profile freshness, month
 Load only the selected workflow:
 
 - [workflow-weekly-report.md](references/workflow-weekly-report.md)
-- [workflow-products.md](references/workflow-products.md) and
+- [workflow-products.md](references/workflow-products.md) and, for buyer-visible
+  descriptions,
+  [workflow-product-content.md](references/workflow-product-content.md), plus
   [workflow-buyer-decision.md](references/workflow-buyer-decision.md)
 - [workflow-blog.md](references/workflow-blog.md) and, for Blog drafts,
   [workflow-blog-content.md](references/workflow-blog-content.md), plus
@@ -78,6 +80,8 @@ Load only the selected workflow:
 - [workflow-connection-profile.md](references/workflow-connection-profile.md)
 
 `write_ready` means the base connection and lightweight profile passed validation. Before a workflow writes, require that workflow's capability to be `write_ready: true`. If it is false, show its `missing` list and allow only local preparation or the reads needed to refresh those prerequisites.
+
+Product and Blog copy additionally require `store_role`. When the helper reports `store_role.status: blocked`, stop topic commitment and drafting and run store-role intake. When it reports `ready_with_warnings`, plan in a neutral, evidence-first voice and keep those writes blocked until the seller voice is confirmed. Never assume the business model, audience, market, content language, or conversion goal.
 
 ## Guide the operator
 

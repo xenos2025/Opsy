@@ -94,6 +94,21 @@ Show the six-item main menu from `SKILL.md` plus each relevant `write_capabiliti
 
 Before a write, downgrade to `connection_required` or `profile_required` if the validated base evidence changed. Keep the base state but block only the affected workflow when a workflow-specific scope, publication, Blog, or metafield definition is missing.
 
+### Store-role overlay for buyer-facing copy
+
+The status helper also returns `store_role` with one of three values:
+
+| Status | Meaning | Effect |
+| --- | --- | --- |
+| `blocked` | one or more `profile.store_role` fields are missing or the business model is unsupported | stop Product and Blog topic commitment and drafting; run store-role intake |
+| `ready_with_warnings` | the six role fields are confirmed but `profile.content_voice.status` is not `ready` | planning may continue in a neutral, evidence-first voice; Product and Blog writes stay blocked |
+| `ready` | role and seller voice are both confirmed | Product and Blog copy may proceed to their craft gates |
+
+Both gaps also appear in `write_capabilities.products.missing` and
+`write_capabilities.blog.missing`. Redirect, weekly-report, and monthly-data work
+are not affected by them. Read
+[workflow-connection-profile.md](workflow-connection-profile.md) for the intake.
+
 ## `approval_pending`
 
 This is an operation-level overlay, not a store state. Show:

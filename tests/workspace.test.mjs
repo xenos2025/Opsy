@@ -66,6 +66,23 @@ function completeProfile(profile) {
   profile.profile.publication_policy = "Draft first; publish after separate approval";
 }
 
+function completeStoreRole(profile) {
+  profile.profile.store_role = {
+    status: "ready",
+    business_model: "b2b_inquiry",
+    industry: "Industrial components",
+    primary_audience: "Procurement engineers at OEM factories",
+    primary_market: "United States",
+    content_language: "en",
+    conversion_goal: "Quote request",
+    updated_at: "2026-07-29T00:12:00Z",
+  };
+  profile.profile.content_voice.status = "ready";
+  profile.profile.content_voice.role =
+    "We are the sales engineers who specify these components";
+  profile.profile.content_voice.updated_at = "2026-07-29T00:12:00Z";
+}
+
 test("new project preview is read-only and apply creates the minimal workspace", () => {
   const project = tempProject();
   try {
@@ -167,12 +184,14 @@ test("connection and profile gates unlock writes in order", () => {
     assert.equal(inspectState(project).state, "profile_required");
 
     completeProfile(profile);
+    completeStoreRole(profile);
     writeJson(profilePath, profile);
 
     const ready = inspectState(project);
     assert.equal(ready.state, "write_ready");
     assert.equal(ready.banner, "运营写入就绪");
     assert.equal(ready.profile_validation.ok, true);
+    assert.equal(ready.store_role.status, "ready");
     assert.equal(ready.write_capabilities.products.write_ready, true);
     assert.equal(ready.write_capabilities.blog.write_ready, true);
     assert.equal(ready.write_capabilities.redirects.write_ready, true);
@@ -264,6 +283,102 @@ test("connection evidence requires explicit ISO timestamps", () => {
     assert.equal(state.state, "connection_required");
     assert.ok(
       state.connection_validation.missing.includes("connection.verified_at"),
+    );
+  } finally {
+    cleanup(project);
+  }
+});
+
+test("missing store role blocks buyer-facing writes but not redirects", () => {
+  const project = tempProject();
+  try {
+    initializeWorkspace({ projectPath: project, agents: "auto", apply: true });
+    const profilePath = path.join(
+      project,
+      "shopify-ops",
+      "config",
+      "store-profile.json",
+    );
+    const profile = readJson(profilePath);
+    completeConnection(profile);
+    completeProfile(profile);
+    writeJson(profilePath, profile);
+
+    const state = inspectState(project);
+    assert.equal(state.state, "write_ready");
+    assert.equal(state.store_role.status, "blocked");
+    assert.ok(
+      state.store_role.missing.includes("profile.store_role.business_model"),
+    );
+    assert.equal(state.write_capabilities.products.write_ready, false);
+    assert.equal(state.write_capabilities.blog.write_ready, false);
+    assert.ok(
+      state.write_capabilities.blog.missing.includes("profile.store_role"),
+    );
+    assert.equal(state.write_capabilities.redirects.write_ready, true);
+  } finally {
+    cleanup(project);
+  }
+});
+
+test("an unconfirmed seller voice warns and still blocks buyer-facing writes", () => {
+  const project = tempProject();
+  try {
+    initializeWorkspace({ projectPath: project, agents: "auto", apply: true });
+    const profilePath = path.join(
+      project,
+      "shopify-ops",
+      "config",
+      "store-profile.json",
+    );
+    const profile = readJson(profilePath);
+    completeConnection(profile);
+    completeProfile(profile);
+    completeStoreRole(profile);
+    profile.profile.content_voice.status = "not_started";
+    writeJson(profilePath, profile);
+
+    const state = inspectState(project);
+    assert.equal(state.store_role.status, "ready_with_warnings");
+    assert.deepEqual(state.store_role.missing, []);
+    assert.ok(
+      state.store_role.warnings.includes("profile.content_voice.status"),
+    );
+    assert.equal(state.write_capabilities.products.write_ready, false);
+    assert.ok(
+      state.write_capabilities.products.missing.includes(
+        "profile.content_voice.status",
+      ),
+    );
+  } finally {
+    cleanup(project);
+  }
+});
+
+test("an unsupported business model is reported as an error", () => {
+  const project = tempProject();
+  try {
+    initializeWorkspace({ projectPath: project, agents: "auto", apply: true });
+    const profilePath = path.join(
+      project,
+      "shopify-ops",
+      "config",
+      "store-profile.json",
+    );
+    const profile = readJson(profilePath);
+    completeConnection(profile);
+    completeProfile(profile);
+    completeStoreRole(profile);
+    profile.profile.store_role.business_model = "marketplace";
+    writeJson(profilePath, profile);
+
+    const state = inspectState(project);
+    assert.equal(state.store_role.status, "blocked");
+    assert.equal(state.store_role.business_model, null);
+    assert.ok(
+      state.store_role.errors.includes(
+        "profile.store_role.business_model must be b2b_inquiry, b2c_dtc, or hybrid",
+      ),
     );
   } finally {
     cleanup(project);

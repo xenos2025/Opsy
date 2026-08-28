@@ -21,16 +21,33 @@ Offer:
 
 If data is missing or stale, default to merchant-directed and say so.
 
-## 2. Load writer role from the store profile
+When a candidate points at an owned Blog URL, check the rewrite cooldown in
+section 8 before offering it as an update. Do not recommend rewriting a URL that
+was materially updated within the last 28 days just because its metrics have not
+moved.
 
-Before any outline or body draft, load `profile.content_voice` from
-`<workspace>/config/store-profile.json` and follow **Writer role (always
-first)** in [workflow-blog-content.md](workflow-blog-content.md).
+## 2. Load store role and writer role from the store profile
+
+Before any outline or body draft, read `<workspace>/config/store-profile.json`.
+
+First confirm `profile.store_role.status` is `ready`. Its business model,
+industry, primary audience, primary market, content language, and conversion
+goal decide who the article speaks to and what the next step is. If the status
+is `blocked`, stop topic commitment and drafting, then run store-role intake
+from [workflow-connection-profile.md](workflow-connection-profile.md). Never
+assume a B2B, B2C, or hybrid frame from the store name, the catalog, or this
+Skill's examples.
+
+Then load `profile.content_voice` and follow **Writer role (always first)** in
+[workflow-blog-content.md](workflow-blog-content.md).
 
 - If `content_voice.status` is not `ready`, run voice intake, save the profile,
-  then continue.
+  then continue. Topic planning may continue in a neutral, evidence-first voice
+  while the operator has not confirmed it, but Shopify writes stay blocked.
 - The role stays the same across content jobs; only structure changes.
 - Do not invent a persona from another industry or another client store.
+
+The status helper reports both gaps as `write_capabilities.blog.missing`.
 
 ## 3. Lock scene and content job
 
@@ -79,6 +96,8 @@ exist.
 Save under `<workspace>/outputs/blog/<handle-or-slug>/` (or the project’s
 existing blog output convention). Include:
 
+- store role summary (business model, audience, market, content language,
+  conversion goal);
 - writer role summary (from `content_voice.role` + expertise);
 - content job + scene summary (2–4 sentences);
 - target blog and language;
@@ -94,6 +113,8 @@ existing blog output convention). Include:
 - selected demand evidence and source period;
 - buyer decision brief and five-check readiness result;
 - craft scorecard result;
+- for updates: `last_content_update` and `cooldown_until`, or the named
+  cooldown exception;
 - publication choice: draft, immediate, or scheduled.
 
 Check existing titles, handles, and keyword intent for collisions.
@@ -120,12 +141,50 @@ Approval A never authorizes publication or scheduling.
 
 ## 8. Revise a published article
 
+### Check the rewrite cooldown first
+
+Search traffic reacts to a rewrite over weeks, not days. Flat impressions, CTR,
+or position shortly after an edit are **not** evidence that the article needs
+rewriting again.
+
+Before proposing a rewrite for ranking or CTR reasons:
+
+1. Find the last material content update for that URL — a change to title, body,
+   summary, SEO title, or meta description. Use the article package notes,
+   `<workspace>/ai-log/operations-log.md`, or the live article's Admin
+   `updatedAt`.
+2. Compute the cooldown as **28 calendar days** from that date in the store
+   timezone (`store.iana_timezone`).
+3. Record `last_content_update` and `cooldown_until` in the package evidence.
+
+Inside the cooldown, do not schedule another ranking-driven rewrite of that URL.
+Show the operator the cooldown date and offer a new article or a different
+surface instead. If no material update date can be found, say so and treat the
+URL as outside cooldown.
+
+These changes are always allowed inside the cooldown; name the reason when you
+use one:
+
+- a broken link, a wrong commercial target, or a duplicate URL created by
+  mistake;
+- a claim, legal, or merchant correction such as a wrong MOQ, price, or
+  certification;
+- an indexation or technical defect such as an unintended noindex, a bad
+  canonical, or a broken redirect;
+- the operator explicitly asks for another rewrite now, after seeing the
+  cooldown date.
+
+### Then rewrite
+
 Read the live article, save a pre-write snapshot, and show an exact field
-diff. Re-load `content_voice` before rewriting. Re-check the shared Blog
-decision brief and the five craft dimensions when the change is material
-(body, images, tables, or commercial links). Pass the `article-update` variable guard
-before one approval, then execute, pass the matching response check, read
-back, and verify the public page. Treat a handle change separately; show the
-old and new paths and route the old path into 404 handling.
+diff. Re-load store role and `content_voice` before rewriting. Re-check the
+shared Blog decision brief and the five craft dimensions when the change is
+material (body, images, tables, or commercial links). Pass the `article-update`
+variable guard before one approval, then execute, pass the matching response
+check, read back, and verify the public page. Treat a handle change separately;
+show the old and new paths and route the old path into 404 handling.
+
+Record the new `last_content_update` after a successful readback so the next
+cooldown is measured from it.
 
 Do not delete articles in V1.

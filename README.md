@@ -13,6 +13,7 @@ Opsy 可以用于符合 V1 范围的 Shopify 独立站；如果站点在建站�
 - **元字段可以直接、安全地填写**：建站阶段已经定义好 namespace、key、类型和校验规则，运营者只需要逐项补充业务值，不必理解或修改底层定义。
 - **月度数据可以直接查询和分析**：标准化的数据导出进入带 manifest、日期范围和归档记录的 `data-center/`，即使客户没有 Google 密钥，Opsy 也能基于服务方每月交付的数据生成可追溯的摘要，并形成需要人工确认的 Product/Blog 关键词建议队列。
 - **文案不只完成字段**：PDP 与 Blog 共用买家决策简报，明确目标买家、当前决定、事实到买家价值的转换、主张证据、主要异议、适用边界和下一步；需求数据不能冒充产品事实。
+- **先确认对谁说话，再决定怎么说**：店铺档案里的业务模型、受众、市场、内容语言、转化目标构成店铺角色，卖家人声在其之上决定语气。两者都确认后，商品描述和 Blog 才允许起草，避免把 B2B 与 B2C 的决策混在一篇里。
 - **商品与内容写入更少临时配置**：店铺档案可以复用已确认的发布渠道、Blog、市场、语言、主 CTA 和对象结构，减少初学者在每次操作中重新判断。
 - **运营记录可以持续积累**：统一工作区保存素材、数据快照、周报、写前备份和操作记录，方便客户自己从 GitHub 更新，或接收服务方发送的数据包。
 
@@ -21,7 +22,7 @@ Opsy 可以用于符合 V1 范围的 Shopify 独立站；如果站点在建站�
 | 功能 | 必要条件 | 条件未满足时 |
 |---|---|---|
 | 业务问卷、公开站点检查 | 可访问的公开站点 | 仍可完成问卷；明确标示无法检查的页面 |
-| 商品、Blog 草稿与发布 | Shopify CLI 已连接；轻量店铺档案有效；目标 Blog/发布渠道已确认 | 保持只读或准备本地草稿，不写入店铺 |
+| 商品、Blog 草稿与发布 | Shopify CLI 已连接；轻量店铺档案有效；店铺角色与卖家人声已确认；目标 Blog/发布渠道已确认 | 保持只读或准备本地草稿，不写入店铺 |
 | 元字段填写 | 店铺已有匹配的元字段定义及校验规则 | 只跳过受影响字段，并生成建站配置处理项 |
 | 上月数据查询、分析与关键词建议 | 有效的 `data-center/manifest.json` 和对应月份数据快照；关键词建议至少需要 `gsc_queries` | 显示数据缺失或过期，不生成无依据结论或自动选题 |
 | 月度数据更新 | 可快进的 GitHub 更新，或服务方提供的本地数据包 | 保留现有快照，提示选择更新来源 |
@@ -64,7 +65,7 @@ Shopify 尚未连接时，仍可使用业务问卷和公开站点检查。
 ./install.sh --host both
 ```
 
-安装器会比较版本、显示目标路径并在变更前确认。升级时旧 Skill 会被归档，不会改动任何客户运营工作区。
+安装器会比较版本、显示目标路径并在变更前确认。升级时旧 Skill 会被归档，不会改动任何客户运营工作区。版本变更见 [CHANGELOG.md](CHANGELOG.md)。
 
 ## 开始使用
 
@@ -108,8 +109,8 @@ Opsy 会寻找 `shopify-ops.json`、判断当前状态，并只展示现在可�
 | 单入口与状态机 | `$opsy` → `opsy.mjs status` → 横幅 → 仅展示当前可执行选项；不让运营者选内部 Agent | [01](docs/diagrams/01-entry-state-menu.svg) |
 | Skill / 工作区 | 升级 Skill 不动客户数据；`init` 只补缺失文件；永不把 Skill 复制进客户仓库 | [02](docs/diagrams/02-project-layout.svg) |
 | 写入安全阶梯 | 店域与 capability → 预读与快照 → `guard-mutation` → 明确批准 → `execute` → `check-response` → 同通道回读 | [03](docs/diagrams/03-write-safety.svg) |
-| 商品双批准 | inbox 校验 → 买家决策简报五检查 → Approval A（`DRAFT`）→ 回读 → Approval B（激活/发布） | [04](docs/diagrams/04-product-publish.svg) |
-| Blog 双门 | `content_voice` + 决策简报 + craft 记分卡 → A 未发布草稿 → B 发布或定时 | [05](docs/diagrams/05-blog-publish.svg) |
+| 商品双批准 | inbox 校验 → 店铺角色与人声 → 买家决策简报五检查 → 描述工艺记分卡 → Approval A（`DRAFT`）→ 回读 → Approval B（激活/发布） | [04](docs/diagrams/04-product-publish.svg) |
+| Blog 双门 | 店铺角色 + `content_voice` + 决策简报 + craft 记分卡（改稿另加 28 天冷却）→ A 未发布草稿 → B 发布或定时 | [05](docs/diagrams/05-blog-publish.svg) |
 | 上月数据 | Git 快进或本地包更新 → validate / summarize / suggest-keywords；建议队列须人工确认后才进商品/Blog | [06](docs/diagrams/06-monthly-data.svg) |
 | 连接与建档 | 问卷与公开检查 → CLI 连接与只读 smoke → 轻量档案 → 按工作流拆分 `write_capabilities` | [07](docs/diagrams/07-connection-profile.svg) |
 | 404 分诊 | `refresh-404` 只建本地队列；仅运营者勾选的 `path → target` 才 guard 并写入；禁止无关 URL 跳首页 | [08](docs/diagrams/08-404-redirect.svg) |
@@ -124,6 +125,7 @@ workspace_missing → connection_required → profile_required → write_ready
 - **识别到服务商工作区**：保留内部工作区，只允许导入已审核任务、预览 Opsy 兼容建档或继续使用内部 Runtime；不自动创建第二份档案。
 - **建档未完成**：只允许为轻量档案做必要读取与确认；手填 `complete` 不算通过。
 - **写入就绪**：展示六项菜单；写入前仍须该工作流 `write_capabilities.*.write_ready` 为真，否则只显示 `missing` 并允许本地准备。
+- **买家可见文案另有前置**：`store_role` 为 `blocked` 时商品与 Blog 不进入起草；为 `ready_with_warnings`（人声未确认）时可中性口吻规划，但这两类写入仍禁止。404、周报、上月数据不受影响。
 
 ### 每次 Shopify 写入（摘要）
 
@@ -152,6 +154,7 @@ workspace_missing → connection_required → profile_required → write_ready
 skills/opsy/       可分发的唯一主 Skill
 tests/             状态、数据、写入保护和契约测试
 docs/diagrams/     流程说明图（SVG）
+CHANGELOG.md       版本更新日志
 install.ps1        Windows 双宿主安装器
 install.sh         macOS/Linux 双宿主安装器
 ```

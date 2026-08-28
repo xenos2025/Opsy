@@ -20,7 +20,7 @@ This repository builds and distributes **Opsy — Guided Shopify Operations**. I
 ## Changes
 
 - Edit source files with focused patches.
-- Update `VERSION`, `opsy-release.json`, `skills/opsy/VERSION`, toolchain metadata, and user-facing version text together when releasing.
+- Update `VERSION`, `opsy-release.json`, `skills/opsy/VERSION`, toolchain metadata, `CHANGELOG.md`, and user-facing version text together when releasing.
 - Validate frontmatter, references, scripts, installers, tests, and residue before publishing.
 - Use Node built-ins for runtime helpers; do not add an end-user package-install step without a documented need.
 

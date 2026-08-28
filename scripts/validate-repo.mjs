@@ -32,6 +32,7 @@ function requireFile(relativePath) {
 
 [
   "README.md",
+  "CHANGELOG.md",
   "VERSION",
   "opsy-release.json",
   "install.ps1",
