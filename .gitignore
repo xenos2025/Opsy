@@ -3,6 +3,8 @@ node_modules/
 .tmp/
 coverage/
 release/
+output/
+.playwright-cli/
 
 # Local-only marketing and design records
 promo/
@@ -15,3 +17,9 @@ docs/adr/
 *.log
 .DS_Store
 Thumbs.db
+
+# Local diagram validation artifacts
+docs/diagrams/*.fit.json
+docs/diagrams/*.v2.json
+docs/diagrams/*.popup-check.png
+docs/diagrams/*.visual-check.*

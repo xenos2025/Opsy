@@ -38,10 +38,14 @@ project/
     README.md
     .gitignore
     config/store-profile.json
+    config/business-questionnaire.md
+    config/buyer_faq.json
     data-center/manifest.json
     data-center/archive/
     inbox/products/
     inbox/content/
+    inbox/faq/
+    inbox/profile/
     inbox/data/
     outputs/
     ai-log/operations-log.md
@@ -51,6 +55,8 @@ project/
 ```
 
 The initializer adds missing files only. It never overwrites existing files.
+An existing `config/faq-library.json` is preserved as legacy evidence and
+reported for manual migration into `buyer_faq.json`.
 
 ## Repository project
 

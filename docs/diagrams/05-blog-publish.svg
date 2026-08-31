@@ -17,7 +17,7 @@
 <rect x="1444" y="18" width="16" height="12" fill="#C15F3C"/>
 
 <text x="740" y="84" text-anchor="middle" class="label" font-size="22">Blog 与内容 · 决策 + 工艺双门</text>
-<text x="740" y="108" text-anchor="middle" class="label-sub" font-size="14">content_voice 就绪 · 场景向选题 · 决策简报 · craft 记分卡 · A 草稿 · B 发布/定时</text>
+<text x="740" y="108" text-anchor="middle" class="label-sub" font-size="14">data-backed / FAQ-seeded 选题 · Blog 包校验 · 决策简报 · craft 门 · A 草稿 · B 发布/定时</text>
 <rect x="40" y="128" width="1400" height="40" rx="3" fill="#F3E6DF" stroke="#C15F3C" stroke-width="1.4"/>
 <text x="60" y="153" class="label-accent" font-size="13">百科式无场景稿、无商业目标稿、媒体未就绪稿：不进入 Approval A（若请求写 Shopify）</text>
 
@@ -29,11 +29,11 @@
 <text x="170" y="276" text-anchor="middle" class="label" font-size="12">profile.content_voice</text>
 <text x="170" y="294" text-anchor="middle" class="label-tiny" font-size="10">seller role · ready</text>
 <rect x="52" y="318" width="236" height="52" rx="2" fill="#F3E6DF" stroke="#C15F3C" stroke-width="1.4"/>
-<text x="170" y="340" text-anchor="middle" class="label" font-size="12">suggest-keywords</text>
-<text x="170" y="358" text-anchor="middle" class="label-tiny" font-size="10">route_hint=blog</text>
+<text x="170" y="340" text-anchor="middle" class="label" font-size="12">Blog topic sources</text>
+<text x="170" y="358" text-anchor="middle" class="label-tiny" font-size="10">data + accepted FAQ questions</text>
 <rect x="52" y="382" width="236" height="52" rx="2" fill="#FFFFFF" stroke="#E5DFD6"/>
-<text x="170" y="404" text-anchor="middle" class="label" font-size="12">场景 / 商业目标</text>
-<text x="170" y="422" text-anchor="middle" class="label-tiny" font-size="10">非百科堆砌</text>
+<text x="170" y="404" text-anchor="middle" class="label" font-size="12">FAQ 影响记录</text>
+<text x="170" y="422" text-anchor="middle" class="label-tiny" font-size="10">cluster · angle · route</text>
 <rect x="52" y="446" width="236" height="52" rx="2" fill="#FAF7F2" stroke="#E5DFD6"/>
 <text x="170" y="468" text-anchor="middle" class="label" font-size="12">inbox/content/</text>
 <text x="170" y="486" text-anchor="middle" class="label-tiny" font-size="10">素材与提纲</text>

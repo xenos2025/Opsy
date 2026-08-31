@@ -14,6 +14,17 @@ import { importAgencyHandoff } from "./lib/agency-handoff.mjs";
 import { inspectEnvironment } from "./lib/environment.mjs";
 import { validateDecisionBriefFile } from "./lib/buyer-decision.mjs";
 import {
+  buildFaqTopicSeeds,
+  selectBuyerFaq,
+  validateBuyerFaqFile,
+} from "./lib/buyer-faq.mjs";
+import { validateAudienceIntakeFile } from "./lib/audience-intake.mjs";
+import {
+  validateBlogPackageFile,
+  validateNextActionsFile,
+  validateProductPackageFile,
+} from "./lib/merchant-packages.mjs";
+import {
   validateGraphqlResponseFile,
   validateMutationFile,
 } from "./lib/guard.mjs";
@@ -22,6 +33,7 @@ import {
   inspectState,
   readJson,
   readProject,
+  skillRoot,
 } from "./lib/workspace.mjs";
 
 function parseArgs(values) {
@@ -61,8 +73,42 @@ function requireOption(options, name) {
   return options[name];
 }
 
+function commaList(value) {
+  if (typeof value !== "string") return [];
+  return value.split(",").map((item) => item.trim()).filter(Boolean);
+}
+
 function projectPath(options) {
   return path.resolve(options.project ?? process.cwd());
+}
+
+function projectProfile(options) {
+  const project = readProject(projectPath(options));
+  if (!project.workspaceRoot) {
+    throw new Error("No Opsy workspace is configured for this project");
+  }
+  const profilePath = path.join(
+    project.workspaceRoot,
+    "config",
+    "store-profile.json",
+  );
+  if (!fs.existsSync(profilePath)) {
+    throw new Error(`Store profile is missing: ${profilePath}`);
+  }
+  return readJson(profilePath);
+}
+
+function projectBuyerFaq(options, { required = false } = {}) {
+  const project = readProject(projectPath(options));
+  if (!project.workspaceRoot) {
+    throw new Error("No Opsy workspace is configured for this project");
+  }
+  const faqPath = path.join(project.workspaceRoot, "config", "buyer_faq.json");
+  if (!fs.existsSync(faqPath)) {
+    if (required) throw new Error(`Buyer FAQ config is missing: ${faqPath}`);
+    return null;
+  }
+  return readJson(faqPath);
 }
 
 function help() {
@@ -75,9 +121,18 @@ Commands:
   validate-data [--project <path>] [--json]
   summarize-data [--project <path>] [--output <path>] [--apply] [--json]
   suggest-keywords [--project <path>] [--limit <1-200>] [--output <path>] [--apply] [--json]
+  select-faq --surface product|blog [--scope <ref,ref>] [--language <code>] [--include-supporting] [--project <path>] [--json]
+  suggest-faq-topics [--project <path>] [--json]
+  audience-wizard [--json]
   import-agency-handoff --file <path> [--project <path>] [--output <path>] [--apply] [--json]
   refresh-404 [--project <path>] [--output <path>] [--apply] [--json]
   validate-decision-brief --file <path> [--surface page|pdp|blog] [--project <path>] [--json]
+  validate-product-package --file <path> [--mode draft|public] [--project <path>] [--json]
+  validate-blog-package --file <path> [--mode review|write] [--project <path>] [--json]
+  validate-next-actions --file <path> [--json]
+  validate-buyer-faq --file <path> [--strict] [--json]
+  validate-faq-library --file <path> [--strict] [--json]  Deprecated alias
+  validate-audience-intake --file <path> [--strict] [--json]
   guard-mutation --operation <name> --variables <file> [--json]
   check-response --operation <name> --response <file> [--json]
 `;
@@ -101,7 +156,15 @@ async function main() {
   }
 
   if (command === "status") {
-    const result = inspectState(projectPath(options));
+    const requestedProject = projectPath(options);
+    let dataCenterValidation = null;
+    try {
+      const { dataCenterPath } = dataCenterFromProject(requestedProject);
+      dataCenterValidation = validateDataCenter(dataCenterPath);
+    } catch {
+      // inspectState owns workspace/config errors; data validation is supplemental.
+    }
+    const result = inspectState(requestedProject, { dataCenterValidation });
     output(result, asJson);
     process.exitCode = result.ok ? 0 : 2;
     return;
@@ -208,6 +271,41 @@ async function main() {
     return;
   }
 
+  if (command === "select-faq") {
+    const profile = projectProfile(options);
+    const result = selectBuyerFaq(projectBuyerFaq(options, { required: true }), {
+      surface: requireOption(options, "surface"),
+      language: options.language ?? profile?.profile?.store_role?.content_language ?? null,
+      scopeKeys: commaList(options.scope),
+      includeSupporting: Boolean(options["include-supporting"]),
+    });
+    output(result, asJson);
+    process.exitCode = result.ok ? 0 : 2;
+    return;
+  }
+
+  if (command === "suggest-faq-topics") {
+    const profile = projectProfile(options);
+    const result = buildFaqTopicSeeds(projectBuyerFaq(options, { required: true }), {
+      language: profile?.profile?.store_role?.content_language ?? null,
+    });
+    output(result, asJson);
+    process.exitCode = result.ok ? 0 : 2;
+    return;
+  }
+
+  if (command === "audience-wizard") {
+    const wizardPath = path.join(skillRoot, "assets", "audience-intake-wizard", "index.html");
+    if (!fs.existsSync(wizardPath)) throw new Error(`Audience wizard is missing: ${wizardPath}`);
+    output(
+      asJson
+        ? { ok: true, path: wizardPath, network_access: false, output_schema: "opsy-audience-intake-v1" }
+        : wizardPath,
+      asJson,
+    );
+    return;
+  }
+
   if (command === "import-agency-handoff") {
     const project = readProject(projectPath(options));
     if (!project.workspaceRoot) throw new Error("No workspace is configured");
@@ -289,6 +387,70 @@ async function main() {
       expectedSurface: options.surface ?? null,
       approvedCtaLabel,
     });
+    output(result, asJson);
+    process.exitCode = result.ok ? 0 : 2;
+    return;
+  }
+
+  if (command === "validate-product-package") {
+    const mode = options.mode ?? "draft";
+    if (!["draft", "public"].includes(mode)) {
+      throw new Error("--mode must be draft or public");
+    }
+    const result = validateProductPackageFile(
+      path.resolve(requireOption(options, "file")),
+      { profile: projectProfile(options), mode, buyerFaq: projectBuyerFaq(options) },
+    );
+    output(result, asJson);
+    process.exitCode = result.ok ? 0 : 2;
+    return;
+  }
+
+  if (command === "validate-blog-package") {
+    const mode = options.mode ?? "review";
+    if (!["review", "write"].includes(mode)) {
+      throw new Error("--mode must be review or write");
+    }
+    const { dataCenterPath } = dataCenterFromProject(projectPath(options));
+    const dataCenterValidation = validateDataCenter(dataCenterPath);
+    const result = validateBlogPackageFile(
+      path.resolve(requireOption(options, "file")),
+      {
+        profile: projectProfile(options),
+        mode,
+        dataCenterValidation,
+        buyerFaq: projectBuyerFaq(options),
+      },
+    );
+    output(result, asJson);
+    process.exitCode = result.ok ? 0 : 2;
+    return;
+  }
+
+  if (command === "validate-next-actions") {
+    const result = validateNextActionsFile(
+      path.resolve(requireOption(options, "file")),
+    );
+    output(result, asJson);
+    process.exitCode = result.ok ? 0 : 2;
+    return;
+  }
+
+  if (command === "validate-buyer-faq" || command === "validate-faq-library") {
+    const result = validateBuyerFaqFile(
+      path.resolve(requireOption(options, "file")),
+      { strict: Boolean(options.strict) },
+    );
+    output(result, asJson);
+    process.exitCode = result.ok ? 0 : 2;
+    return;
+  }
+
+  if (command === "validate-audience-intake") {
+    const result = validateAudienceIntakeFile(
+      path.resolve(requireOption(options, "file")),
+      { strict: Boolean(options.strict) },
+    );
     output(result, asJson);
     process.exitCode = result.ok ? 0 : 2;
     return;

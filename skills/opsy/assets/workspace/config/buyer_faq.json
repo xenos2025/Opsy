@@ -1,0 +1,13 @@
+{
+  "schema_version": "buyer-faq-v1",
+  "status": "not_started",
+  "generated_at": null,
+  "last_reviewed_at": null,
+  "reviewed_by": "",
+  "source_summary": "",
+  "sources": [],
+  "audience_signals": [],
+  "faq_items": [],
+  "conflicts": [],
+  "quarantine": []
+}

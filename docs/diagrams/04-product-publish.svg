@@ -17,7 +17,7 @@
 <rect x="1444" y="18" width="16" height="12" fill="#C15F3C"/>
 
 <text x="740" y="84" text-anchor="middle" class="label" font-size="22">商品运营 · 双批准发布</text>
-<text x="740" y="108" text-anchor="middle" class="label-sub" font-size="14">inbox → 校验队列 → 买家决策简报 → Approval A 草稿 → 回读 → Approval B 发布</text>
+<text x="740" y="108" text-anchor="middle" class="label-sub" font-size="14">商家材料 → 商品包校验 → 买家决策简报 → Approval A 草稿 → 回读 → Approval B 发布</text>
 <rect x="40" y="128" width="1400" height="40" rx="3" fill="#F3E6DF" stroke="#C15F3C" stroke-width="1.4"/>
 <text x="60" y="153" class="label-accent" font-size="13">需求数据是买家兴趣证据，不能冒充产品事实 · 图片不能推断认证 / MOQ / 交期</text>
 

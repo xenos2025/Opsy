@@ -1,5 +1,12 @@
 # Monthly data-center contract
 
+This is a **provider-delivered local snapshot contract**, not a Google
+connection contract. The enterprise owner does not configure API credentials,
+OAuth, service accounts, GA4 properties, or GSC properties in Opsy. If no valid
+package exists, report `not_delivered`. Product may continue from merchant and
+sales evidence. Blog must return `scoring_blocked` until valid
+`gsc_queries` and `ga4_landing_pages` snapshots are delivered.
+
 ## Layout
 
 Use:
@@ -74,8 +81,9 @@ node <skill-root>/scripts/opsy.mjs suggest-keywords --project <project-root>
 
 Required GSC columns are `query`, `clicks`, `ctr`, `impressions`, and
 `position`. When present, `gsc_query_page` maps a query to its strongest owned
-page and `ga4_landing_pages` adds landing sessions and engaged sessions for
-that path.
+page. `ga4_landing_pages` adds landing sessions and engaged sessions; it is
+required before a queue row can enter Blog, though Product may use a GSC-only
+row with the GA4 gap disclosed.
 
 Stable output columns are:
 

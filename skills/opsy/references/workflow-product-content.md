@@ -13,6 +13,11 @@ Opsy is **industry-agnostic**. Pull every noun from the active store profile and
 catalog. Do not import textile, wall-panel, or any other vocabulary from agency
 example packs.
 
+Read `profile.merchant_context` before drafting. Use its confirmed product
+families, buyer roles, sales questions, purchase objections, commercial facts,
+and restricted claims. A `ready_with_gaps` context does not authorize guessing;
+name the missing owner fact in the package and ask one question at a time.
+
 ## Expression order (required)
 
 ```text
@@ -26,7 +31,7 @@ verified product facts (+ optional demand evidence)
 Never jump from a fact list straight to `descriptionHtml`. Record which voice
 was applied in the product package:
 
-- `store_role.status` and `store_role.business_model` from
+- `store_role.status` and the required `store_role.business_model: b2b_inquiry` from
   `<workspace>/config/store-profile.json`;
 - `content_voice.status` and `content_voice.role`.
 
@@ -72,6 +77,13 @@ Do not reuse an identical H2 sequence across every product. Reuse the **jobs**,
 not a copy-paste skeleton.
 
 ## FAQ rules
+
+Prefer accepted, scope-matched `pdp` question signals from
+`config/buyer_faq.json`; follow
+[buyer-faq-contract.md](buyer-faq-contract.md). A `question_only` row may shape
+the question without authorizing its draft answer. Reuse answer text as a fact
+only when `content_use: eligible`; otherwise use verified Product facts or ask
+the owner/sales role to confirm the missing commercial fact.
 
 - Use 2–3 questions for a product offered for publication. One is acceptable for
   a draft when material is thin; say so in the package notes.
@@ -140,7 +152,7 @@ Show the operator a short scorecard (pass / fix / blocked):
 
 | Dimension | Pass means |
 | --- | --- |
-| Store role | `store_role.status` is `ready` |
+| Store role | `store_role.status` is `ready` and `business_model` is `b2b_inquiry` |
 | Seller voice | `content_voice.status: ready` and the opening reads in that role |
 | Opening | Primary answer plus buyer value, not a spec restatement |
 | Structure | Specs, applications, and a next step each do their own job |

@@ -32,12 +32,15 @@ Banner:
 
 Choices:
 
-1. Complete the business questionnaire.
-2. Run a public-site observation.
+1. Complete the enterprise profile questionnaire.
+2. Normalize local FAQ material.
 3. Check prerequisites or connect Shopify CLI.
 4. Inspect the project/workspace.
 
-Do not run Admin reads, full audits, data analysis, or Shopify writes.
+FAQ normalization remains local and follows
+[buyer-faq-contract.md](buyer-faq-contract.md). Do not run Admin reads,
+public-site audits, technical foundation reports, data analysis, or Shopify
+writes.
 
 ### Agency workspace overlay
 
@@ -73,10 +76,12 @@ Banner:
 Choices:
 
 1. Complete the lightweight profile.
-2. Refresh the connection.
-3. Show the missing profile fields.
+2. Normalize local FAQ material.
+3. Refresh the connection.
+4. Show the missing profile fields.
 
-Allow only reads needed for the profile. Do not perform operational writes.
+Allow only reads needed for the profile and local FAQ normalization. Do not
+perform operational writes.
 
 ## `write_ready`
 
@@ -92,6 +97,16 @@ Banner:
 
 Show the six-item main menu from `SKILL.md` plus each relevant `write_capabilities.*.write_ready` result. The base state does not override a false capability. Show the capability's exact `missing` list and permit only local preparation or prerequisite refresh until it passes.
 
+The helper also returns `data_access.mode: delivered_snapshots_only`,
+`live_google_api: false`, `buyer_faq`, `blog_data_center`, and
+`blog_topic_sources`. Buyer FAQ validation keeps question acceptance separate
+from public answer eligibility. `blog_topic_sources.status`
+is `data_backed` when valid `gsc_queries` and `ga4_landing_pages` exist,
+`faq_seeded` when a valid empty data-center can use accepted Blog FAQ questions, or
+`scoring_blocked` when neither evidence lane is usable. FAQ-seeded topics carry
+no numeric search-demand claims. Do not offer Google authorization or live
+GA4/GSC queries. Missing delivered data never blocks merchant-led Product work.
+
 Before a write, downgrade to `connection_required` or `profile_required` if the validated base evidence changed. Keep the base state but block only the affected workflow when a workflow-specific scope, publication, Blog, or metafield definition is missing.
 
 ### Store-role overlay for buyer-facing copy
@@ -100,14 +115,21 @@ The status helper also returns `store_role` with one of three values:
 
 | Status | Meaning | Effect |
 | --- | --- | --- |
-| `blocked` | one or more `profile.store_role` fields are missing or the business model is unsupported | stop Product and Blog topic commitment and drafting; run store-role intake |
+| `blocked` | one or more `profile.store_role` fields are missing or `business_model` is not `b2b_inquiry` | stop Product and Blog topic commitment and drafting; run store-role intake or route a checkout-led store to Opsy DTC |
 | `ready_with_warnings` | the six role fields are confirmed but `profile.content_voice.status` is not `ready` | planning may continue in a neutral, evidence-first voice; Product and Blog writes stay blocked |
 | `ready` | role and seller voice are both confirmed | Product and Blog copy may proceed to their craft gates |
 
 Both gaps also appear in `write_capabilities.products.missing` and
-`write_capabilities.blog.missing`. Redirect, weekly-report, and monthly-data work
+`write_capabilities.blog.missing`. Redirect, next-actions, and delivered-data work
 are not affected by them. Read
 [workflow-connection-profile.md](workflow-connection-profile.md) for the intake.
+
+### Merchant-context overlay
+
+`merchant_context.status` is `not_started`, `ready_with_gaps`, or `ready`.
+Use its `missing` list to finish the enterprise profile questionnaire. Do not
+turn those gaps into a technical audit. Product and Blog packages must name
+their factual sources even when the context is ready.
 
 ## `approval_pending`
 

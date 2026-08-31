@@ -39,6 +39,9 @@
       "business_model": null,
       "industry": null,
       "primary_audience": null,
+      "secondary_audiences": [],
+      "audience_status": "not_started",
+      "audience_intake_path": null,
       "primary_market": null,
       "content_language": null,
       "conversion_goal": null,
@@ -54,6 +57,19 @@
       "must_not": [],
       "signature_proof": [],
       "example_phrasing": null,
+      "updated_at": null
+    },
+    "merchant_context": {
+      "status": "not_started",
+      "product_families": [],
+      "buyer_roles": [],
+      "sales_questions": [],
+      "purchase_objections": [],
+      "confirmed_commercial_facts": [],
+      "restricted_claims": [],
+      "product_owner": null,
+      "content_owner": null,
+      "publication_approver": null,
       "updated_at": null
     }
   }

@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Opsy 客户画像填写工具</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230d5c56'/%3E%3Ctext x='32' y='40' text-anchor='middle' font-size='26' font-family='Arial' font-weight='700' fill='white'%3EO%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="app.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#wizard-form">跳到表单</a>
+  <header class="topbar">
+    <div class="brand-lockup" aria-label="Opsy">
+      <span class="brand-mark" aria-hidden="true">O</span>
+      <span><strong>Opsy</strong><small>客户画像填写工具</small></span>
+    </div>
+    <div class="topbar__meta">
+      <span class="privacy-dot" aria-hidden="true"></span>
+      草稿只保存在当前浏览器，完成后下载本地文件
+    </div>
+  </header>
+
+  <main class="shell">
+    <aside class="rail" aria-label="填写进度">
+      <p class="eyebrow">客户与销售</p>
+      <h1>先说清楚<br>谁来采购</h1>
+      <p class="rail__intro">按销售平时的说法，记录客户是谁、为什么来采购、最担心什么。系统会把这些答案整理给商品页和文章使用。</p>
+      <nav class="steps" id="steps">
+        <button class="step is-active" type="button" data-step="store"><span>01</span>基本业务</button>
+        <button class="step" type="button" data-step="audiences"><span>02</span>客户与采购</button>
+        <button class="step" type="button" data-step="evidence"><span>03</span>资料来源</button>
+        <button class="step" type="button" data-step="review"><span>04</span>确认保存</button>
+      </nav>
+      <div class="rail__rule">
+        <strong>不会发生</strong>
+        <span>不会连接店铺后台、统计工具、邮件或任何外部服务。</span>
+      </div>
+    </aside>
+
+    <section class="workspace">
+      <div class="workspace__head">
+        <div>
+          <p class="eyebrow">本地工作文件</p>
+          <h2 id="section-title">基本业务</h2>
+        </div>
+        <div class="file-chip">
+          <span>保存文件</span>
+          <strong>客户画像资料</strong>
+        </div>
+      </div>
+
+      <div class="status" id="status" role="status" aria-live="polite">草稿已自动保存在当前浏览器。</div>
+      <form id="wizard-form" novalidate></form>
+
+      <footer class="actions">
+        <button class="btn btn--quiet" type="button" id="btn-back">上一步</button>
+        <div class="actions__right">
+          <button class="btn btn--quiet" type="button" id="btn-import">继续填写已有文件</button>
+          <input id="file-import" type="file" accept="application/json,.json" hidden>
+          <button class="btn btn--quiet" type="button" id="btn-reset">重新填写</button>
+          <button class="btn btn--primary" type="button" id="btn-next">下一步</button>
+          <button class="btn btn--primary" type="button" id="btn-download" hidden>下载客户画像</button>
+        </div>
+      </footer>
+    </section>
+  </main>
+
+  <template id="help-template">
+    <p>下载后把文件发回当前对话即可；如由服务方协助，也可以直接发送给服务方。Opsy 会自动检查，并把确认后的内容整理到店铺档案中。</p>
+  </template>
+</body>
+</html>

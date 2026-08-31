@@ -1,7 +1,9 @@
 # Workflow: 商品运营
 
 Load [workflow-product-content.md](workflow-product-content.md) before writing
-any buyer-visible description. A filled field set is not a usable PDP.
+any buyer-visible description. Read
+[product-package-contract.md](product-package-contract.md) before saving or
+validating the package. A filled field set is not a usable PDP.
 
 ## Intake
 
@@ -12,6 +14,24 @@ Prefer:
 3. optional Excel or CSV for batch supplements.
 
 Stage chat attachments in the product inbox before processing. Never require JSON from the operator.
+
+When the operator supplies FAQ documents or sales Q&A, stage and normalize them
+through [buyer-faq-contract.md](buyer-faq-contract.md). An accepted,
+scope/language-matched `pdp` question may shape the PDP question, objection, or
+merchant confirmation request. Its answer becomes a Product fact only when the
+separate answer gate marks it `eligible`. An enterprise-wide FAQ does not prove
+a product-specific claim. Record applied IDs under `sourceFacts.faqReview` and
+cite `config/buyer_faq.json#<id>`.
+
+Before drafting, run:
+
+```text
+node <skill-root>/scripts/opsy.mjs select-faq --project <project-root> --surface product --scope <product-handle-or-family-ref> --include-supporting --json
+```
+
+Use primary rows first. Supporting rows may supply objections, confirmation
+requests, or internal-link ideas, but cannot supply Product answer facts. Use
+only returned fields; do not reopen the raw FAQ answer object in Product work.
 
 Ask for missing facts one at a time. At minimum verify:
 
@@ -31,10 +51,11 @@ Do not infer technical specifications, certifications, materials, dimensions, MO
 Before drafting any buyer-visible description, read
 `<workspace>/config/store-profile.json` and confirm:
 
-- `profile.store_role.status` is `ready`. If it is `blocked`, run store-role
+- `profile.store_role.status` is `ready` and `business_model` is
+  `b2b_inquiry`. If it is `blocked`, run store-role
   intake from [workflow-connection-profile.md](workflow-connection-profile.md);
-  never assume the business model, audience, market, content language, or
-  conversion goal.
+  route a checkout-led store to Opsy DTC, and never assume the audience,
+  market, content language, or conversion goal.
 - `profile.content_voice.status` is `ready`. If not, run voice intake from
   [workflow-blog-content.md](workflow-blog-content.md). The same seller role
   serves Blog and PDP.
@@ -62,9 +83,13 @@ operator confirms it is a genuinely single-option SKU. Mention available options
 only when the operator confirms them, and offer the option-list FAQ from
 [workflow-product-content.md](workflow-product-content.md).
 
-## Use delivered demand evidence
+## Optional provider-delivered demand evidence
 
-When the active monthly snapshot is valid, preview the shared queue:
+Product work starts from merchant materials and sales confirmation. It does not
+require GA4, GSC, Google credentials, or a scored keyword queue.
+
+Only when a service provider has already delivered a valid local monthly
+snapshot may you preview the shared queue:
 
 ```text
 node <skill-root>/scripts/opsy.mjs suggest-keywords --project <project-root>
@@ -123,11 +148,12 @@ Read the current metafield value and use its `compareDigest` for updates. Use ex
    variables.
 4. Save the local product package, decision brief, applied store role and voice,
    selected demand evidence, and field preview.
-5. Prepare variables with `status: DRAFT` and pass the `product-create-draft` guard.
-6. Ask Approval A for the exact selected candidates.
-7. Execute `assets/graphql/product-create-draft.graphql`, pass the matching response check, then read each product back with the core `product-readback.graphql`. If media was supplied, validate the extra media-read scopes, then use `product-media-readback.graphql` to verify asynchronous media state.
-8. Prepare and guard the exact activation (`product-activate`) and publication (`publishable-publish`) variables, then ask Approval B for those status and publication targets.
-9. Execute only the approved operations, check each response under its own operation name, and read back status and publications.
+5. Run `validate-product-package --mode draft`; fix all blocking issues.
+6. Prepare variables with `status: DRAFT` and pass the `product-create-draft` guard.
+7. Ask Approval A for the exact selected candidates.
+8. Execute `assets/graphql/product-create-draft.graphql`, pass the matching response check, then read each product back with the core `product-readback.graphql`. If media was supplied, validate the extra media-read scopes, then use `product-media-readback.graphql` to verify asynchronous media state.
+9. Rerun the package validator with `--mode public`, then prepare and guard the exact activation (`product-activate`) and publication (`publishable-publish`) variables and ask Approval B for those status and publication targets.
+10. Execute only the approved operations, check each response under its own operation name, and read back status and publications.
 
 Approval A never authorizes Approval B.
 

@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { buildFaqTopicSeeds, validateBuyerFaqFile } from "./buyer-faq.mjs";
 
 const moduleDir = path.dirname(fileURLToPath(import.meta.url));
 export const skillRoot = path.resolve(moduleDir, "..", "..");
@@ -146,11 +147,29 @@ export function planWorkspace({
 
 export function initializeWorkspace(options) {
   const plan = planWorkspace(options);
-  if (!options.apply || plan.action === "use-existing") {
+  if (!options.apply) {
     return { ...plan, applied: false, created: [] };
   }
 
   const created = [];
+  if (plan.action === "use-existing") {
+    if (
+      !plan.workspaceRoot ||
+      !fs.existsSync(plan.workspaceRoot) ||
+      !fs.statSync(plan.workspaceRoot).isDirectory()
+    ) {
+      throw new Error(`Configured workspace does not exist: ${plan.workspaceRoot}`);
+    }
+    fs.mkdirSync(path.join(plan.workspaceRoot, "inbox", "faq"), { recursive: true });
+    fs.mkdirSync(path.join(plan.workspaceRoot, "inbox", "profile"), { recursive: true });
+    copyIfMissing(
+      path.join(workspaceAssets, "config", "buyer_faq.json"),
+      path.join(plan.workspaceRoot, "config", "buyer_faq.json"),
+      created,
+    );
+    return { ...plan, applied: true, created };
+  }
+
   if (!fs.existsSync(plan.markerPath)) {
     writeJson(plan.markerPath, {
       schema_version: "opsy-project-v1",
@@ -167,6 +186,8 @@ export function initializeWorkspace(options) {
       "data-center/archive",
       "inbox/products",
       "inbox/content",
+      "inbox/faq",
+      "inbox/profile",
       "inbox/data",
       "outputs",
       "ai-log",
@@ -182,6 +203,7 @@ export function initializeWorkspace(options) {
       [".gitignore", ".gitignore"],
       ["config/store-profile.json", "config/store-profile.json"],
       ["config/business-questionnaire.md", "config/business-questionnaire.md"],
+      ["config/buyer_faq.json", "config/buyer_faq.json"],
       ["data-center/manifest.json", "data-center/manifest.json"],
       ["ai-log/operations-log.md", "ai-log/operations-log.md"],
       ["ai-log/handle-changes.csv", "ai-log/handle-changes.csv"],
@@ -400,7 +422,16 @@ export function validateLightweightProfile(profile) {
   return { ok: missing.length === 0 && errors.length === 0, missing, errors };
 }
 
-const BUSINESS_MODELS = new Set(["b2b_inquiry", "b2c_dtc", "hybrid"]);
+const BUSINESS_MODELS = new Set(["b2b_inquiry"]);
+const AUDIENCE_STATUSES = new Set([
+  "research_draft",
+  "merchant_confirmed",
+  "data_revised",
+]);
+const MERCHANT_DATA_ACCESS = Object.freeze({
+  mode: "delivered_snapshots_only",
+  live_google_api: false,
+});
 
 export function summarizeStoreRole(profile) {
   const role = profile?.profile?.store_role;
@@ -425,6 +456,11 @@ export function summarizeStoreRole(profile) {
   );
   addMissing(
     missing,
+    "profile.store_role.audience_status",
+    AUDIENCE_STATUSES.has(role?.audience_status),
+  );
+  addMissing(
+    missing,
     "profile.store_role.primary_market",
     isNonEmptyString(role?.primary_market),
   );
@@ -445,12 +481,35 @@ export function summarizeStoreRole(profile) {
     !BUSINESS_MODELS.has(role.business_model)
   ) {
     errors.push(
-      "profile.store_role.business_model must be b2b_inquiry, b2c_dtc, or hybrid",
+      "profile.store_role.business_model must be b2b_inquiry in Opsy B2B",
     );
   }
 
-  const warnings =
-    voice?.status === "ready" ? [] : ["profile.content_voice.status"];
+  if (
+    isNonEmptyString(role?.audience_status) &&
+    role.audience_status !== "not_started" &&
+    !AUDIENCE_STATUSES.has(role.audience_status)
+  ) {
+    errors.push(
+      "profile.store_role.audience_status must be research_draft, merchant_confirmed, or data_revised",
+    );
+  }
+
+  if (
+    role?.audience_status === "research_draft" &&
+    !isNonEmptyString(role?.audience_intake_path)
+  ) {
+    errors.push(
+      "profile.store_role.audience_intake_path is required for research_draft",
+    );
+  }
+
+  const warnings = [
+    ...(voice?.status === "ready" ? [] : ["profile.content_voice.status"]),
+    ...(role?.audience_status === "research_draft"
+      ? ["profile.store_role.audience_status:research_draft"]
+      : []),
+  ];
   const blocked = missing.length > 0 || errors.length > 0;
 
   return {
@@ -465,6 +524,53 @@ export function summarizeStoreRole(profile) {
     missing,
     errors,
     warnings,
+  };
+}
+
+export function summarizeMerchantContext(profile) {
+  const context = profile?.profile?.merchant_context;
+  const missing = [];
+
+  addMissing(missing, "profile.merchant_context.status", context?.status === "ready");
+  for (const field of [
+    "product_families",
+    "buyer_roles",
+    "sales_questions",
+    "purchase_objections",
+    "confirmed_commercial_facts",
+    "restricted_claims",
+  ]) {
+    addMissing(
+      missing,
+      `profile.merchant_context.${field}`,
+      Array.isArray(context?.[field]) && context[field].length > 0,
+    );
+  }
+  for (const field of ["product_owner", "content_owner", "publication_approver"]) {
+    addMissing(
+      missing,
+      `profile.merchant_context.${field}`,
+      isNonEmptyString(context?.[field]),
+    );
+  }
+  addMissing(
+    missing,
+    "profile.merchant_context.updated_at",
+    isIsoDateTime(context?.updated_at),
+  );
+
+  const hasAnyAnswer =
+    context &&
+    Object.entries(context).some(
+      ([key, value]) =>
+        key !== "status" &&
+        (isNonEmptyString(value) || (Array.isArray(value) && value.length > 0)),
+    );
+
+  return {
+    status:
+      missing.length === 0 ? "ready" : hasAnyAnswer ? "ready_with_gaps" : "not_started",
+    missing,
   };
 }
 
@@ -533,7 +639,100 @@ export function summarizeWriteCapabilities(profile) {
   };
 }
 
-export function inspectState(projectPath) {
+const BLOG_DATASET_NAMES = ["gsc_queries", "ga4_landing_pages"];
+
+function summarizeBlogDataCenter(workspaceRoot, manifest, validation = null) {
+  const missing = [];
+  if (manifest?.schema_version !== "data-center-manifest-v1") {
+    missing.push("data-center/manifest.json");
+  }
+  for (const name of BLOG_DATASET_NAMES) {
+    const dataset = manifest?.datasets?.[name];
+    if (!isNonEmptyString(dataset?.path)) {
+      missing.push(`data-center.${name}`);
+      continue;
+    }
+    try {
+      const datasetPath = resolveInside(
+        path.join(workspaceRoot, "data-center"),
+        dataset.path,
+        `${name}.path`,
+      );
+      if (!fs.existsSync(datasetPath)) missing.push(`data-center.${name}`);
+    } catch {
+      missing.push(`data-center.${name}`);
+    }
+  }
+  if (validation) {
+    const validatedDatasets = new Map(
+      (Array.isArray(validation.datasets) ? validation.datasets : []).map((dataset) => [
+        dataset?.name,
+        dataset,
+      ]),
+    );
+    if (!validation.ok) missing.push("data-center.validation");
+    for (const name of BLOG_DATASET_NAMES) {
+      const dataset = validatedDatasets.get(name);
+      if (!dataset || (Array.isArray(dataset.errors) && dataset.errors.length > 0)) {
+        missing.push(`data-center.${name}`);
+      }
+    }
+  }
+  return {
+    status: missing.length === 0 ? "ready" : "scoring_blocked",
+    required_datasets: BLOG_DATASET_NAMES,
+    missing: [...new Set(missing)],
+  };
+}
+
+function summarizeBlogTopicSources(profile, blogDataCenter, dataCenterValidation, buyerFaqPayload) {
+  const faqSeeds = buyerFaqPayload
+    ? buildFaqTopicSeeds(buyerFaqPayload, {
+        language: profile?.profile?.store_role?.content_language ?? null,
+      })
+    : {
+        ok: false,
+        status: "missing",
+        rows: [],
+        errors: [{ message: "config/buyer_faq.json is missing" }],
+        warnings: [],
+      };
+
+  if (blogDataCenter.status === "ready") {
+    return {
+      status: "data_backed",
+      data_center_status: "ready",
+      faq_seed_count: faqSeeds.rows.length,
+      numeric_demand_claims: true,
+      missing: [],
+    };
+  }
+
+  if (dataCenterValidation?.ok === true && faqSeeds.ok && faqSeeds.rows.length > 0) {
+    return {
+      status: "faq_seeded",
+      data_center_status: blogDataCenter.status,
+      faq_seed_count: faqSeeds.rows.length,
+      numeric_demand_claims: false,
+      missing: [],
+      limitation: "Cold-start topics come from accepted sales-question evidence, not observed search demand; answer publication remains separately gated",
+    };
+  }
+
+  return {
+    status: "scoring_blocked",
+    data_center_status: blogDataCenter.status,
+    faq_seed_count: faqSeeds.rows.length,
+    numeric_demand_claims: false,
+    missing: [
+      ...blogDataCenter.missing,
+      ...(faqSeeds.rows.length === 0 ? ["buyer_faq.accepted_blog_question"] : []),
+      ...(!faqSeeds.ok ? ["buyer_faq.validation"] : []),
+    ].filter((value, index, values) => values.indexOf(value) === index),
+  };
+}
+
+export function inspectState(projectPath, { dataCenterValidation = null } = {}) {
   let project;
   try {
     project = readProject(projectPath);
@@ -543,6 +742,7 @@ export function inspectState(projectPath) {
       state: "workspace_invalid",
       banner: "运营项目配置无效",
       error: error.message,
+      data_access: MERCHANT_DATA_ACCESS,
       choices: ["检查 shopify-ops.json", "选择其他项目目录"],
     };
   }
@@ -553,6 +753,7 @@ export function inspectState(projectPath) {
       state: "workspace_missing",
       banner: "运营项目文件夹未建立",
       project_root: project.projectRoot,
+      data_access: MERCHANT_DATA_ACCESS,
       choices: ["预览运营项目文件夹方案", "选择其他项目目录"],
     };
   }
@@ -575,6 +776,7 @@ export function inspectState(projectPath) {
         profile_path: profilePath,
         agency_evidence_paths: agencyEvidencePaths,
         reason: "agency workspace detected; Opsy store profile is missing",
+        data_access: MERCHANT_DATA_ACCESS,
         choices: [
           "导入服务商已审核任务",
           "预览 Opsy 兼容建档方案",
@@ -590,7 +792,8 @@ export function inspectState(projectPath) {
       workspace_root: project.workspaceRoot,
       profile_path: profilePath,
       reason: "store profile is missing",
-      choices: ["业务问卷", "公开站点检查", "连接与店铺档案", "检查运营项目文件夹"],
+      data_access: MERCHANT_DATA_ACCESS,
+      choices: ["企业画像问卷", "整理 FAQ 资料", "连接与店铺档案", "检查运营项目文件夹"],
     };
   }
 
@@ -604,6 +807,7 @@ export function inspectState(projectPath) {
       workspace_root: project.workspaceRoot,
       profile_path: profilePath,
       error: parsed.error,
+      data_access: MERCHANT_DATA_ACCESS,
       choices: ["修复店铺档案", "查看原始错误"],
     };
   }
@@ -613,6 +817,52 @@ export function inspectState(projectPath) {
   const profileValidation = validateLightweightProfile(profile);
   const manifestPath = path.join(project.workspaceRoot, "data-center", "manifest.json");
   const manifest = fs.existsSync(manifestPath) ? safeReadJson(manifestPath).value : null;
+  const buyerFaqPath = path.join(project.workspaceRoot, "config", "buyer_faq.json");
+  const legacyFaqPath = path.join(project.workspaceRoot, "config", "faq-library.json");
+  const buyerFaqPayload = fs.existsSync(buyerFaqPath) ? safeReadJson(buyerFaqPath).value : null;
+  const buyerFaq = fs.existsSync(buyerFaqPath)
+    ? validateBuyerFaqFile(buyerFaqPath)
+    : {
+        ok: false,
+        status: "fix",
+        artifact_status: "missing",
+        counts: { errors: 1, warnings: 0 },
+        source_count: 0,
+        item_count: 0,
+        signal_count: 0,
+        conflict_count: 0,
+        quarantine_count: 0,
+        route_counts: { product: 0, blog: 0, provider_handoff: 0, route_review_required: 0 },
+        errors: [
+          {
+            code: "missing_file",
+            path: "config/buyer_faq.json",
+            message: "Buyer FAQ config is missing; rerun workspace initialization to add the neutral template",
+          },
+        ],
+        warnings: [],
+      };
+  if (fs.existsSync(legacyFaqPath)) {
+    buyerFaq.warnings = [
+      ...(Array.isArray(buyerFaq.warnings) ? buyerFaq.warnings : []),
+      {
+        code: "legacy_faq_library_detected",
+        path: "config/faq-library.json",
+        message: "Legacy FAQ evidence is preserved; review and migrate it into config/buyer_faq.json",
+      },
+    ];
+  }
+  const blogDataCenter = summarizeBlogDataCenter(
+    project.workspaceRoot,
+    manifest,
+    dataCenterValidation,
+  );
+  const blogTopicSources = summarizeBlogTopicSources(
+    profile,
+    blogDataCenter,
+    dataCenterValidation,
+    buyerFaqPayload,
+  );
 
   if (!connectionValidation.ok) {
     return {
@@ -623,7 +873,9 @@ export function inspectState(projectPath) {
       workspace_root: project.workspaceRoot,
       store: profile?.store?.myshopify_domain ?? null,
       connection_validation: connectionValidation,
-      choices: ["业务问卷", "公开站点检查", "连接与店铺档案", "检查运营项目文件夹"],
+      buyer_faq: buyerFaq,
+      data_access: MERCHANT_DATA_ACCESS,
+      choices: ["企业画像问卷", "整理 FAQ 资料", "连接与店铺档案", "检查运营项目文件夹"],
     };
   }
 
@@ -639,11 +891,22 @@ export function inspectState(projectPath) {
       connection_validation: connectionValidation,
       profile_validation: profileValidation,
       store_role: summarizeStoreRole(profile),
-      choices: ["完成轻量店铺建档", "刷新店铺连接", "查看缺失档案字段"],
+      merchant_context: summarizeMerchantContext(profile),
+      buyer_faq: buyerFaq,
+      blog_data_center: blogDataCenter,
+      blog_topic_sources: blogTopicSources,
+      data_access: MERCHANT_DATA_ACCESS,
+      choices: ["完成企业画像问卷", "整理 FAQ 资料", "刷新店铺连接", "查看缺失档案字段"],
     };
   }
 
   const writeCapabilities = summarizeWriteCapabilities(profile);
+  if (blogTopicSources.status === "scoring_blocked") {
+    writeCapabilities.blog.write_ready = false;
+    writeCapabilities.blog.missing = [
+      ...new Set([...writeCapabilities.blog.missing, ...blogTopicSources.missing]),
+    ];
+  }
   return {
     ok: true,
     state: "write_ready",
@@ -657,14 +920,19 @@ export function inspectState(projectPath) {
     connection_validation: connectionValidation,
     profile_validation: profileValidation,
     store_role: summarizeStoreRole(profile),
+    merchant_context: summarizeMerchantContext(profile),
+    buyer_faq: buyerFaq,
+    blog_data_center: blogDataCenter,
+    blog_topic_sources: blogTopicSources,
     write_capabilities: writeCapabilities,
+    data_access: MERCHANT_DATA_ACCESS,
     choices: [
-      "运营周报",
+      "本周三件事",
       "商品运营",
       "Blog 与内容",
       "404 处理",
-      "上月数据查询 / 数据更新",
-      "连接与店铺档案",
+      "导入服务方数据 / 查看已有摘要",
+      "连接与企业画像",
     ],
   };
 }

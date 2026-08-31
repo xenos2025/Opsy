@@ -19,7 +19,8 @@ time, fill the artifact locally, then show a plain-language summary.
 - one decision stage: `discover`, `evaluate`, `validate`, or `inquire`;
 - verified product/article materials and merchant confirmations;
 - active store profile, configured seller voice, and approved primary CTA;
-- optional keyword suggestions generated from the delivered data-center.
+- keyword suggestions generated from the delivered data-center: optional for
+  Product, required for Blog topic selection.
 
 Keyword, GSC, GA4, and inquiry-pattern inputs are **demand evidence**. They can
 support buyer questions, the decision being served, and the decision stage.

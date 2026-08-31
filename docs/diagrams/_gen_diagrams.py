@@ -83,18 +83,18 @@ def gen_01() -> None:
 <text x="420" y="236" text-anchor="middle" class="label-tiny" font-size="11">STATE A</text>
 <text x="420" y="256" text-anchor="middle" class="label" font-size="15">店铺连接未完成</text>
 <rect x="312" y="282" width="216" height="44" rx="2" fill="#FFFFFF" stroke="#E5DFD6"/>
-<text x="420" y="300" text-anchor="middle" class="label" font-size="12">业务问卷</text>
-<text x="420" y="318" text-anchor="middle" class="label-tiny" font-size="10">offer / CTA / voice</text>
+<text x="420" y="300" text-anchor="middle" class="label" font-size="12">企业画像问卷</text>
+<text x="420" y="318" text-anchor="middle" class="label-tiny" font-size="10">买家 / 销售问题 / 审批人</text>
 <rect x="312" y="334" width="216" height="44" rx="2" fill="#FFFFFF" stroke="#E5DFD6"/>
-<text x="420" y="352" text-anchor="middle" class="label" font-size="12">公开站点检查</text>
-<text x="420" y="370" text-anchor="middle" class="label-tiny" font-size="10">public-only</text>
+<text x="420" y="352" text-anchor="middle" class="label" font-size="12">整理 FAQ 资料</text>
+<text x="420" y="370" text-anchor="middle" class="label-tiny" font-size="10">本地配置 · 冲突待确认</text>
 <rect x="312" y="386" width="216" height="44" rx="2" fill="#F3E6DF" stroke="#C15F3C" stroke-width="1.6"/>
 <text x="420" y="404" text-anchor="middle" class="label" font-size="12">doctor / CLI 连接</text>
 <text x="420" y="422" text-anchor="middle" class="label-tiny" font-size="10">不装系统依赖</text>
 <rect x="312" y="438" width="216" height="44" rx="2" fill="#FFFFFF" stroke="#E5DFD6"/>
 <text x="420" y="456" text-anchor="middle" class="label" font-size="12">工作区预览</text>
 <text x="420" y="474" text-anchor="middle" class="label-tiny" font-size="10">init 需确认</text>
-<text x="420" y="540" text-anchor="middle" class="label-tiny" font-size="11">禁止 Admin 写入 / 全量审计</text>
+<text x="420" y="540" text-anchor="middle" class="label-tiny" font-size="11">禁止 Admin 写入 / 技术报告</text>
 <text x="420" y="620" text-anchor="middle" class="label-accent" font-size="11">→ 07</text>
 
 <rect x="560" y="214" width="240" height="420" rx="4" fill="#FFFFFF" stroke="#C15F3C" stroke-width="1.8"/>
@@ -112,7 +112,7 @@ def gen_01() -> None:
 <text x="680" y="422" text-anchor="middle" class="label-tiny" font-size="10">按工作流拆分</text>
 <rect x="572" y="438" width="216" height="44" rx="2" fill="#FFFFFF" stroke="#E5DFD6"/>
 <text x="680" y="456" text-anchor="middle" class="label" font-size="12">缺项补配置清单</text>
-<text x="680" y="474" text-anchor="middle" class="label-tiny" font-size="10">不阻断本地草稿</text>
+<text x="680" y="474" text-anchor="middle" class="label-tiny" font-size="10">FAQ 可继续本地整理</text>
 <text x="680" y="540" text-anchor="middle" class="label-tiny" font-size="11">禁止运营写入 Shopify</text>
 <text x="680" y="620" text-anchor="middle" class="label-accent" font-size="11">→ 07</text>
 
@@ -121,8 +121,8 @@ def gen_01() -> None:
 <text x="1180" y="236" text-anchor="middle" class="label" font-size="11" fill="#FAF7F2">STATE C · write_ready</text>
 <text x="1180" y="256" text-anchor="middle" class="label" font-size="15" fill="#FAF7F2">运营写入就绪 · 六项主菜单</text>
 <rect x="840" y="286" width="210" height="70" rx="2" fill="#F3E6DF" stroke="#C15F3C" stroke-width="1.4"/>
-<text x="945" y="314" text-anchor="middle" class="label" font-size="13">1 运营周报</text>
-<text x="945" y="336" text-anchor="middle" class="label-tiny" font-size="10">周切换提示 / 摘要</text>
+<text x="945" y="314" text-anchor="middle" class="label" font-size="13">1 本周三件事</text>
+<text x="945" y="336" text-anchor="middle" class="label-tiny" font-size="10">恰好 3 项可执行行动</text>
 <rect x="1070" y="286" width="210" height="70" rx="2" fill="#F3E6DF" stroke="#C15F3C" stroke-width="1.4"/>
 <text x="1175" y="314" text-anchor="middle" class="label" font-size="13">2 商品运营</text>
 <text x="1175" y="336" text-anchor="middle" class="label-tiny" font-size="10">草稿 → 发布 · 04</text>
@@ -133,10 +133,10 @@ def gen_01() -> None:
 <text x="945" y="402" text-anchor="middle" class="label" font-size="13">4 404 处理</text>
 <text x="945" y="424" text-anchor="middle" class="label-tiny" font-size="10">选中对才写跳转</text>
 <rect x="1070" y="374" width="210" height="70" rx="2" fill="#F3E6DF" stroke="#C15F3C" stroke-width="1.4"/>
-<text x="1175" y="402" text-anchor="middle" class="label" font-size="13">5 上月数据</text>
-<text x="1175" y="424" text-anchor="middle" class="label-tiny" font-size="10">摘要 / 关键词队列 · 06</text>
+<text x="1175" y="402" text-anchor="middle" class="label" font-size="13">5 服务方数据</text>
+<text x="1175" y="424" text-anchor="middle" class="label-tiny" font-size="10">本地交付 / 摘要 · 06</text>
 <rect x="1300" y="374" width="210" height="70" rx="2" fill="#FFFFFF" stroke="#E5DFD6"/>
-<text x="1405" y="402" text-anchor="middle" class="label" font-size="13">6 连接与档案</text>
+<text x="1405" y="402" text-anchor="middle" class="label" font-size="13">6 连接与企业画像</text>
 <text x="1405" y="424" text-anchor="middle" class="label-tiny" font-size="10">刷新 readiness · 07</text>
 <rect x="840" y="470" width="680" height="56" rx="2" fill="#FAF7F2" stroke="#E5DFD6"/>
 <text x="1180" y="494" text-anchor="middle" class="label" font-size="13">写入前再查该工作流 write_capabilities.*.write_ready</text>
@@ -147,13 +147,13 @@ def gen_01() -> None:
 <text x="60" y="688" class="label-accent" font-size="13">DATA RAIL（客户工作区，不进 Skill）</text>
 <rect x="60" y="702" width="280" height="50" rx="2" fill="#FAF7F2" stroke="#E5DFD6"/>
 <text x="200" y="722" text-anchor="middle" class="label" font-size="13">config/</text>
-<text x="200" y="740" text-anchor="middle" class="label-tiny" font-size="10">store-profile · questionnaire</text>
+<text x="200" y="740" text-anchor="middle" class="label-tiny" font-size="10">store-profile · buyer FAQ</text>
 <rect x="355" y="702" width="280" height="50" rx="2" fill="#FAF7F2" stroke="#E5DFD6"/>
 <text x="495" y="722" text-anchor="middle" class="label" font-size="13">data-center/</text>
 <text x="495" y="740" text-anchor="middle" class="label-tiny" font-size="10">manifest · GA4/GSC · archive</text>
 <rect x="650" y="702" width="280" height="50" rx="2" fill="#FAF7F2" stroke="#E5DFD6"/>
 <text x="790" y="722" text-anchor="middle" class="label" font-size="13">inbox/ · outputs/</text>
-<text x="790" y="740" text-anchor="middle" class="label-tiny" font-size="10">素材 · 草稿 · 建议队列</text>
+<text x="790" y="740" text-anchor="middle" class="label-tiny" font-size="10">商品 / 内容 / FAQ · 草稿</text>
 <rect x="945" y="702" width="280" height="50" rx="2" fill="#FAF7F2" stroke="#E5DFD6"/>
 <text x="1085" y="722" text-anchor="middle" class="label" font-size="13">ai-log/ · backups/</text>
 <text x="1085" y="740" text-anchor="middle" class="label-tiny" font-size="10">操作记录 · 写前快照</text>
@@ -164,7 +164,7 @@ def gen_01() -> None:
 <text x="790" y="820" text-anchor="middle" class="label-tiny" font-size="12">权威顺序：SKILL.md「Route by current state」+ references/state-machine.md</text>
 <rect x="40" y="850" width="1500" height="90" rx="4" fill="#FFFFFF" stroke="#E5DFD6"/>
 <text x="60" y="880" class="label-accent" font-size="13">与服务商多 Agent 套件的边界</text>
-<text x="60" y="908" class="label-sub" font-size="13">Opsy = 初学者可执行操作面（周报 / 商品 / Blog / 404 / 数据 / 连接）· 深度打分、诊断、Ops Coach 仍走客户仓库内 monthly-loop，除非运营者明确要 $opsy</text>
+<text x="60" y="908" class="label-sub" font-size="13">Opsy = 企业主可执行操作面（三件事 / 商品 / Blog / 404 / 服务方数据 / 画像）· 技术验收与深度诊断仍归服务方</text>
 <text x="{w - 20}" y="{h - 20}" text-anchor="end" class="label-tiny mono" font-size="11">01 / entry map / terracotta</text>
 </svg>
 '''
@@ -192,7 +192,7 @@ def gen_02() -> None:
 <text x="300" y="244" text-anchor="middle" class="label" font-size="14">SKILL.md · references/ · scripts/</text>
 <rect x="90" y="270" width="420" height="52" rx="2" fill="#F3E6DF" stroke="#C15F3C" stroke-width="1.6"/>
 <text x="300" y="292" text-anchor="middle" class="label" font-size="14">scripts/opsy.mjs</text>
-<text x="300" y="312" text-anchor="middle" class="label-tiny" font-size="11">status · init · guard · data · 404</text>
+<text x="300" y="312" text-anchor="middle" class="label-tiny" font-size="11">status · init · guard · data · FAQ</text>
 <rect x="90" y="336" width="420" height="40" rx="2" fill="#FAF7F2" stroke="#E5DFD6"/>
 <text x="300" y="362" text-anchor="middle" class="label" font-size="14">assets/graphql · workspace 模板</text>
 <rect x="90" y="388" width="420" height="40" rx="2" fill="#FAF7F2" stroke="#E5DFD6"/>
@@ -212,7 +212,7 @@ def gen_02() -> None:
 <rect x="690" y="218" width="200" height="78" rx="2" fill="#F3E6DF" stroke="#C15F3C"/>
 <text x="790" y="246" text-anchor="middle" class="label" font-size="14">config/</text>
 <text x="790" y="268" text-anchor="middle" class="label-tiny" font-size="11">store-profile.json</text>
-<text x="790" y="286" text-anchor="middle" class="label-tiny" font-size="11">questionnaire</text>
+<text x="790" y="286" text-anchor="middle" class="label-tiny" font-size="11">questionnaire · buyer_faq</text>
 
 <rect x="910" y="218" width="200" height="78" rx="2" fill="#F3E6DF" stroke="#C15F3C"/>
 <text x="1010" y="246" text-anchor="middle" class="label" font-size="14">data-center/</text>
@@ -221,7 +221,7 @@ def gen_02() -> None:
 
 <rect x="690" y="314" width="200" height="70" rx="2" fill="#FAF7F2" stroke="#E5DFD6"/>
 <text x="790" y="342" text-anchor="middle" class="label" font-size="14">inbox/</text>
-<text x="790" y="364" text-anchor="middle" class="label-tiny" font-size="11">products · content · data</text>
+<text x="790" y="364" text-anchor="middle" class="label-tiny" font-size="11">products · content · faq · data</text>
 
 <rect x="910" y="314" width="200" height="70" rx="2" fill="#FAF7F2" stroke="#E5DFD6"/>
 <text x="1010" y="342" text-anchor="middle" class="label" font-size="14">outputs/ · backups/</text>
@@ -332,7 +332,7 @@ def gen_04() -> None:
     )
     body += '''
 <text x="740" y="84" text-anchor="middle" class="label" font-size="22">商品运营 · 双批准发布</text>
-<text x="740" y="108" text-anchor="middle" class="label-sub" font-size="14">inbox → 校验队列 → 买家决策简报 → Approval A 草稿 → 回读 → Approval B 发布</text>
+<text x="740" y="108" text-anchor="middle" class="label-sub" font-size="14">商家材料 → 商品包校验 → 买家决策简报 → Approval A 草稿 → 回读 → Approval B 发布</text>
 <rect x="40" y="128" width="1400" height="40" rx="3" fill="#F3E6DF" stroke="#C15F3C" stroke-width="1.4"/>
 <text x="60" y="153" class="label-accent" font-size="13">需求数据是买家兴趣证据，不能冒充产品事实 · 图片不能推断认证 / MOQ / 交期</text>
 
@@ -460,7 +460,7 @@ def gen_05() -> None:
     )
     body += '''
 <text x="740" y="84" text-anchor="middle" class="label" font-size="22">Blog 与内容 · 决策 + 工艺双门</text>
-<text x="740" y="108" text-anchor="middle" class="label-sub" font-size="14">content_voice 就绪 · 场景向选题 · 决策简报 · craft 记分卡 · A 草稿 · B 发布/定时</text>
+<text x="740" y="108" text-anchor="middle" class="label-sub" font-size="14">data-backed / FAQ-seeded 选题 · Blog 包校验 · 决策简报 · craft 门 · A 草稿 · B 发布/定时</text>
 <rect x="40" y="128" width="1400" height="40" rx="3" fill="#F3E6DF" stroke="#C15F3C" stroke-width="1.4"/>
 <text x="60" y="153" class="label-accent" font-size="13">百科式无场景稿、无商业目标稿、媒体未就绪稿：不进入 Approval A（若请求写 Shopify）</text>
 
@@ -472,11 +472,11 @@ def gen_05() -> None:
 <text x="170" y="276" text-anchor="middle" class="label" font-size="12">profile.content_voice</text>
 <text x="170" y="294" text-anchor="middle" class="label-tiny" font-size="10">seller role · ready</text>
 <rect x="52" y="318" width="236" height="52" rx="2" fill="#F3E6DF" stroke="#C15F3C" stroke-width="1.4"/>
-<text x="170" y="340" text-anchor="middle" class="label" font-size="12">suggest-keywords</text>
-<text x="170" y="358" text-anchor="middle" class="label-tiny" font-size="10">route_hint=blog</text>
+<text x="170" y="340" text-anchor="middle" class="label" font-size="12">Blog topic sources</text>
+<text x="170" y="358" text-anchor="middle" class="label-tiny" font-size="10">data + accepted FAQ questions</text>
 <rect x="52" y="382" width="236" height="52" rx="2" fill="#FFFFFF" stroke="#E5DFD6"/>
-<text x="170" y="404" text-anchor="middle" class="label" font-size="12">场景 / 商业目标</text>
-<text x="170" y="422" text-anchor="middle" class="label-tiny" font-size="10">非百科堆砌</text>
+<text x="170" y="404" text-anchor="middle" class="label" font-size="12">FAQ 影响记录</text>
+<text x="170" y="422" text-anchor="middle" class="label-tiny" font-size="10">cluster · angle · route</text>
 <rect x="52" y="446" width="236" height="52" rx="2" fill="#FAF7F2" stroke="#E5DFD6"/>
 <text x="170" y="468" text-anchor="middle" class="label" font-size="12">inbox/content/</text>
 <text x="170" y="486" text-anchor="middle" class="label-tiny" font-size="10">素材与提纲</text>
@@ -574,29 +574,29 @@ def gen_06() -> None:
         [("a06", "#C15F3C"), ("a06Ok", "#4A6B54")],
     )
     body += '''
-<text x="700" y="84" text-anchor="middle" class="label" font-size="22">上月数据 · 更新 · 关键词建议</text>
-<text x="700" y="108" text-anchor="middle" class="label-sub" font-size="14">服务方交付快照 · 不伪造实时 Google · 建议队列需人工确认后才进商品/Blog</text>
+<text x="700" y="84" text-anchor="middle" class="label" font-size="22">服务方数据 + FAQ · Blog 选题证据门</text>
+<text x="700" y="108" text-anchor="middle" class="label-sub" font-size="14">企业主不连接 Google API · 数据优先 · 新站可用已接受 FAQ 问题冷启动</text>
 
 <rect x="40" y="130" width="640" height="220" rx="4" fill="#FFFFFF" stroke="#E5DFD6"/>
 <rect x="40" y="130" width="640" height="44" fill="#F3E6DF"/>
-<text x="360" y="158" text-anchor="middle" class="label" font-size="15">路径 A · Git 快进更新</text>
+<text x="360" y="158" text-anchor="middle" class="label" font-size="15">路径 A · 新站 / 尚无搜索数据</text>
 <rect x="60" y="192" width="180" height="56" rx="2" fill="#F3E6DF" stroke="#C15F3C"/>
-<text x="150" y="216" text-anchor="middle" class="label" font-size="12">status + fetch</text>
-<text x="150" y="234" text-anchor="middle" class="label-tiny" font-size="10">只读预览</text>
+<text x="150" y="216" text-anchor="middle" class="label" font-size="12">有效空 manifest</text>
+<text x="150" y="234" text-anchor="middle" class="label-tiny" font-size="10">无 GSC / GA4</text>
 <line x1="250" y1="220" x2="280" y2="220" stroke="#C15F3C" stroke-width="2" marker-end="url(#a06)"/>
 <rect x="290" y="192" width="180" height="56" rx="2" fill="#F3E6DF" stroke="#C15F3C"/>
-<text x="380" y="216" text-anchor="middle" class="label" font-size="12">预览 commits</text>
-<text x="380" y="234" text-anchor="middle" class="label-tiny" font-size="10">dirty → 停止</text>
+<text x="380" y="216" text-anchor="middle" class="label" font-size="12">suggest-faq-topics</text>
+<text x="380" y="234" text-anchor="middle" class="label-tiny" font-size="10">approved · language · scope</text>
 <line x1="480" y1="220" x2="510" y2="220" stroke="#C15F3C" stroke-width="2" marker-end="url(#a06)"/>
 <rect x="520" y="192" width="140" height="56" rx="2" fill="#E8F0EA" stroke="#4A6B54"/>
-<text x="590" y="216" text-anchor="middle" class="label" font-size="12" fill="#4A6B54">批准后 pull</text>
-<text x="590" y="234" text-anchor="middle" class="label-tiny" font-size="10">无 stash/force</text>
-<text x="360" y="290" text-anchor="middle" class="label-tiny" font-size="12">非数据变更（主题/规则/Skill）须单独披露</text>
-<text x="360" y="320" text-anchor="middle" class="label-tiny" font-size="12">非快进更新一律拒绝自动合并</text>
+<text x="590" y="216" text-anchor="middle" class="label" font-size="12" fill="#4A6B54">FAQ-seeded Blog</text>
+<text x="590" y="234" text-anchor="middle" class="label-tiny" font-size="10">无 seed 才 blocked</text>
+<text x="360" y="290" text-anchor="middle" class="label-tiny" font-size="12">无数字结论 · 无搜索量/KD 推断</text>
+<text x="360" y="320" text-anchor="middle" class="label-tiny" font-size="12">企业主无需技术人员或 Google 凭证</text>
 
 <rect x="720" y="130" width="640" height="220" rx="4" fill="#FFFFFF" stroke="#E5DFD6"/>
 <rect x="720" y="130" width="640" height="44" fill="#F3E6DF"/>
-<text x="1040" y="158" text-anchor="middle" class="label" font-size="15">路径 B · 本地数据包</text>
+<text x="1040" y="158" text-anchor="middle" class="label" font-size="15">路径 B · 服务方本地数据包</text>
 <rect x="740" y="192" width="180" height="56" rx="2" fill="#F3E6DF" stroke="#C15F3C"/>
 <text x="830" y="216" text-anchor="middle" class="label" font-size="12">检查 package</text>
 <text x="830" y="234" text-anchor="middle" class="label-tiny" font-size="10">manifest 兼容</text>
@@ -622,9 +622,9 @@ def gen_06() -> None:
 <text x="660" y="494" text-anchor="middle" class="label-tiny" font-size="12">一页摘要 · 可追溯指标</text>
 <text x="660" y="516" text-anchor="middle" class="label-tiny" font-size="12">最多 3 条运营提示</text>
 <rect x="880" y="432" width="450" height="120" rx="2" fill="#F3E6DF" stroke="#C15F3C" stroke-width="1.4"/>
-<text x="1105" y="468" text-anchor="middle" class="label" font-size="15">suggest-keywords</text>
-<text x="1105" y="494" text-anchor="middle" class="label-tiny" font-size="12">GSC 需求 + 可选 GA4 落地页</text>
-<text x="1105" y="516" text-anchor="middle" class="label-tiny" font-size="12">route_hint: product / blog / review</text>
+<text x="1105" y="468" text-anchor="middle" class="label" font-size="15">topic suggestions</text>
+<text x="1105" y="494" text-anchor="middle" class="label-tiny" font-size="12">suggest-keywords + suggest-faq-topics</text>
+<text x="1105" y="516" text-anchor="middle" class="label-tiny" font-size="12">data_backed / faq_seeded</text>
 
 <rect x="40" y="610" width="1320" height="180" rx="4" fill="#FFFFFF" stroke="#E5DFD6"/>
 <text x="60" y="642" class="label-accent" font-size="13">建议队列 · 不是授权写稿</text>
@@ -663,17 +663,17 @@ def gen_07() -> None:
         [("a07", "#C15F3C")],
     )
     body += '''
-<text x="700" y="84" text-anchor="middle" class="label" font-size="22">连接与轻量店铺建档</text>
-<text x="700" y="108" text-anchor="middle" class="label-sub" font-size="14">连接前只做问卷与公开检查 · 连接后先建档 · 再按能力拆分 write_ready</text>
+<text x="700" y="84" text-anchor="middle" class="label" font-size="22">连接与企业画像</text>
+<text x="700" y="108" text-anchor="middle" class="label-sub" font-size="14">连接前可做画像与 FAQ 整理 · 不做技术报告 · 连接后拆分 write_ready</text>
 
 <rect x="40" y="140" width="250" height="300" rx="4" fill="#FFFFFF" stroke="#E5DFD6"/>
 <rect x="40" y="140" width="250" height="48" fill="#F3E6DF"/>
 <text x="165" y="160" text-anchor="middle" class="label-tiny" font-size="11">LADDER 1</text>
 <text x="165" y="178" text-anchor="middle" class="label" font-size="14">连接前</text>
 <rect x="56" y="208" width="218" height="48" rx="2" fill="#FFFFFF" stroke="#E5DFD6"/>
-<text x="165" y="236" text-anchor="middle" class="label" font-size="12">业务问卷</text>
+<text x="165" y="236" text-anchor="middle" class="label" font-size="12">企业画像问卷</text>
 <rect x="56" y="268" width="218" height="48" rx="2" fill="#FFFFFF" stroke="#E5DFD6"/>
-<text x="165" y="296" text-anchor="middle" class="label" font-size="12">公开站点检查</text>
+<text x="165" y="296" text-anchor="middle" class="label" font-size="12">经营事实 / FAQ 整理</text>
 <rect x="56" y="328" width="218" height="48" rx="2" fill="#F3E6DF" stroke="#C15F3C"/>
 <text x="165" y="356" text-anchor="middle" class="label" font-size="12">opsy.mjs doctor</text>
 <text x="165" y="420" text-anchor="middle" class="label-tiny" font-size="11">禁止 Admin 推断 / 写入</text>
@@ -751,9 +751,9 @@ def gen_07() -> None:
 <text x="1220" y="568" text-anchor="middle" class="label-tiny" font-size="10">永不读/记 token</text>
 
 <rect x="40" y="640" width="1320" height="120" rx="4" fill="#FFFFFF" stroke="#E5DFD6"/>
-<text x="60" y="674" class="label-accent" font-size="13">公开站点检查边界</text>
-<text x="60" y="706" class="label" font-size="13">只记录普通访客可见页：URL · 响应 · 语言 · 导航 · 商品呈现 · Blog · 询盘 CTA · 标记 public-only</text>
-<text x="60" y="736" class="label-tiny" font-size="12">不推断主题源码、元字段定义、分析、未发布内容、权限 —— 不叫「审计」</text>
+<text x="60" y="674" class="label-accent" font-size="13">企业主版 Site Foundation 边界</text>
+<text x="60" y="706" class="label" font-size="13">只保留画像问卷：产品线 · 买家角色 · 销售问题 · 异议 · 商业事实 · 受限主张 · 负责人</text>
+<text x="60" y="736" class="label-tiny" font-size="12">不提供 Tracking · CWV · 结构化数据 · 索引抓取 · 主题代码或其他技术验收报告</text>
 <text x="1380" y="800" text-anchor="end" class="label-tiny mono" font-size="11">07 / connection / terracotta</text>
 </svg>
 '''

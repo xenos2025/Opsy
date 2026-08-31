@@ -5,10 +5,13 @@ This repository builds and distributes **Opsy — Guided Shopify Operations**. I
 ## Boundaries
 
 - Keep the only registered Skill at `skills/opsy/`.
+- Keep the supported business model fixed to `b2b_inquiry`; route checkout-led DTC stores to the separate Opsy DTC package.
 - Keep `skills/opsy/SKILL.md` concise and link every reference directly.
 - Keep client names, domains, IDs, credentials, raw exports, and project-specific rules out of the distributable Skill.
 - Never copy the Skill into generated customer workspaces.
 - Preserve existing customer `AGENTS.md`, `shopify-ops.json`, profiles, manifests, outputs, and inbox files.
+- Keep merchant data access at provider-delivered local snapshots only; never add a self-service Google API/OAuth path.
+- Keep site-foundation scope to the enterprise profile questionnaire; technical tracking, CWV, structured-data, crawl, or theme reports are out of scope.
 
 ## Shopify authority
 

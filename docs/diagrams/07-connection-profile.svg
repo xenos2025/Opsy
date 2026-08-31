@@ -16,17 +16,17 @@
 <text x="20" y="29" fill="#6B6560" font-size="13" class="mono">opsy / docs/diagrams / 07-connection-profile.svg</text>
 <rect x="1364" y="18" width="16" height="12" fill="#C15F3C"/>
 
-<text x="700" y="84" text-anchor="middle" class="label" font-size="22">连接与轻量店铺建档</text>
-<text x="700" y="108" text-anchor="middle" class="label-sub" font-size="14">连接前只做问卷与公开检查 · 连接后先建档 · 再按能力拆分 write_ready</text>
+<text x="700" y="84" text-anchor="middle" class="label" font-size="22">连接与企业画像</text>
+<text x="700" y="108" text-anchor="middle" class="label-sub" font-size="14">连接前可做画像与 FAQ 整理 · 不做技术报告 · 连接后拆分 write_ready</text>
 
 <rect x="40" y="140" width="250" height="300" rx="4" fill="#FFFFFF" stroke="#E5DFD6"/>
 <rect x="40" y="140" width="250" height="48" fill="#F3E6DF"/>
 <text x="165" y="160" text-anchor="middle" class="label-tiny" font-size="11">LADDER 1</text>
 <text x="165" y="178" text-anchor="middle" class="label" font-size="14">连接前</text>
 <rect x="56" y="208" width="218" height="48" rx="2" fill="#FFFFFF" stroke="#E5DFD6"/>
-<text x="165" y="236" text-anchor="middle" class="label" font-size="12">业务问卷</text>
+<text x="165" y="236" text-anchor="middle" class="label" font-size="12">企业画像问卷</text>
 <rect x="56" y="268" width="218" height="48" rx="2" fill="#FFFFFF" stroke="#E5DFD6"/>
-<text x="165" y="296" text-anchor="middle" class="label" font-size="12">公开站点检查</text>
+<text x="165" y="296" text-anchor="middle" class="label" font-size="12">经营事实 / FAQ 整理</text>
 <rect x="56" y="328" width="218" height="48" rx="2" fill="#F3E6DF" stroke="#C15F3C"/>
 <text x="165" y="356" text-anchor="middle" class="label" font-size="12">opsy.mjs doctor</text>
 <text x="165" y="420" text-anchor="middle" class="label-tiny" font-size="11">禁止 Admin 推断 / 写入</text>
@@ -104,8 +104,8 @@
 <text x="1220" y="568" text-anchor="middle" class="label-tiny" font-size="10">永不读/记 token</text>
 
 <rect x="40" y="640" width="1320" height="120" rx="4" fill="#FFFFFF" stroke="#E5DFD6"/>
-<text x="60" y="674" class="label-accent" font-size="13">公开站点检查边界</text>
-<text x="60" y="706" class="label" font-size="13">只记录普通访客可见页：URL · 响应 · 语言 · 导航 · 商品呈现 · Blog · 询盘 CTA · 标记 public-only</text>
-<text x="60" y="736" class="label-tiny" font-size="12">不推断主题源码、元字段定义、分析、未发布内容、权限 —— 不叫「审计」</text>
+<text x="60" y="674" class="label-accent" font-size="13">企业主版 Site Foundation 边界</text>
+<text x="60" y="706" class="label" font-size="13">只保留画像问卷：产品线 · 买家角色 · 销售问题 · 异议 · 商业事实 · 受限主张 · 负责人</text>
+<text x="60" y="736" class="label-tiny" font-size="12">不提供 Tracking · CWV · 结构化数据 · 索引抓取 · 主题代码或其他技术验收报告</text>
 <text x="1380" y="800" text-anchor="end" class="label-tiny mono" font-size="11">07 / connection / terracotta</text>
 </svg>

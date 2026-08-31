@@ -1,0 +1,287 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "Opsy 配置如何驱动三个核心模块",
+    "output": "docs/diagrams/opsy-project-config-dataflow.html",
+    "viewBox": [1280, 720],
+    "animation": "none",
+    "quality_profile": "showcase"
+  },
+  "stages": [
+    { "label": "资料从哪里来" },
+    { "label": "四组长期配置" },
+    { "label": "Runtime 装配" },
+    { "label": "三个核心模块" },
+    { "label": "可交付业务结果" }
+  ],
+  "nodes": [
+    {
+      "id": "sourceBundle",
+      "type": "external",
+      "label": "企业资料与数据来源",
+      "sublabel": "问卷、FAQ、产品、Shopify 回读、CSV",
+      "stage": 0,
+      "row": 2,
+      "width": 140,
+      "height": 68,
+      "tag": "人工确认 + 只读验证"
+    },
+
+    {
+      "id": "projectMarker",
+      "type": "database",
+      "label": "shopify-ops.json",
+      "sublabel": "定位项目与 workspace",
+      "stage": 1,
+      "row": 0,
+      "width": 150,
+      "height": 68,
+      "tag": "所有模块先读"
+    },
+    {
+      "id": "storeProfile",
+      "type": "database",
+      "label": "store-profile.json",
+      "sublabel": "连接、产品线、受众、市场、语气、负责人",
+      "stage": 1,
+      "row": 1,
+      "width": 150,
+      "height": 68,
+      "tag": "经营画像"
+    },
+    {
+      "id": "buyerFaq",
+      "type": "database",
+      "label": "buyer_faq.json",
+      "sublabel": "买家问题、异议、答案门禁、内容路由",
+      "stage": 1,
+      "row": 3,
+      "width": 150,
+      "height": 68,
+      "tag": "问题证据"
+    },
+    {
+      "id": "dataManifest",
+      "type": "database",
+      "label": "manifest.json + CSV",
+      "sublabel": "GSC/GA4 快照、周期与来源",
+      "stage": 1,
+      "row": 4,
+      "width": 150,
+      "height": 68,
+      "yOffset": -8,
+      "tag": "服务方本地数据"
+    },
+
+    {
+      "id": "runtimeProfile",
+      "type": "backend",
+      "label": "Opsy Runtime",
+      "sublabel": "读取 4 组配置，检查状态并装配模块上下文",
+      "stage": 2,
+      "row": 2,
+      "width": 150,
+      "height": 68,
+      "tag": "每次先执行"
+    },
+
+    {
+      "id": "productSkill",
+      "type": "backend",
+      "label": "Product 商品运营",
+      "sublabel": "画像定受众；FAQ 补异议；数据排优先级",
+      "stage": 3,
+      "row": 0,
+      "width": 150,
+      "height": 68,
+      "tag": "生成和优化商品页"
+    },
+    {
+      "id": "blogSkill",
+      "type": "backend",
+      "label": "Blog 内容增长",
+      "sublabel": "画像定语气；FAQ 定选题；GSC/GA4 定需求",
+      "stage": 3,
+      "row": 2,
+      "width": 150,
+      "height": 68,
+      "tag": "写作和 SEO/GEO 优化"
+    },
+    {
+      "id": "nextActions",
+      "type": "backend",
+      "label": "本周三件事",
+      "sublabel": "配置缺口加商品/文章校验，筛出 3 个动作",
+      "stage": 3,
+      "row": 4,
+      "width": 150,
+      "height": 68,
+      "yOffset": -8,
+      "tag": "给负责人和完成标准"
+    },
+
+    {
+      "id": "productResult",
+      "type": "cloud",
+      "label": "商品草稿与校验包",
+      "sublabel": "标题、描述、SEO、图片、发布前检查",
+      "stage": 4,
+      "row": 0,
+      "width": 150,
+      "height": 68,
+      "tag": "批准后写入 Shopify"
+    },
+    {
+      "id": "blogResult",
+      "type": "cloud",
+      "label": "文章草稿与校验包",
+      "sublabel": "选题、正文、SEO/GEO、内链、图片",
+      "stage": 4,
+      "row": 2,
+      "width": 150,
+      "height": 68,
+      "tag": "批准后写入 Shopify"
+    },
+    {
+      "id": "actionsResult",
+      "type": "cloud",
+      "label": "3 项行动清单",
+      "sublabel": "负责人、对象、日期、完成标准、风险",
+      "stage": 4,
+      "row": 4,
+      "width": 150,
+      "height": 68,
+      "yOffset": -8,
+      "tag": "不生成长报告"
+    }
+  ],
+  "flows": [
+    {
+      "id": "sourceToMarker",
+      "from": "sourceBundle",
+      "to": "projectMarker",
+      "label": "项目连接",
+      "classification": "项目定位",
+      "variant": "default",
+      "labelAt": [205, 218]
+    },
+    {
+      "id": "sourceToProfile",
+      "from": "sourceBundle",
+      "to": "storeProfile",
+      "label": "经营画像",
+      "classification": "经营事实",
+      "variant": "emphasis",
+      "labelAt": [150, 334]
+    },
+    {
+      "id": "sourceToFaq",
+      "from": "sourceBundle",
+      "to": "buyerFaq",
+      "label": "FAQ 资料",
+      "classification": "问题证据",
+      "variant": "default",
+      "labelAt": [150, 448]
+    },
+    {
+      "id": "sourceToManifest",
+      "from": "sourceBundle",
+      "to": "dataManifest",
+      "label": "数据快照",
+      "classification": "GSC/GA4 数据",
+      "variant": "dashed",
+      "labelAt": [205, 552]
+    },
+
+    {
+      "id": "markerToRuntime",
+      "from": "projectMarker",
+      "to": "runtimeProfile",
+      "label": "定位",
+      "classification": "所有模块",
+      "variant": "emphasis",
+      "labelAt": [423, 218]
+    },
+    {
+      "id": "profileToRuntime",
+      "from": "storeProfile",
+      "to": "runtimeProfile",
+      "label": "画像",
+      "classification": "模块上下文",
+      "variant": "emphasis",
+      "labelAt": [485, 334]
+    },
+    {
+      "id": "faqToRuntime",
+      "from": "buyerFaq",
+      "to": "runtimeProfile",
+      "label": "FAQ",
+      "classification": "内容与异议",
+      "variant": "default",
+      "labelAt": [485, 448]
+    },
+    {
+      "id": "manifestToRuntime",
+      "from": "dataManifest",
+      "to": "runtimeProfile",
+      "label": "数据",
+      "classification": "选题与优先级",
+      "variant": "dashed",
+      "labelAt": [423, 552]
+    },
+
+    {
+      "id": "runtimeToProduct",
+      "from": "runtimeProfile",
+      "to": "productSkill",
+      "label": "Product 输入",
+      "classification": "Product 输入",
+      "variant": "emphasis",
+      "labelAt": [640, 240]
+    },
+    {
+      "id": "runtimeToBlog",
+      "from": "runtimeProfile",
+      "to": "blogSkill",
+      "label": "Blog 输入",
+      "classification": "Blog 输入",
+      "variant": "emphasis",
+      "labelAt": [690, 330]
+    },
+    {
+      "id": "runtimeToActions",
+      "from": "runtimeProfile",
+      "to": "nextActions",
+      "label": "行动输入",
+      "classification": "行动输入",
+      "variant": "emphasis",
+      "labelAt": [640, 540]
+    },
+
+    {
+      "id": "productToResult",
+      "from": "productSkill",
+      "to": "productResult",
+      "label": "商品包",
+      "classification": "商品交付",
+      "variant": "emphasis"
+    },
+    {
+      "id": "blogToResult",
+      "from": "blogSkill",
+      "to": "blogResult",
+      "label": "文章包",
+      "classification": "内容交付",
+      "variant": "emphasis"
+    },
+    {
+      "id": "actionsToResult",
+      "from": "nextActions",
+      "to": "actionsResult",
+      "label": "3 项行动",
+      "classification": "执行交付",
+      "variant": "emphasis"
+    }
+  ]
+}

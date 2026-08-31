@@ -1,4 +1,8 @@
-# Workflow: 上月数据查询 / 数据更新
+# Workflow: 导入服务方数据 / 查看已有摘要
+
+Opsy never obtains Google credentials or queries GA4/GSC for the enterprise
+owner. This workflow only accepts a provider-delivered local package already
+placed in the workspace, or reads an existing validated snapshot.
 
 ## State the data basis
 
@@ -11,21 +15,8 @@ Before any answer, show:
 - whether the requested metric exists;
 - whether a comparison snapshot exists.
 
-Never describe a monthly snapshot as real-time Google data.
-
-## Update from Git
-
-For a repository project:
-
-1. Run read-only status and fetch.
-2. Preview incoming commits and changed paths.
-3. Stop if the worktree is dirty or the update is not fast-forward.
-4. Disclose theme, config, rule, Skill, or other non-data changes separately.
-5. Ask approval for the exact fast-forward update.
-6. Pull without stash, reset, force, or automatic merge.
-7. Validate the active manifest and datasets.
-
-Do not reduce a repository update to a blind `git pull`.
+Never describe a monthly snapshot as real-time Google data. Never offer OAuth,
+API setup, Property ID entry, or an “update from Google” button.
 
 ## Update from a local package
 
@@ -48,9 +39,11 @@ node <skill-root>/scripts/opsy.mjs summarize-data --project <project-root>
 node <skill-root>/scripts/opsy.mjs suggest-keywords --project <project-root>
 ```
 
-All three commands preview without changing files. The second previews a
+All three commands read local files and preview without changing them. The second previews a
 one-page summary. The third previews a Product/Blog suggestion queue derived
-from observed GSC demand and optional GA4 landing-page support. Add `--apply`
+from observed GSC demand and GA4 landing-page support. Product can use a
+GSC-only queue with a disclosed gap; Blog handoff requires valid
+`ga4_landing_pages`. Add `--apply`
 only after confirming each output path.
 
 The summary contains:
@@ -69,7 +62,7 @@ The keyword queue is saved, when approved, as:
 ```
 
 It records the observed query, `route_hint` (`product`, `blog`, or `review`),
-suggested action, owned page/surface, GSC metrics, optional joined GA4 landing
+suggested action, owned page/surface, GSC metrics, joined GA4 landing
 metrics, evidence references, source period, and merchant decision fields.
 GSC supplies demand evidence. GA4 only describes how an already-owned landing
 page was used. Neither source proves product capability, certification,

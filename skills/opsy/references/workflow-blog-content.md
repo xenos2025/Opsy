@@ -14,8 +14,15 @@ Opsy is **industry-agnostic**. Content jobs below describe buyer jobs for any
 B2B inquiry storefront. Do not default to textile/fabric vocabulary (patterns,
 gsm, yardage) unless the store profile’s products actually use those terms.
 
-Do not invent search volume, KD, rankings, or opportunity scores. Do not paste
-agency scoring CSVs into beginner flow unless the operator already has them.
+Do not invent search volume, KD, rankings, or opportunity scores. Consume the
+validated local data-center queue through [workflow-blog.md](workflow-blog.md);
+do not ask the operator to paste analytics rows manually.
+
+Read `profile.merchant_context` for real buyer roles, sales questions,
+objections, confirmed commercial facts, restricted claims, and content owner.
+These refine scene intake after the data-selected cluster exists. They cannot
+replace missing provider-delivered data; missing data returns
+`scoring_blocked` before this craft step.
 
 ## Store role (before the writer role)
 
@@ -23,23 +30,25 @@ The seller voice describes *how* the store speaks. `profile.store_role`
 describes *who it speaks to*: business model, industry, primary audience,
 primary market, content language, and conversion goal. Both are needed.
 
-Read `profile.store_role` before topic commitment. If its status is `blocked`,
-stop and run store-role intake in
-[workflow-connection-profile.md](workflow-connection-profile.md). Do not default
-the store to B2B inquiry, B2C purchase, one market, one language, or one CTA
-because of this Skill's examples.
+Read `profile.store_role` before topic commitment. Its `business_model` must be
+`b2b_inquiry`. If its status is `blocked`, stop and run store-role intake in
+[workflow-connection-profile.md](workflow-connection-profile.md). If the store
+closes primarily through direct online purchase, route it to Opsy DTC instead
+of adapting this B2B Skill.
 
-The business model decides the conversion frame:
-
-- `b2b_inquiry`: procurement, RFQ, sample, MOQ, and lead-generation framing.
-- `b2c_dtc`: product discovery, comparison, purchase, and retention framing.
-  Route transactional demand to the product or collection surface instead of
-  forcing it into a Blog article.
-- `hybrid`: label one primary audience per article. Never blend a procurement
-  decision and a consumer decision into one post.
+Use procurement, RFQ, sample, MOQ, and lead-generation framing. Pull the exact
+audience, market, language, and CTA from the confirmed profile rather than this
+Skill's examples.
 
 This same block also governs Product copy — see
 [workflow-product-content.md](workflow-product-content.md).
+
+For buyer questions or factual answers sourced from merchant FAQ material,
+read `config/buyer_faq.json` and apply
+[buyer-faq-contract.md](buyer-faq-contract.md). Accepted questions matching the
+article language, scope, and Blog route may shape the angle or outline. Their
+answers remain out of buyer-visible copy unless `content_use: eligible` passes
+the separate answer gate; conflicting and quarantined rows remain out.
 
 ## Writer role (always first)
 
@@ -75,7 +84,7 @@ Product and Blog draft Approval A**. The same role serves both surfaces.
 
 ### Voice intake (one question at a time)
 
-Propose defaults from the business questionnaire / public site, then confirm:
+Propose defaults from the enterprise profile questionnaire, then confirm:
 
 1. In one sentence, who is speaking when this store writes Blog for buyers?
 2. What do they know deeply (process, specs, sampling, programs…)?
