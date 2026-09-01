@@ -221,15 +221,17 @@ def gen_02() -> None:
 
 <rect x="690" y="314" width="200" height="70" rx="2" fill="#FAF7F2" stroke="#E5DFD6"/>
 <text x="790" y="342" text-anchor="middle" class="label" font-size="14">inbox/</text>
-<text x="790" y="364" text-anchor="middle" class="label-tiny" font-size="11">products · content · faq · data</text>
+<text x="790" y="364" text-anchor="middle" class="label-tiny" font-size="10">products · content · faq · profile · data</text>
 
 <rect x="910" y="314" width="200" height="70" rx="2" fill="#FAF7F2" stroke="#E5DFD6"/>
-<text x="1010" y="342" text-anchor="middle" class="label" font-size="14">outputs/ · backups/</text>
-<text x="1010" y="364" text-anchor="middle" class="label-tiny" font-size="11">草稿 · 写前快照</text>
+<text x="1010" y="342" text-anchor="middle" class="label" font-size="12">outputs/ · backups/ · tmp/</text>
+<text x="1010" y="364" text-anchor="middle" class="label-tiny" font-size="11">草稿 · 写前快照 · 单次操作文件</text>
 
-<rect x="690" y="404" width="420" height="56" rx="2" fill="#FFFFFF" stroke="#B54A3A" stroke-dasharray="5 4"/>
-<text x="900" y="429" text-anchor="middle" class="label" font-size="14" fill="#B54A3A">已有 AGENTS.md · 永不覆盖</text>
-<text x="900" y="450" text-anchor="middle" class="label-tiny" font-size="11">已有 _project/ 可只补 shopify-ops.json</text>
+<text x="900" y="402" text-anchor="middle" class="label-tiny" font-size="11">README.md · .gitignore</text>
+<text x="900" y="418" text-anchor="middle" class="label-tiny" font-size="11">ai-log/operations-log.md · handle-changes.csv</text>
+<rect x="690" y="426" width="420" height="56" rx="2" fill="#FFFFFF" stroke="#B54A3A" stroke-dasharray="5 4"/>
+<text x="900" y="451" text-anchor="middle" class="label" font-size="14" fill="#B54A3A">已有 AGENTS.md · 永不覆盖</text>
+<text x="900" y="472" text-anchor="middle" class="label-tiny" font-size="11">已有 _project/ 可只补 shopify-ops.json</text>
 <text x="900" y="530" text-anchor="middle" class="label-sub" font-size="13">gitignore：inbox / outputs / backups / tmp</text>
 
 <rect x="60" y="590" width="1080" height="130" rx="4" fill="#FFFFFF" stroke="#C15F3C" stroke-width="1.6"/>
@@ -332,7 +334,7 @@ def gen_04() -> None:
     )
     body += '''
 <text x="740" y="84" text-anchor="middle" class="label" font-size="22">商品运营 · 双批准发布</text>
-<text x="740" y="108" text-anchor="middle" class="label-sub" font-size="14">商家材料 → 商品包校验 → 买家决策简报 → Approval A 草稿 → 回读 → Approval B 发布</text>
+<text x="740" y="108" text-anchor="middle" class="label-sub" font-size="14">商家材料 → 候选校验 → 决策简报 → 描述 craft → 商品包校验 → A 草稿 → 回读 → B 发布</text>
 <rect x="40" y="128" width="1400" height="40" rx="3" fill="#F3E6DF" stroke="#C15F3C" stroke-width="1.4"/>
 <text x="60" y="153" class="label-accent" font-size="13">需求数据是买家兴趣证据，不能冒充产品事实 · 图片不能推断认证 / MOQ / 交期</text>
 
@@ -370,7 +372,7 @@ def gen_04() -> None:
 <rect x="520" y="188" width="220" height="520" rx="4" fill="#FFFFFF" stroke="#C15F3C" stroke-width="1.8"/>
 <rect x="520" y="188" width="220" height="48" fill="#C15F3C"/>
 <text x="630" y="208" text-anchor="middle" class="label" font-size="11" fill="#FAF7F2">STEP 3</text>
-<text x="630" y="226" text-anchor="middle" class="label" font-size="14" fill="#FAF7F2">买家决策简报</text>
+<text x="630" y="226" text-anchor="middle" class="label" font-size="14" fill="#FAF7F2">决策 + 描述工艺</text>
 <rect x="532" y="252" width="196" height="48" rx="2" fill="#F3E6DF" stroke="#C15F3C" stroke-width="1.6"/>
 <text x="630" y="272" text-anchor="middle" class="label" font-size="12">decision-brief.json</text>
 <text x="630" y="290" text-anchor="middle" class="label-tiny" font-size="10">surface=pdp</text>
@@ -380,10 +382,13 @@ def gen_04() -> None:
 <rect x="532" y="372" width="196" height="48" rx="2" fill="#FFFFFF" stroke="#E5DFD6"/>
 <text x="630" y="392" text-anchor="middle" class="label" font-size="12">事实→买家价值</text>
 <text x="630" y="410" text-anchor="middle" class="label-tiny" font-size="10">异议 / 适用边界</text>
-<rect x="532" y="432" width="196" height="48" rx="2" fill="#FFFFFF" stroke="#E5DFD6"/>
-<text x="630" y="452" text-anchor="middle" class="label" font-size="12">元字段匹配定义</text>
-<text x="630" y="470" text-anchor="middle" class="label-tiny" font-size="10">不创建 definition</text>
-<text x="630" y="540" text-anchor="middle" class="label-accent" font-size="11">未全 pass 不进 A</text>
+<rect x="532" y="432" width="196" height="48" rx="2" fill="#F3E6DF" stroke="#C15F3C" stroke-width="1.4"/>
+<text x="630" y="452" text-anchor="middle" class="label" font-size="12">描述 craft scorecard</text>
+<text x="630" y="470" text-anchor="middle" class="label-tiny" font-size="10">workflow-product-content</text>
+<rect x="532" y="492" width="196" height="48" rx="2" fill="#F3E6DF" stroke="#C15F3C" stroke-width="1.4"/>
+<text x="630" y="512" text-anchor="middle" class="label" font-size="11">validate-product-package</text>
+<text x="630" y="530" text-anchor="middle" class="label-tiny" font-size="10">mode=draft</text>
+<text x="630" y="568" text-anchor="middle" class="label-accent" font-size="11">两门 + 包校验全 pass 才进 A</text>
 
 <rect x="760" y="188" width="220" height="520" rx="4" fill="#FFFFFF" stroke="#C15F3C" stroke-width="1.8"/>
 <rect x="760" y="188" width="220" height="48" fill="#C15F3C"/>
@@ -418,6 +423,8 @@ def gen_04() -> None:
 <rect x="1012" y="432" width="196" height="48" rx="2" fill="#FAF7F2" stroke="#E5DFD6"/>
 <text x="1110" y="452" text-anchor="middle" class="label" font-size="12">handle 变更?</text>
 <text x="1110" y="470" text-anchor="middle" class="label-tiny" font-size="10">→ 404 队列</text>
+<text x="1110" y="526" text-anchor="middle" class="label-accent" font-size="10">validate-product-package</text>
+<text x="1110" y="544" text-anchor="middle" class="label-tiny" font-size="10">mode=public · 再进入 B</text>
 
 <rect x="1240" y="188" width="200" height="520" rx="4" fill="#FFFFFF" stroke="#E5DFD6"/>
 <rect x="1240" y="188" width="200" height="48" fill="#F3E6DF"/>
@@ -425,7 +432,7 @@ def gen_04() -> None:
 <text x="1340" y="226" text-anchor="middle" class="label" font-size="14">落盘</text>
 <rect x="1252" y="252" width="176" height="64" rx="2" fill="#FAF7F2" stroke="#E5DFD6"/>
 <text x="1340" y="278" text-anchor="middle" class="label" font-size="12">outputs/products/</text>
-<text x="1340" y="298" text-anchor="middle" class="label-tiny" font-size="10">package + brief</text>
+<text x="1340" y="298" text-anchor="middle" class="label-tiny" font-size="10">package + brief + craft</text>
 <rect x="1252" y="332" width="176" height="64" rx="2" fill="#FAF7F2" stroke="#E5DFD6"/>
 <text x="1340" y="358" text-anchor="middle" class="label" font-size="12">ai-log/</text>
 <text x="1340" y="378" text-anchor="middle" class="label-tiny" font-size="10">operations-log</text>
@@ -460,7 +467,7 @@ def gen_05() -> None:
     )
     body += '''
 <text x="740" y="84" text-anchor="middle" class="label" font-size="22">Blog 与内容 · 决策 + 工艺双门</text>
-<text x="740" y="108" text-anchor="middle" class="label-sub" font-size="14">data-backed / FAQ-seeded 选题 · Blog 包校验 · 决策简报 · craft 门 · A 草稿 · B 发布/定时</text>
+<text x="740" y="108" text-anchor="middle" class="label-sub" font-size="14">data-backed / FAQ-seeded 选题 · 决策简报 · craft 门 · Blog 包校验 · A 草稿 · B 发布/定时</text>
 <rect x="40" y="128" width="1400" height="40" rx="3" fill="#F3E6DF" stroke="#C15F3C" stroke-width="1.4"/>
 <text x="60" y="153" class="label-accent" font-size="13">百科式无场景稿、无商业目标稿、媒体未就绪稿：不进入 Approval A（若请求写 Shopify）</text>
 
@@ -514,6 +521,7 @@ def gen_05() -> None:
 <rect x="612" y="446" width="236" height="52" rx="2" fill="#F3E6DF" stroke="#C15F3C" stroke-width="1.6"/>
 <text x="730" y="468" text-anchor="middle" class="label" font-size="12">内链 · CTA</text>
 <text x="730" y="486" text-anchor="middle" class="label-tiny" font-size="10">workflow-blog-content</text>
+<text x="730" y="530" text-anchor="middle" class="label-accent" font-size="10">validate-blog-package · review / write</text>
 
 <rect x="880" y="188" width="260" height="480" rx="4" fill="#FFFFFF" stroke="#E5DFD6"/>
 <rect x="880" y="188" width="260" height="48" fill="#F3E6DF"/>
@@ -530,7 +538,7 @@ def gen_05() -> None:
 <text x="1010" y="422" text-anchor="middle" class="label-tiny" font-size="10">blog / title / body / tags</text>
 <rect x="892" y="446" width="236" height="52" rx="2" fill="#FFFFFF" stroke="#E5DFD6"/>
 <text x="1010" y="468" text-anchor="middle" class="label" font-size="12">已有文章修订</text>
-<text x="1010" y="486" text-anchor="middle" class="label-tiny" font-size="10">快照 + 精确 diff</text>
+<text x="1010" y="486" text-anchor="middle" class="label-tiny" font-size="10">先查 28 天 cooldown · 再做快照 + diff</text>
 
 <rect x="1160" y="188" width="280" height="480" rx="4" fill="#FFFFFF" stroke="#E5DFD6"/>
 <rect x="1160" y="188" width="280" height="48" fill="#F3E6DF"/>
@@ -555,8 +563,8 @@ def gen_05() -> None:
 <line x1="1140" y1="400" x2="1158" y2="400" stroke="#C15F3C" stroke-width="2" marker-end="url(#a05)"/>
 
 <rect x="40" y="692" width="1400" height="130" rx="4" fill="#FFFFFF" stroke="#E5DFD6"/>
-<text x="60" y="724" class="label-accent" font-size="13">与商品共用买家决策层 · 与服务商 Blog SEO/GEO Agent 分工</text>
-<text x="60" y="754" class="label" font-size="13">Opsy：可执行的草稿/修订/发布菜单 + craft 门槛 · 深度评分队列与 GEO 诊断仍归客户仓库 monthly-loop</text>
+<text x="60" y="724" class="label-accent" font-size="13">已发布文章更新：先查 28 天 cooldown；纠错、技术缺陷或运营者明确提前改写可作为例外</text>
+<text x="60" y="754" class="label" font-size="13">与商品共用买家决策层 · Opsy 管草稿/修订/发布与 craft 门；深度 SEO/GEO 诊断仍归服务方</text>
 <text x="60" y="784" class="label-tiny" font-size="12">权威：workflow-blog.md · workflow-blog-content.md · workflow-buyer-decision.md</text>
 <text x="1460" y="860" text-anchor="end" class="label-tiny mono" font-size="11">05 / blog / terracotta</text>
 </svg>

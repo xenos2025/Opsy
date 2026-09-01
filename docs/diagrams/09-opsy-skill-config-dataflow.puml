@@ -1,0 +1,353 @@
+@startuml
+' Opsy — UML component and data-flow architecture
+' Visual contract: user-provided Shopify Operations Skill UML reference.
+' Content authority: current Opsy repository only.
+
+title
+<size:28><b>Opsy — UML 组件与数据流架构图</b></size>
+<size:16><color:#64748B>1 个注册 Skill · 6 个内部工作流 · 4 组长期项目状态 · 本地快照数据 · 双批准 Shopify 写入</color></size>
+end title
+
+top to bottom direction
+skinparam backgroundColor #F6F9FC
+skinparam shadowing true
+skinparam roundcorner 8
+skinparam linetype ortho
+skinparam nodesep 32
+skinparam ranksep 38
+skinparam defaultFontName "Noto Sans CJK SC"
+skinparam defaultFontSize 15
+skinparam defaultFontColor #17243A
+skinparam ArrowColor #475569
+skinparam ArrowThickness 1.4
+skinparam packageStyle rectangle
+skinparam packageBorderColor #64748B
+skinparam packageBackgroundColor #F8FAFC
+skinparam packageFontColor #334155
+skinparam packageFontStyle bold
+skinparam ClassAttributeIconSize 0
+skinparam ClassBorderThickness 1.5
+skinparam ClassBorderColor #334155
+skinparam ClassBackgroundColor #DCEBFA
+skinparam ClassHeaderBackgroundColor #8FC4F7
+skinparam ClassFontColor #17243A
+skinparam ClassFontStyle bold
+skinparam ClassAttributeFontStyle plain
+skinparam ClassAttributeFontColor #334155
+skinparam NoteBorderColor #B89B56
+skinparam NoteBackgroundColor #FFF8D8
+skinparam NoteFontColor #3F3A2F
+
+skinparam class {
+  BackgroundColor<<operator>> #E2E8F0
+  BorderColor<<operator>> #475569
+  BackgroundColor<<runtime>> #B9D9F7
+  BorderColor<<runtime>> #2563A6
+  BackgroundColor<<config>> #E6CCFF
+  BorderColor<<config>> #7C3AED
+  BackgroundColor<<input>> #FFF8D8
+  BorderColor<<input>> #B89B56
+  BackgroundColor<<asset>> #E2E8F0
+  BorderColor<<asset>> #64748B
+  BackgroundColor<<evidence>> #C8E0F8
+  BorderColor<<evidence>> #2563A6
+  BackgroundColor<<workflow>> #C5E0FA
+  BorderColor<<workflow>> #2563A6
+  BackgroundColor<<validator>> #C5E0FA
+  BorderColor<<validator>> #2563A6
+  BackgroundColor<<workspace>> #BDF3D9
+  BorderColor<<workspace>> #15803D
+  BackgroundColor<<gate>> #FFD8A8
+  BorderColor<<gate>> #C2410C
+  BackgroundColor<<shopify>> #BDF3D9
+  BorderColor<<shopify>> #15803D
+  BackgroundColor<<external>> #E2E8F0
+  BorderColor<<external>> #64748B
+}
+
+hide circle
+hide stereotype
+
+class "Operator / Codex Task" as Operator <<operator>> {
+  + request(outcome, projectRoot)
+}
+
+class "OpsyRuntime" as Runtime <<runtime>> [[../../skills/opsy/SKILL.md]] {
+  - skillRoot : skills/opsy
+  - businessModel : b2b_inquiry
+  - dataAccess : delivered_snapshots_only
+  + preflight(projectRoot)
+  + statusAndCapabilityGates()
+  + routeOneOperatorGoal()
+  + enforceApprovalAndReadback()
+}
+
+Operator -[#475569,bold]-> Runtime : preflight
+
+package "跨 Skill / 包链接" as CrossSkillLinks {
+  class "Shopify Operations Skill" as AgencySkill <<external>> [[../../skills/opsy/references/agency-handoff.md]] {
+    + exportReviewedMerchantTasks()
+  }
+  class "opsy-merchant-handoff.csv" as AgencyHandoff <<evidence>> {
+    - contract : opsy-agency-handoff-v1
+    - status : ready_for_merchant
+    + importWithoutWriteApproval()
+  }
+  class "Opsy DTC" as OpsyDtc <<external>> {
+    + handleCheckoutLedStore()
+  }
+
+  AgencySkill -[#2563A6]-> AgencyHandoff : 已审核任务
+  AgencyHandoff -[#2563A6]-> Runtime : import-agency-handoff
+  Runtime -[#7C3AED,dashed]-> OpsyDtc : checkout-led only
+}
+
+class "WorkspaceResolver" as Resolver <<operator>> [[../../skills/opsy/references/project-layout.md]] {
+  - shopify-ops.json
+  - AGENTS.md
+  + resolveNearestMarker()
+  + preserveExistingWorkspace()
+}
+
+diamond "Primary\nWorkflow\nRouter" as Router #FFF0B8
+
+Resolver -[#475569]-> Router : project + workspace
+Runtime -[#475569,bold]-> Router : state + allowed choices
+
+note right of Router
+  一次只加载一个内部工作流。
+  Product / Blog / 404 等不是
+  独立安装 Skill；它们共享同一
+  Opsy Runtime、配置和安全门。
+end note
+
+package "项目规则、长期画像与 FAQ（采集输入不等于事实库）" as ConfigLayer {
+  class "ProjectAndWorkspaceConfig" as ProjectConfig <<config>> [[../../skills/opsy/references/project-layout.md]] {
+    - shopify-ops.json
+    - AGENTS.md
+    - workspace path
+    + locateProjectAndRules()
+  }
+
+  class "ProfileInputEvidence" as ProfileInputs <<input>> [[../../skills/opsy/assets/workspace/config/business-questionnaire.md]] {
+    - config/business-questionnaire.md
+    - inbox/profile/YYYY-MM-DD/audience-intake.json
+    - Shopify read-only profile readback
+    + promoteConfirmedSummaryOnly()
+  }
+
+  class "StoreProfileConfig" as StoreProfile <<config>> [[../../skills/opsy/assets/workspace/config/store-profile.json]] {
+    - config/store-profile.json
+    - store + connection
+    - profile.store_role
+    - profile.content_voice
+    - profile.merchant_context
+    - markets / languages / primary_inquiry_cta
+    + provideConfirmedProfile()
+  }
+
+  class "FaqSourceEvidence" as FaqSources <<input>> [[../../skills/opsy/references/buyer-faq-contract.md]] {
+    - inbox/faq/BATCH/source-*
+    - question / answer / language / source
+    + normalizeAndReviewConflicts()
+  }
+
+  class "BuyerFaqConfig" as BuyerFaq <<config>> [[../../skills/opsy/references/buyer-faq-contract.md]] {
+    - config/buyer_faq.json
+    - audience_signals / faq_items
+    - conflicts / quarantine
+    + provideEligibleQuestionsAndRoutes()
+  }
+
+  ProjectConfig -[hidden]down-> ProfileInputs
+  ProfileInputs -[#B89B56]-> StoreProfile : 确认摘要 / 只读回读
+  StoreProfile -[hidden]down-> FaqSources
+  FaqSources -[#B89B56]-> BuyerFaq : 规范化 + 人工审核
+}
+
+note right of StoreProfile
+  画像事实库 = config/store-profile.json
+  FAQ 不提供 connection、角色、市场、语气或 CTA。
+end note
+
+package "Manifest 声明的数据与经营证据" as EvidenceLayer {
+  class "EvidenceManifest" as Manifest <<evidence>> [[../../skills/opsy/references/data-contract.md]] {
+    - data-center/manifest.json
+    - source / scope / timezone
+    - date_range / pulled_at / row_count
+    + verifyDeclaredDatasetContract()
+  }
+
+  class "SearchEvidence" as SearchEvidence <<evidence>> [[../../skills/opsy/references/data-contract.md]] {
+    - gsc_queries.csv
+    - gsc_pages.csv
+    - gsc_query_page.csv
+    - gsc_not_found.csv optional
+    + routeDemandPagesAnd404s()
+  }
+
+  class "AnalyticsEvidence" as AnalyticsEvidence <<evidence>> [[../../skills/opsy/references/data-contract.md]] {
+    - ga4_channels.csv
+    - ga4_landing_pages.csv
+    - ga4_direct_unassigned_quality.csv
+    - ga4_effective_channels.csv
+    + summarizeLandingAndChannelSignals()
+  }
+
+  class "MerchantSourceEvidence" as MerchantEvidence <<evidence>> [[../opsy-project-file-inventory.md]] {
+    - inbox/products/*
+    - inbox/content/*
+    - images / video / sheets / sales facts
+    + preserveSourceRefsAndUnknowns()
+  }
+
+  Manifest -[hidden]down-> SearchEvidence
+  SearchEvidence -[hidden]down-> AnalyticsEvidence
+  AnalyticsEvidence -[hidden]down-> MerchantEvidence
+}
+
+ProjectConfig -[#7C3AED,dashed]-> Runtime : 项目定位与规则
+StoreProfile -[#7C3AED,dashed]-> Runtime : store-profile.json → 连接 / 角色 / 市场 / 语气 / CTA
+BuyerFaq -[#7C3AED,dashed]-> Runtime : buyer_faq.json → FAQ 问题 / 异议 / 答案资格 / 路由
+
+Manifest -[#2563A6,dashed]-> Runtime : 活动数据集与新鲜度
+SearchEvidence -[#2563A6,dashed]-> Runtime : 搜索需求 / 404
+AnalyticsEvidence -[#2563A6,dashed]-> Runtime : 落地页 / 渠道表现
+MerchantEvidence -[#2563A6,dashed]-> Runtime : 产品和内容事实
+
+ConfigLayer -[hidden]right- Runtime
+Runtime -[hidden]right- EvidenceLayer
+
+package "6 个 Opsy 内部工作流 · Router 一次选择一个" as Workflows {
+  class "Connection & Profile" as ConnectionFlow <<workflow>> [[../../skills/opsy/references/workflow-connection-profile.md]] {
+    + connectReadOnlyAndConfirmProfile()
+  }
+  class "Next Actions" as ActionsFlow <<workflow>> [[../../skills/opsy/references/workflow-next-actions.md]] {
+    + returnExactlyThreeActions()
+  }
+  class "Product Operations" as ProductFlow <<workflow>> [[../../skills/opsy/references/workflow-products.md]] {
+    + buildDecisionAndProductPackage()
+  }
+  class "Blog & Content" as BlogFlow <<workflow>> [[../../skills/opsy/references/workflow-blog.md]] {
+    + chooseDataBackedOrFaqSeededTopic()
+  }
+  class "404 Redirect" as RedirectFlow <<workflow>> [[../../skills/opsy/references/workflow-404.md]] {
+    + triageAndSelectExactRedirects()
+  }
+  class "Monthly Data" as MonthlyFlow <<workflow>> [[../../skills/opsy/references/workflow-monthly-data.md]] {
+    + validateSummarizeSuggestKeywords()
+  }
+
+  ConnectionFlow -[hidden]right-> ActionsFlow
+  ActionsFlow -[hidden]right-> ProductFlow
+  ConnectionFlow -[hidden]down-> BlogFlow
+  ActionsFlow -[hidden]down-> RedirectFlow
+  ProductFlow -[hidden]down-> MonthlyFlow
+  BlogFlow -[hidden]right-> RedirectFlow
+  RedirectFlow -[hidden]right-> MonthlyFlow
+}
+
+Router -[#C2410C,bold]-> Workflows : route exactly one
+
+StoreProfile -[#7C3AED,dashed]-> Workflows : 已确认画像与写作边界
+BuyerFaq -[#7C3AED,dashed]-> Workflows : 合格问题与答案资格
+Manifest -[#2563A6,dashed]-> Workflows : manifest-declared only
+MerchantEvidence -[#2563A6,dashed]-> Workflows : source facts / media
+
+class "SpecialistValidators" as Validators <<validator>> [[../../skills/opsy/scripts/opsy.mjs]] {
+  + validateDataCenter()
+  + validateBuyerFaqAndAudienceIntake()
+  + validateDecisionProductBlogPackages()
+  + validateNextActions()
+  + guardMutationAndCheckResponse()
+  + return(pass | warning | blocker)
+}
+
+Workflows -[#475569,bold]-> Validators : candidate artifacts
+
+package "Client Workspace · 客户私有，可迁移，升级不得覆盖" as ClientWorkspace {
+  class "outputs/" as Outputs <<workspace>> {
+    - product-package.json
+    - blog-package.json
+    - next-actions.json
+    - monthly/keyword-suggestions-*.csv
+    - 404/404-queue.csv
+    - agency-handoff/*.csv
+    + keepEvidencePathsAndReadback()
+  }
+
+  class "backups/ + tmp/opsy/" as SafetyState <<workspace>> {
+    - pre-write snapshots
+    - query / variables / sanitized response
+    + preserveExactOperationState()
+  }
+
+  class "ai-log/" as AuditLog <<workspace>> {
+    - operations-log.md
+    - handle-changes.csv
+    + recordOutcomeWithoutCredentials()
+  }
+
+  Outputs -[hidden]right-> SafetyState
+  SafetyState -[hidden]right-> AuditLog
+}
+
+class "GraphQLAndToolchainAssets" as GraphqlAssets <<asset>> [[../../skills/opsy/references/shopify-cli.md]] {
+  - Skill package asset; not client profile
+  - assets/toolchain.json
+  - assets/graphql/*.graphql
+  - *.variables.example.json
+  + pinCommandAndOperationContract()
+}
+
+class "SharedWriteGate" as WriteGate <<gate>> [[../../skills/opsy/references/safety-and-approvals.md]] {
+  + requireWorkflowWriteCapability()
+  + requirePreWriteSnapshot()
+  + requireExactFieldPreview()
+  + requireExplicitApprovalA()
+  + requireGuardedVariables()
+  + requireReadbackBeforeApprovalB()
+}
+
+class "Shopify Admin / Public Site" as Shopify <<shopify>> [[../../skills/opsy/references/shopify-cli.md]] {
+  + approvedDraftOrUpdate()
+  + adminReadback()
+  + approvalBPublishOrSchedule()
+  + publicPageReadback()
+}
+
+Validators -[#15803D,bold]-> Outputs : validated local deliverables
+Validators -[#C2410C,bold]-> WriteGate : write candidate only
+GraphqlAssets -[#C2410C,dashed]-> WriteGate : exact operation template
+WriteGate -[#C2410C,bold]-> Shopify : explicit approved scope
+WriteGate -[#15803D]-> SafetyState : snapshot + operation files
+Shopify -[#15803D,dashed]-> AuditLog : Admin / public readback
+Shopify -[#15803D,dashed]-> Outputs : verified result
+
+Outputs -[hidden]right-> WriteGate
+WriteGate -[hidden]right-> Shopify
+
+note right of EvidenceLayer
+  原始 CSV 不改写；只有 manifest 声明的文件是活动数据。
+  Product 可无 Google 数据运行；Blog 需要 GSC + GA4，
+  或使用合格 FAQ 问题进入不含虚构指标的 faq_seeded 冷启动。
+end note
+
+note bottom of ClientWorkspace
+  business-questionnaire.md 是填写入口；audience-intake.json 是日期证据。
+  只有确认摘要进入 store-profile.json；输出包不会反写成第二份事实库。
+end note
+
+legend bottom
+  |= 颜色 / 线型 |= 含义 |
+  |<#E6CCFF>　</#E6CCFF>| 客户长期项目配置 |
+  |<#FFF8D8>　</#FFF8D8>| 采集输入 / 只读回读；确认后才晋升为画像或 FAQ |
+  |<#E2E8F0>　</#E2E8F0>| Skill 包内只读操作模板；不是客户画像 |
+  |<#C8E0F8>　</#C8E0F8>| manifest 管理的数据与经营证据 |
+  |<#C5E0FA>　</#C5E0FA>| Runtime、工作流和专业校验器 |
+  |<#BDF3D9>　</#BDF3D9>| 客户 Workspace、审计落盘与 Shopify 回读 |
+  |<#FFD8A8>　</#FFD8A8>| 需要明确批准的写入门 |
+  |虚线依赖| 读取、条件证据或跨包路由；不自动授权写入 |
+endlegend
+
+@enduml

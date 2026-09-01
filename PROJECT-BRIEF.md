@@ -152,7 +152,7 @@ project/
 
 Codex 与 WorkBuddy 只注册一个实际 Skill：`opsy`。六项业务能力是 `references/workflow-*.md` 中由主入口直接加载的内部工作流，不单独注册或要求初学者选择 Agent。状态规则、确定性脚本、模板和测试各自分层，避免把所有逻辑堆进一个提示文件。
 
-发行仓库为 `xenos2025/Opsy`，本地实现根目录为 `D:\Opsy`，包含项目文档、安装器和 `skills/opsy/`。Skill 自身不包含客户工作区副本。
+发行仓库为 `xenos2025/Opsy`，本地实现位于当前仓库根目录，包含项目文档、安装器和 `skills/opsy/`。Skill 自身不包含客户工作区副本。
 
 项目通过 GitHub 仓库和带版本号的 GitHub Release 分发，提供 `install.ps1` 与 `install.sh`：
 
@@ -193,4 +193,4 @@ Codex 与 WorkBuddy 只注册一个实际 Skill：`opsy`。六项业务能力是
 
 ## 最终确认
 
-已确认使用 **Opsy — Guided Shopify Operations / `opsy`**，以 `D:\Opsy` 为本地发行仓库根目录、`xenos2025/Opsy` 为远程仓库，并按本说明的 V1 范围进入实现。
+已确认使用 **Opsy — Guided Shopify Operations / `opsy`**，以当前仓库根目录作为本地发行仓库、`xenos2025/Opsy` 为远程仓库，并按本说明的 V1 范围进入实现。

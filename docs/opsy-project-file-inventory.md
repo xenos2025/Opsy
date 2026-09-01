@@ -4,7 +4,7 @@
 
 - 日期：2026-09-01
 - 时区：Asia/Shanghai
-- 范围：仅 `D:\Opsy` 当前 Opsy B2B 项目，不包含 `Shopify Operations Skill`
+- 范围：仅当前仓库中的 Opsy B2B 项目，不包含 `Shopify Operations Skill`
 - 依据：当前 `initializeWorkspace()` 实现、workspace 模板、项目结构合同、Runtime/Product/Blog/FAQ/画像/本周三件事合同和工作区测试
 - 结论类型：本地代码与模板实证；不包含客户项目、线上 Shopify 状态或服务方外部系统
 - 配套图：[`diagrams/opsy-project-config-dataflow.html`](diagrams/opsy-project-config-dataflow.html)，展示来源、长期配置和 Opsy 各能力的消费路径

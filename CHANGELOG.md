@@ -28,6 +28,7 @@
 - Blog 起草增加 `content_voice` 与场景工种要求，并补充内容工艺检查。
 - 月度数据可生成关键词建议队列；GSC-only 行只供 Product 候选使用，Blog 候选还必须有有效 GA4 落地页证据。建议须人工确认后才进入商品或 Blog。
 - README 增加 terracotta 流程说明图，覆盖状态机、工作区、写入安全、商品/Blog 双批准、月度数据、连接建档和 404。
+- README 改用 PlantUML 总架构图展示 Skill 链接、配置与证据来源、内部工作流及 Shopify 写入门；原 01–08 流程图保留为营销和讲解素材。
 - 新增 Opsy 新项目文件清单与交互式配置流图，说明配置来源及其在 Runtime、Product、Blog 和本周三件事中的完整消费路径。
 - 可从 Shopify Operations Skill 导入已审核的 `opsy-agency-handoff-v1` 任务；不继承任何 Shopify 写入批准。
 - 识别服务商工作区时，展示「已识别服务商工作区；Opsy 尚未启用」，并保持当前档案与 Shopify 只读。

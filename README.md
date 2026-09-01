@@ -104,21 +104,15 @@ Opsy 会寻找 `shopify-ops.json`、判断当前状态，并只展示现在可�
 
 新商品和新文章默认先创建非公开草稿；回读验证后，必须第二次确认才能正式发布。
 
-## 核心流程
+## 整体架构与数据流
 
-下图与文字同源：状态、写入安全与各工作流的完整示意见 [`docs/diagrams/`](docs/diagrams/)。权威规则仍在 `skills/opsy/SKILL.md` 与 `references/`。
+下图集中说明 Opsy 与 Shopify Operations Skill / Opsy DTC 的链接、Runtime 路由、六个内部工作流、长期项目配置、本地证据、客户工作区和双批准写入门。画像事实来自 `config/store-profile.json`；`config/buyer_faq.json` 是独立的 FAQ 问题、异议与答案资格配置。
 
-| 流程 | 说明 | 图 |
-|---|---|---|
-| 单入口与状态机 | `$opsy` → `opsy.mjs status` → 横幅 → 仅展示当前可执行选项；不让运营者选内部 Agent | [01](docs/diagrams/01-entry-state-menu.svg) |
-| Skill / 工作区 | 升级 Skill 不动客户数据；`init` 只补缺失文件；永不把 Skill 复制进客户仓库 | [02](docs/diagrams/02-project-layout.svg) |
-| 写入安全阶梯 | 店域与 capability → 预读与快照 → `guard-mutation` → 明确批准 → `execute` → `check-response` → 同通道回读 | [03](docs/diagrams/03-write-safety.svg) |
-| 商品双批准 | 商家材料 → 商品包校验 → 买家决策与工艺门 → Approval A（`DRAFT`）→ 回读 → Approval B（激活/发布） | [04](docs/diagrams/04-product-publish.svg) |
-| Blog 双门 | 销售问题/商家主题 → Blog 包校验 → 决策与 craft 门（改稿另加 28 天冷却）→ A 未发布草稿 → B 发布或定时 | [05](docs/diagrams/05-blog-publish.svg) |
-| 服务方数据 | 仅本地交付包 → validate / summarize / suggest-keywords；没有数据时 Product 可继续，新站 Blog 可用已接受 FAQ 问题冷启动 | [06](docs/diagrams/06-monthly-data.svg) |
-| 连接与企业画像 | 企业画像问卷 → CLI 连接与只读 smoke → 轻量档案 → 按工作流拆分 `write_capabilities` | [07](docs/diagrams/07-connection-profile.svg) |
-| 404 分诊 | `refresh-404` 只建本地队列；仅运营者勾选的 `path → target` 才 guard 并写入；禁止无关 URL 跳首页 | [08](docs/diagrams/08-404-redirect.svg) |
-| 项目配置流 | 说明每份配置从哪里来，并追踪到 Runtime、Product、Blog 与本周三件事的实际用途 | [文件清单](docs/opsy-project-file-inventory.md) · [交互图](docs/diagrams/opsy-project-config-dataflow.html) |
+[![Opsy UML 组件与数据流架构图](docs/diagrams/09-opsy-skill-config-dataflow.svg)](docs/diagrams/09-opsy-skill-config-dataflow.svg)
+
+[PlantUML 源文件](docs/diagrams/09-opsy-skill-config-dataflow.puml) · [SVG](docs/diagrams/09-opsy-skill-config-dataflow.svg) · [PNG 截图](docs/diagrams/09-opsy-skill-config-dataflow.png) · [项目文件清单](docs/opsy-project-file-inventory.md)
+
+原有 01–08 流程图继续保存在 [`docs/diagrams/`](docs/diagrams/) 作为网站、社交媒体、提案和演示使用的营销/讲解素材，不作为执行规则的权威来源。权威规则仍以 `skills/opsy/SKILL.md` 与 `references/` 为准。
 
 ### 状态推进（摘要）
 
@@ -153,15 +147,19 @@ workspace_missing → connection_required → profile_required → write_ready
 - 只有 `_project/`、没有定位文件：先预览，再选择是否只补定位文件。
 - 已有 `AGENTS.md` 永不覆盖。
 
-## 仓库结构
+## 主要仓库结构（摘要）
 
 ```text
 skills/opsy/       可分发的唯一主 Skill
 tests/             状态、数据、写入保护和契约测试
-docs/diagrams/     流程说明图（SVG）
-CHANGELOG.md       版本更新日志
-install.ps1        Windows 双宿主安装器
-install.sh         macOS/Linux 双宿主安装器
+scripts/           仓库校验脚本
+docs/diagrams/     流程 SVG、生成器与配置流交互图
+docs/              新项目文件清单与设计说明
+VERSION            当前发布版本
+opsy-release.json  发布与工具链元数据
+CHANGELOG.md        版本更新日志
+install.*          Codex / WorkBuddy 双宿主安装器
+uninstall.*        可恢复归档卸载器
 ```
 
 Skill 内只包含项目无关的说明、工具和模板，不包含客户数据。
