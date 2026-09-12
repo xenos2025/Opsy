@@ -8,7 +8,11 @@ import {
   validateBlogPackage,
   validateNextActions,
   validateProductPackage,
+  validateProductBatch,
 } from "../skills/opsy/scripts/lib/merchant-packages.mjs";
+import { fingerprint } from "../skills/opsy/scripts/lib/product-intake.mjs";
+import { selectContentContext, validateContentReuse } from "../skills/opsy/scripts/lib/content-reuse.mjs";
+import { blogPreview } from "../skills/opsy/scripts/lib/blog-media.mjs";
 import { summarizeMerchantContext } from "../skills/opsy/scripts/lib/workspace.mjs";
 
 function profile() {
@@ -388,6 +392,11 @@ function blogPackage() {
         url: "https://cdn.shopify.com/s/files/1/0000/featured.jpg",
         alt: "Industrial component comparison guide",
       },
+      mediaMappings: [
+        { location: "featured", url: "https://cdn.shopify.com/s/files/1/0000/featured.jpg", alt: "Industrial component comparison guide", sourceRef: "inbox/blog/image-review.md#cover", rightsConfirmed: true, relevanceConfirmed: true },
+        { location: "inline:1", url: "https://cdn.shopify.com/s/files/1/0000/guide-1.jpg", alt: "Application comparison", sourceRef: "inbox/blog/image-review.md#application", rightsConfirmed: true, relevanceConfirmed: true },
+        { location: "inline:2", url: "https://cdn.shopify.com/s/files/1/0000/guide-2.jpg", alt: "Evidence checklist", sourceRef: "inbox/blog/image-review.md#evidence", rightsConfirmed: true, relevanceConfirmed: true },
+      ],
       internalLinks: [
         "https://example.com/collections/components",
         "https://example.com/pages/request-a-quote",
@@ -404,6 +413,129 @@ test("merchant context reports a usable owner-operated profile", () => {
   const result = summarizeMerchantContext(profile());
   assert.equal(result.status, "ready");
   assert.deepEqual(result.missing, []);
+});
+
+test("one FAQ is valid only for an explicitly caveated product draft", () => {
+  const p = productPackage();
+  p.descriptionHtml = '<h2>Questions</h2><p><strong>What should I provide?</strong></p><p>Provide application details.</p>';
+  assert.equal(validateProductPackage(p, { profile: profile(), buyerFaq: buyerFaq() }).ok, false);
+  p.sourceFacts.faqCaveat = "Only one question has confirmed material";
+  assert.equal(validateProductPackage(p, { profile: profile(), buyerFaq: buyerFaq() }).ok, true);
+  p.status = "ACTIVE";
+  assert.equal(validateProductPackage(p, { profile: profile(), buyerFaq: buyerFaq(), mode: "public" }).ok, false);
+});
+
+function productBlog() {
+  const p = blogPackage();
+  const id = "gid://shopify/Product/10", url = "https://example.com/products/component";
+  const imageUrl = p.article.mediaMappings[1].url;
+  const evidence = { schema_version: "opsy-product-evidence-v1", method: "retained Shopify readback and public URL review", observedAt: "2026-09-11T08:00:00Z", products: [{ id, handle: "component", url, sourceRef: "inbox/product-readback.json", media: [{ id: "media-10", url: imageUrl, sourceRef: "inbox/product-readback.json#media-10" }] }] };
+  p.productEvidence = { path: "inbox/product-evidence.json", fingerprint: fingerprint(evidence) };
+  p.article.productReferences = [{ id, handle: "component", url }];
+  p.article.internalLinks.push(url);
+  p.article.bodyHtml += `<a data-product-id="${id}" href="${url}">Component</a>`;
+  p.article.bodyHtml = p.article.bodyHtml.replace(`<img src="${imageUrl}"`, `<img data-product-id="${id}" src="${imageUrl}"`);
+  Object.assign(p.article.mediaMappings[1], { productId: id, mediaId: "media-10", sourceRef: "inbox/product-readback.json#media-10" });
+  return { p, evidence };
+}
+
+test("Blog binds product identity, retained URL, inline media and body annotation", () => {
+  const { p, evidence } = productBlog();
+  const options = { profile: profile(), buyerFaq: buyerFaq(), dataCenterValidation: blogDataCenterValidation(), mode: "write", productEvidence: evidence };
+  const result = validateBlogPackage(p, options);
+  assert.equal(result.ok, true, JSON.stringify(result.errors));
+  p.article.mediaMappings[1].productId = "gid://shopify/Product/other";
+  assert.ok(validateBlogPackage(p, options).errors.some((e) => e.code === "media_product_mismatch"));
+});
+
+test("Blog rejects HTTPS-but-wrong product media and missing/changed retained evidence", () => {
+  const { p, evidence } = productBlog();
+  const options = { profile: profile(), buyerFaq: buyerFaq(), dataCenterValidation: blogDataCenterValidation(), mode: "write", productEvidence: evidence };
+  const old = p.article.mediaMappings[1].url;
+  p.article.bodyHtml = p.article.bodyHtml.replace(old, "https://example.com/wrong.png");
+  p.article.mediaMappings[1].url = "https://example.com/wrong.png";
+  assert.ok(validateBlogPackage(p, options).errors.some((e) => e.code === "media_product_mismatch"));
+  assert.ok(validateBlogPackage(p, { ...options, productEvidence: null }).errors.some((e) => e.code === "product_evidence"));
+  evidence.products[0].url = "https://example.com/products/renamed";
+  assert.ok(validateBlogPackage(p, options).errors.some((e) => e.code === "product_evidence"));
+});
+
+test("legacy Blog media stays local review, and comments, orphan maps and alternate sources cannot bypass write", () => {
+  const p = blogPackage(), options = { profile: profile(), buyerFaq: buyerFaq(), dataCenterValidation: blogDataCenterValidation() };
+  delete p.article.mediaMappings;
+  assert.equal(validateBlogPackage(p, options).ok, true);
+  assert.equal(validateBlogPackage(p, { ...options, mode: "write" }).ok, false);
+  const complete = blogPackage();
+  complete.article.bodyHtml = complete.article.bodyHtml.replace(/(<img[^>]+>)/g, '<!--$1-->');
+  assert.equal(validateBlogPackage(complete, { ...options, mode: "write" }).ok, false);
+  const alternate = blogPackage();
+  alternate.article.bodyHtml = alternate.article.bodyHtml.replace("<img src=", '<img srcset="https://example.com/other.jpg 2x" src=');
+  assert.ok(validateBlogPackage(alternate, { ...options, mode: "write" }).errors.some((e) => e.code === "media_body_mismatch"));
+});
+
+test("Blog must actually render the declared internal links and CTA", () => {
+  const p = blogPackage();
+  p.article.bodyHtml = p.article.bodyHtml.replace(/<a[^>]*>[\s\S]*?<\/a>/g, "");
+  assert.ok(validateBlogPackage(p, { profile: profile(), buyerFaq: buyerFaq(), dataCenterValidation: blogDataCenterValidation(), mode: "write" }).errors.some((e) => e.code === "body_link_missing"));
+});
+
+test("Blog retains duplicate blocking, unresolved fact gates and the rewrite cooldown", () => {
+  const p = blogPackage();
+  const options = { profile: profile(), buyerFaq: buyerFaq(), dataCenterValidation: blogDataCenterValidation(), mode: "write", now: new Date("2026-09-11T08:00:00Z") };
+  p.topic.createOrUpdate = "update";
+  p.topic.lastContentUpdate = "2026-09-01T08:00:00Z";
+  p.topic.cooldownUntil = "2026-09-29T08:00:00Z";
+  assert.ok(validateBlogPackage(p, options).errors.some((e) => e.code === "cooldown"));
+  assert.equal(validateBlogPackage(p, { ...options, now: new Date("2026-09-30T08:00:00Z") }).ok, true);
+  p.topic.duplicateCheck = "blocked";
+  assert.ok(validateBlogPackage(p, options).errors.some((e) => e.code === "duplicate_blocked"));
+  p.article.bodyHtml += "<p>[needs merchant confirmation]</p>";
+  assert.ok(validateBlogPackage(p, options).errors.some((e) => e.code === "unresolved_marker"));
+});
+
+test("content reuse replays exact task scope, source fingerprints and actual excerpts", () => {
+  const sources = { profile: profile(), buyerFaq: buyerFaq() };
+  const task = { surface: "blog", job: "comparison", scopeKeys: ["Industrial components"], market: "United States", language: "en" };
+  const selection = selectContentContext({ ...sources, task });
+  assert.ok(selection.items.some((i) => i.id === "profile-audience"));
+  const reuse = { selection, uses: [{ itemId: "profile-audience", use: "buyer_context", rationale: "Address the confirmed buyer", briefExcerpt: "Procurement engineers", contentExcerpt: "Compare evidence" }] };
+  const target = { body: "<p>Compare evidence</p>", brief: { buyer: "Procurement engineers" }, surface: "blog", scopeKeys: task.scopeKeys };
+  assert.deepEqual(validateContentReuse(reuse, sources, target), []);
+  assert.ok(validateContentReuse(reuse, sources, { ...target, body: "Removed paragraph" }).length);
+  sources.profile.profile.store_role.primary_audience = "Other audience";
+  assert.ok(validateContentReuse(reuse, sources, target).length);
+  const outside = selectContentContext({ ...sources, task: { ...task, market: "Unconfirmed market" } });
+  assert.ok(!outside.items.some((i) => i.id === "profile-audience"));
+});
+
+test("content reuse selects accepted FAQ questions without leaking unapproved answers", () => {
+  const selection = selectContentContext({ profile: profile(), buyerFaq: buyerFaq(), task: { surface: "blog", job: "comparison", scopeKeys: ["industrial-components"], market: "United States", language: "en" } });
+  assert.ok(selection.items.some((i) => i.id === "faq-faq-compare-inputs"));
+  assert.ok(selection.items.every((i) => i.authority === "question_only" || i.authority === "planning_only"));
+  assert.ok(!JSON.stringify(selection).includes("draft_answer"));
+});
+
+test("batch package validation isolates malformed and duplicate candidates", (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "opsy-package-batch-"));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const p = productPackage();
+  fs.writeFileSync(path.join(root, "good.json"), JSON.stringify(p));
+  fs.writeFileSync(path.join(root, "broken.json"), "{");
+  const result = validateProductBatch({ packages: [{ candidateId: "good", path: "good.json" }, { candidateId: "bad", path: "broken.json" }] }, { workspaceRoot: root, profile: profile(), buyerFaq: buyerFaq() });
+  assert.deepEqual(result.passedIds, ["good"]);
+  assert.equal(result.approvalGranted, false);
+  const duplicates = validateProductBatch({ packages: [{ candidateId: "a", path: "good.json" }, { candidateId: "b", path: "good.json" }] }, { workspaceRoot: root, profile: profile(), buyerFaq: buyerFaq() });
+  assert.deepEqual(duplicates.passedIds, []);
+  const duplicateIds = validateProductBatch({ packages: [{ candidateId: "same", path: "good.json" }, { candidateId: "same", path: "broken.json" }] }, { workspaceRoot: root, profile: profile(), buyerFaq: buyerFaq() });
+  assert.deepEqual(duplicateIds.passedIds, []);
+});
+
+test("local Blog preview includes a sandboxed rendering and explicit validation status", () => {
+  const html = blogPreview(blogPackage(), { ok: false, errors: [{ code: "needs_media" }] });
+  assert.ok(html.includes("iframe sandbox"));
+  assert.ok(html.includes("待补充，不能写入"));
+  assert.ok(html.includes("featured.jpg"));
+  assert.ok(html.includes("Request a quote"));
 });
 
 test("product package passes without Google data when merchant evidence is named", () => {
@@ -683,9 +815,11 @@ test("CLI validates Product and Blog packages against the project profile", () =
       JSON.stringify({ workspace: "shopify-ops" }),
       "utf8",
     );
+    const storedProfile = profile();
+    storedProfile.profile.store_role.audience_intake_path = "inbox/profile/missing-optional.json";
     fs.writeFileSync(
       path.join(configDirectory, "store-profile.json"),
-      JSON.stringify(profile()),
+      JSON.stringify(storedProfile),
       "utf8",
     );
     fs.writeFileSync(
@@ -719,6 +853,13 @@ test("CLI validates Product and Blog packages against the project profile", () =
       assert.equal(command.status, 0, `${commandName}: ${command.stderr}`);
       assert.equal(JSON.parse(command.stdout).ok, true, commandName);
     }
+    const previewArgs = [path.resolve("skills/opsy/scripts/opsy.mjs"), "preview-blog-package", "--project", project, "--file", path.join(project, "blog.json"), "--apply", "--json"];
+    const preview = spawnSync(process.execPath, previewArgs, { encoding: "utf8" });
+    assert.equal(preview.status, 0, preview.stderr);
+    const previewPath = JSON.parse(preview.stdout).outputPath;
+    assert.ok(fs.readFileSync(previewPath, "utf8").includes("iframe sandbox"));
+    const again = spawnSync(process.execPath, previewArgs, { encoding: "utf8" });
+    assert.notEqual(again.status, 0);
   } finally {
     fs.rmSync(project, { recursive: true, force: true });
   }

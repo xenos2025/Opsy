@@ -1,5 +1,51 @@
 # Workflow: 买家决策简报
 
+## Reuse confirmed task context first
+
+For Product and Blog, reuse existing confirmed profile, sales questions,
+objections and accepted FAQ questions before repeating intake. Run:
+
+```text
+node <skill-root>/scripts/opsy.mjs select-content-context --project <root> --surface blog --job comparison --scope <exact-product-family-ref> --market <market> --language <code> --json
+```
+
+Use `--surface product --job pdp` for Product. `--job` is the actual article
+format for Blog. Match exact scope keys, market and language; do not silently
+expand a family, country, audience or task. The selector reads the existing
+store profile and buyer FAQ. If the profile records a workspace-relative
+`audience_intake_path`, reuse that file; alternatively pass `--audience` with a
+retained workspace-relative questionnaire path. Missing optional intake keeps
+the existing profile/FAQ lane usable. Do not create an audience library or a
+new operator menu.
+
+Only merchant-confirmed/data-revised profile context and reviewed, valid
+questionnaire rows are selectable. Multiple matching questionnaire audiences
+stay ambiguous. Ask only for unresolved task facts; do not treat research-draft
+audiences as served-customer evidence. FAQ selection returns questions, never
+unapproved answers. Product/Blog answer use still follows its existing FAQ gate.
+
+Save the returned selection as `contentReuse.selection` in Blog, or
+`sourceFacts.contentReuse.selection` in Product. For every used item record:
+
+```json
+{
+  "itemId": "profile-audience",
+  "use": "buyer_context",
+  "briefExcerpt": "Exact text in the buyer decision brief",
+  "contentExcerpt": "Exact text in the article or product body",
+  "rationale": "How this input changed this buyer decision"
+}
+```
+
+Put these rows in `uses`; if none were used, record `nonUseReason`. Source
+fingerprints and exact pointers preserve the reviewed revision without a new
+shared runtime. Validators replay selection and check current fingerprints,
+task scope and actual excerpts. Old packages without this optional record
+remain compatible; new tasks should retain it to avoid repeated questions.
+These checks prove declared linkage, not semantic faithfulness. Review the
+actual phrasing; audience concerns and sales questions never authorize product
+facts, supplier capabilities or merchant promises.
+
 Use this shared workflow before drafting or materially rewriting a Product/PDP
 or Blog package. Opsy exposes only the `pdp` and `blog` adapters. `page` remains
 reserved for the service-provider Page workflow and is not an Opsy menu item.

@@ -1,5 +1,12 @@
 # Blog content craft (scenarios, copy, media, tables, links)
 
+Reuse confirmed task context through
+[workflow-buyer-decision.md](workflow-buyer-decision.md) before asking the same
+scene/FAQ questions again. For any named product, use its verified product URL
+and media from the same retained product evidence. Follow the explicit body,
+cover and product mappings in [blog-package-contract.md](blog-package-contract.md);
+HTTPS, alt text and image counts alone do not establish relevance or ownership.
+
 Use this after a topic is chosen and before Shopify draft approval. Package
 fields alone do not make a useful B2B article. Judge readiness on five craft
 dimensions: **topic fit**, **body usefulness**, **images**, **tables**, and

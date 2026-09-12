@@ -19,10 +19,15 @@ import {
   validateBuyerFaqFile,
 } from "./lib/buyer-faq.mjs";
 import { validateAudienceIntakeFile } from "./lib/audience-intake.mjs";
+import { readProductTable } from "./lib/product-table.mjs";
+import { importProductSources, assessBatch, inside, prepareProductDrafts } from "./lib/product-intake.mjs";
+import { selectContentContext } from "./lib/content-reuse.mjs";
+import { blogPreview } from "./lib/blog-media.mjs";
 import {
   validateBlogPackageFile,
   validateNextActionsFile,
   validateProductPackageFile,
+  validateProductBatch,
 } from "./lib/merchant-packages.mjs";
 import {
   validateGraphqlResponseFile,
@@ -111,10 +116,31 @@ function projectBuyerFaq(options, { required = false } = {}) {
   return readJson(faqPath);
 }
 
+function workspaceRoot(options) {
+  const root = readProject(projectPath(options)).workspaceRoot;
+  if (!root) throw new Error("No Opsy workspace is configured");
+  return root;
+}
+
+function audienceSource(options, profile) {
+  const reference = options.audience ?? profile.profile?.store_role?.audience_intake_path;
+  if (!reference) return null;
+  const file = inside(workspaceRoot(options), reference);
+  if (!options.audience && !fs.existsSync(file)) return null;
+  return readJson(file);
+}
+
 function help() {
   return `Opsy helper
 
 Commands:
+  prepare-product-packages --file <workspace-relative-intake.json> [--project <path>] [--apply] [--json]
+  validate-product-batch --file <queue.json> [--mode draft|public] [--project <path>] [--json]
+  inspect-product-table --file <csv|xlsx> [--sheet <name>] [--header-row <n>] [--json]
+  import-product-sources --kind table|image|1688|alibaba --batch <id> [--file <path>] [--url <url>] [--access accessible|login_required|captcha|unavailable|not_attempted] [--columns <agent-mapping.json>] [--sheet <name>] [--header-row <n>] [--project <path>] [--apply] [--json]
+  check-product-intake --file <intake.json> [--existing <local-products.json>] [--json]
+  select-content-context --surface product|blog --job <pdp|article-format> --scope <ref,ref> --market <market> --language <code> [--audience <workspace-relative-file>] [--project <path>] [--json]
+  preview-blog-package --file <package.json> [--output <workspace-relative.html>] [--project <path>] [--apply] [--json]
   doctor [--json]
   status [--project <path>] [--json]
   init --project <path> [--workspace <name>] [--agents auto|yes|no] [--apply] [--json]
@@ -152,6 +178,66 @@ async function main() {
     const result = inspectEnvironment();
     output(result, asJson);
     process.exitCode = result.ok ? 0 : 2;
+    return;
+  }
+
+  if (command === "inspect-product-table") {
+    const table = readProductTable(path.resolve(requireOption(options, "file")), { sheet: options.sheet, headerRow: Number(options["header-row"] ?? 1) });
+    output({ ...table, rows: table.rows.slice(0, 10), totalRows: table.rows.length }, asJson);
+    return;
+  }
+
+  if (command === "prepare-product-packages") {
+    const root = workspaceRoot(options), relative = requireOption(options, "file");
+    const batch = readJson(inside(root, relative)), result = prepareProductDrafts(batch, relative);
+    const queue = { packages: [] };
+    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(batch.batchId)) throw new Error("Invalid batch identifier");
+    const directory = inside(root, `outputs/products/${batch.batchId}`);
+    if (options.apply && fs.existsSync(directory)) throw new Error("Output batch exists; preserve it and choose a new batch");
+    for (const item of result.packages) {
+      if (!/^candidate-\d+$/.test(item.candidateId)) throw new Error("Invalid candidate identifier");
+      const target = `outputs/products/${batch.batchId}/${item.candidateId}.json`;
+      queue.packages.push({ candidateId: item.candidateId, path: target });
+      if (options.apply) { fs.mkdirSync(directory, { recursive: true }); fs.writeFileSync(inside(root, target), `${JSON.stringify(item.package, null, 2)}\n`, { flag: "wx" }); }
+    }
+    if (options.apply && queue.packages.length) fs.writeFileSync(path.join(directory, "queue.json"), `${JSON.stringify(queue, null, 2)}\n`, { flag: "wx" });
+    output({ ...result, packageQueue: queue, applied: Boolean(options.apply), writeReady: false }, asJson);
+    return;
+  }
+
+  if (command === "validate-product-batch") {
+    const profile = projectProfile(options);
+    const result = validateProductBatch(readJson(path.resolve(requireOption(options, "file"))), { workspaceRoot: workspaceRoot(options), profile, mode: options.mode ?? "draft", buyerFaq: projectBuyerFaq(options), audienceIntake: audienceSource(options, profile) });
+    output(result, asJson); process.exitCode = result.ok ? 0 : 2; return;
+  }
+
+  if (command === "import-product-sources") {
+    const result = importProductSources({ workspaceRoot: workspaceRoot(options), batchId: requireOption(options, "batch"), kind: requireOption(options, "kind"), file: options.file ? path.resolve(options.file) : undefined, url: options.url, access: options.access, columns: options.columns ? readJson(path.resolve(options.columns)) : undefined, sheet: options.sheet, headerRow: Number(options["header-row"] ?? 1), apply: Boolean(options.apply) });
+    output(result, asJson);
+    return;
+  }
+
+  if (command === "check-product-intake") {
+    const result = assessBatch(readJson(path.resolve(requireOption(options, "file"))), { existing: options.existing ? readJson(path.resolve(options.existing)) : [] });
+    output({ ...result, storeDuplicateStatus: options.existing ? "local_snapshot_only" : "pending_live" }, asJson);
+    process.exitCode = result.ok ? 0 : 2;
+    return;
+  }
+
+  if (command === "select-content-context") {
+    const profile = projectProfile(options);
+    const audienceIntake = audienceSource(options, profile);
+    output(selectContentContext({ profile, buyerFaq: projectBuyerFaq(options), audienceIntake, audiencePath: audienceIntake ? options.audience ?? profile.profile?.store_role?.audience_intake_path ?? null : null, task: { surface: requireOption(options, "surface"), job: requireOption(options, "job"), scopeKeys: commaList(requireOption(options, "scope")), market: requireOption(options, "market"), language: requireOption(options, "language") } }), asJson);
+    return;
+  }
+
+  if (command === "preview-blog-package") {
+    const root = workspaceRoot(options), file = path.resolve(requireOption(options, "file")), profile = projectProfile(options);
+    const validation = validateBlogPackageFile(file, { workspaceRoot: root, profile, buyerFaq: projectBuyerFaq(options), audienceIntake: audienceSource(options, profile), mode: "write", dataCenterValidation: validateDataCenter(path.join(root, "data-center")) });
+    const preview = blogPreview(readJson(file), validation);
+    const target = inside(root, options.output ?? `outputs/blog/${path.basename(file, path.extname(file))}-preview.html`);
+    if (options.apply) { fs.mkdirSync(path.dirname(target), { recursive: true }); fs.writeFileSync(target, preview, { flag: "wx" }); }
+    output({ ok: validation.ok, applied: Boolean(options.apply), outputPath: target, validation }, asJson);
     return;
   }
 
@@ -399,7 +485,7 @@ async function main() {
     }
     const result = validateProductPackageFile(
       path.resolve(requireOption(options, "file")),
-      { profile: projectProfile(options), mode, buyerFaq: projectBuyerFaq(options) },
+      { profile: projectProfile(options), mode, buyerFaq: projectBuyerFaq(options), workspaceRoot: workspaceRoot(options), audienceIntake: audienceSource(options, projectProfile(options)) },
     );
     output(result, asJson);
     process.exitCode = result.ok ? 0 : 2;
@@ -420,6 +506,8 @@ async function main() {
         mode,
         dataCenterValidation,
         buyerFaq: projectBuyerFaq(options),
+        workspaceRoot: workspaceRoot(options),
+        audienceIntake: audienceSource(options, projectProfile(options)),
       },
     );
     output(result, asJson);

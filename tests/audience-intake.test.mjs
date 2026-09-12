@@ -4,6 +4,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { selectContentContext } from "../skills/opsy/scripts/lib/content-reuse.mjs";
 import {
   validateAudienceIntake,
   validateAudienceIntakeFile,
@@ -74,6 +75,22 @@ test("Opsy audience intake validates Product and Blog routes", () => {
   assert.equal(result.audience_count, 1);
   assert.equal(result.route_counts.product, 1);
   assert.equal(result.route_counts.blog, 1);
+});
+
+test("lightweight reuse selects only exact reviewed audience scope and retains ambiguity", () => {
+  const task = { surface: "blog", job: "comparison", scopeKeys: ["sample-family"], market: "United States", language: "en" };
+  const source = intake();
+  const result = selectContentContext({ audienceIntake: source, task });
+  assert.ok(result.items.some((i) => i.id === "audience-oem_procurement-job"));
+  assert.ok(result.items.every((i) => i.source === "audienceIntake" && i.pointer.startsWith("/audiences/0/")));
+  const changedScope = selectContentContext({ audienceIntake: source, task: { ...task, scopeKeys: ["unrelated-family"] } });
+  assert.equal(changedScope.items.length, 0);
+  source.review.status = "draft";
+  assert.equal(selectContentContext({ audienceIntake: source, task }).items.length, 0);
+  source.review.status = "merchant_reviewed";
+  source.audiences.push({ ...source.audiences[0], audience_id: "other_buyer" });
+  assert.equal(selectContentContext({ audienceIntake: source, task }).items.length, 0);
+  assert.ok(selectContentContext({ audienceIntake: source, task }).pending.some((p) => p.includes("Multiple")));
 });
 
 test("first_party maturity requires retained first-party evidence", () => {

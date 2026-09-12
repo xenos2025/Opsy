@@ -83,6 +83,12 @@ The status helper reports both gaps as `write_capabilities.blog.missing`.
 
 ## 3. Lock scene and content job
 
+First run the lightweight context selector in
+[workflow-buyer-decision.md](workflow-buyer-decision.md). Prefill scene intake
+from exact-scope confirmed profile/FAQ/questionnaire inputs, show what was
+reused, and ask only for missing or conflicting details. Retain selection
+fingerprints and the actual brief/body excerpts in `contentReuse`.
+
 Before writing:
 
 1. Pick **one** content job from the default set (`application`,
@@ -143,6 +149,10 @@ existing blog output convention). Include:
 - SEO title and description;
 - tags;
 - featured image URL + alt; inline image list;
+- `article.mediaMappings` for every cover/inline image and
+  `article.productReferences` for each named product; retain the independent
+  product URL/media evidence and its fingerprint as described in
+  [blog-package-contract.md](blog-package-contract.md);
 - internal links (commercial target + supports);
 - B2B inquiry CTA (profile-approved);
 - sources / verified facts / unresolved merchant facts;
@@ -158,6 +168,15 @@ existing blog output convention). Include:
 Check existing titles, handles, and keyword intent for collisions.
 Run `validate-blog-package --mode review` and resolve blocking issues before
 showing the package as complete.
+
+Generate the local visual preview with `preview-blog-package --project <root>
+--file <package.json> --apply --json` (under the same `node
+<skill-root>/scripts/opsy.mjs` helper). It contains cover, body pictures,
+product/link/CTA list and write validation. It refuses to overwrite an existing
+preview; use a new workspace-relative `--output` for a revision. A missing
+image, unresolved fact or invalid mapping stays a local draft. Review the
+rendered image/product correspondence with actual retained media; static
+package validation is not a real website or human visual check.
 
 ## 7. Create a new article
 

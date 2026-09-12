@@ -41,6 +41,71 @@ Use `schema_version: opsy-blog-package-v1` and include:
 
 Supported formats are `procurement_guide`, `comparison`, `application`, `technical`, `market_solution`, and `product_roundup`. Procurement, comparison, and technical formats need a decision-useful table.
 
+## Product references and media correspondence
+
+Every image, including non-product illustrations, needs an
+`article.mediaMappings` row with `location` (`featured` or one-based
+`inline:1`, `inline:2`, ...), exact `url`, exact `alt`, retained `sourceRef`,
+`rightsConfirmed` and `relevanceConfirmed`. Confirm relevance against the
+actual image and intended content; never set these flags just to pass a gate.
+Use ordinary explicit `src` images. `srcset`/lazy alternate sources must be
+resolved into one reviewed source before writing this package.
+
+For every named product add `article.productReferences: [{id, handle, url}]`.
+Record the Shopify GID (or an independently verified stable product identifier),
+exact public HTTPS product URL on this store, and handle. Verify the URL with a
+supported read-only source. Body links use `<a data-product-id="<id>"
+href="<exact-url>">Product name</a>` and appear in `article.internalLinks`.
+`product_roundup` requires at least one such named product. Do not relabel a
+named-product article as generic to avoid this gate.
+
+Retain independent evidence in a customer-local file:
+
+```json
+{
+  "schema_version": "opsy-product-evidence-v1",
+  "method": "Supported readback plus public product URL verification",
+  "observedAt": "2026-09-11T08:00:00Z",
+  "products": [{
+    "id": "gid://shopify/Product/123",
+    "handle": "example-component",
+    "url": "https://example.com/products/example-component",
+    "sourceRef": "inbox/products/readback.json#product-123",
+    "media": [{
+      "id": "media-123",
+      "url": "https://example.com/images/component.jpg",
+      "sourceRef": "inbox/products/readback.json#media-123"
+    }]
+  }]
+}
+```
+
+The example is synthetic, not a real verified store. Capture only fields
+actually returned by the supported reader, and retain the source readback.
+Do not invent a product or media ID from an image filename. Before using
+Shopify API/CLI fields, verify the current official schema/help and available
+scopes; this feature does not add or change any Shopify query or mutation.
+
+The package adds `productEvidence: {path, fingerprint}` with a workspace-relative
+evidence path and `fingerprint(evidence)` from `product-intake.mjs`. The agent
+builds these records; the operator never writes JSON. Package validation loads
+the retained file and compares the evidence fingerprint, product/handle/URL,
+and product-media membership. Each product mapping additionally has `productId`
+and `mediaId`; its `sourceRef` equals the matched evidence media source. Inline
+product `<img>` tags carry the same `data-product-id`. A product must have a
+corresponding mapped image; all body product links must be mapped. An orphan,
+swapped product image or mismatched body mapping fails validation.
+
+The evidence fingerprint is a freshness/linkage check, not independent proof
+that a page was visited or that a photograph shows the correct item. Agent and
+operator visual/semantic review remain required. Do not claim real-store
+acceptance from synthetic tests. Existing packages without mappings remain
+reviewable locally, with `needs_media`; they need mappings before a new write.
+
+Internal links and the approved CTA must actually occur in the body; declaring
+them only in package metadata is insufficient. Keep the CTA label configured
+in the profile, and verify its destination during scene intake.
+
 ## Deterministic gate
 
 For a local review:
@@ -51,7 +116,8 @@ node <skill-root>/scripts/opsy.mjs validate-blog-package --project <project-root
 
 Before Approval A, rerun with `--mode write`. Write mode requires one HTTPS
 featured image, at least two HTTPS inline images with alt text, two verified
-internal links, resolved confirmation markers, and the approved CTA. The
+internal links, complete source/product media mappings, resolved confirmation
+markers, and the approved CTA in the body. The
 validator also cross-checks applied FAQ ids against accepted question status,
 Blog-primary route, content language, scope, answer-conflict/quarantine state, and evidence
 references; `faq_seeded` packages fail when any numeric search metric is

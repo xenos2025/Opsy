@@ -29,9 +29,12 @@ Choose the three actions that remove the nearest real blockers:
 2. one Product or Blog package that can be completed safely;
 3. one approved Shopify or storefront follow-up with observable readback.
 
-Use delivered data to prioritize Blog work. If it is missing, one action may be
-to obtain or validate the provider package, but do not produce a Blog topic or
-draft. Product and other actions may still use merchant facts, package
+Use delivered data to prioritize `data_backed` Blog work. If it is missing, a
+valid empty manifest plus accepted, language/scope-matched FAQ questions permits
+`faq_seeded` topics and drafts without metrics, following
+[blog-package-contract.md](blog-package-contract.md). If neither lane qualifies,
+one action may be to obtain or validate the missing input. Product and other
+actions may still use merchant facts, package
 validation results, and Shopify readbacks. Never fabricate metrics or require
 Google API access.
 

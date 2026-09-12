@@ -1,6 +1,6 @@
 ---
 name: opsy
-description: Guides enterprise owners, sales, and basic operators through B2B inquiry-focused Shopify work in Codex or WorkBuddy. Use for an Opsy workspace, merchant business profiling, exactly three weekly actions, evidence-backed Product packages, data-center-backed Blog packages, provider-delivered local data snapshots, 404 handling, existing metafield values, and explicitly approved Shopify Admin GraphQL operations. Do not use for checkout-led DTC stores, live Google API access, or technical site-foundation audits.
+description: Guides enterprise owners, sales, and basic operators through B2B inquiry-focused Shopify work in Codex or WorkBuddy. Use for an Opsy workspace, merchant business profiling, exactly three weekly actions, Product packages from supplier links, Excel/CSV or images, data-backed or FAQ-seeded Blog packages, provider-delivered local data snapshots, 404 handling, existing metafield values, and explicitly approved Shopify Admin GraphQL operations. Do not use for checkout-led DTC stores, live Google API access, or technical site-foundation audits.
 ---
 
 # Opsy

@@ -86,7 +86,8 @@ only when `content_use: eligible`; otherwise use verified Product facts or ask
 the owner/sales role to confirm the missing commercial fact.
 
 - Use 2–3 questions for a product offered for publication. One is acceptable for
-  a draft when material is thin; say so in the package notes.
+  a draft when material is thin; record `sourceFacts.faqCaveat`. Draft validation
+  warns; public validation still requires at least two.
 - Keep the section heading as `<h2>` (for example `Common Questions`) in the
   store's content language.
 - Write each question as a bold paragraph, not a heading:

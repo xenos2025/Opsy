@@ -3,6 +3,9 @@ import path from "node:path";
 import { validateDecisionBrief } from "./buyer-decision.mjs";
 import { selectBuyerFaq } from "./buyer-faq.mjs";
 import { summarizeStoreRole } from "./workspace.mjs";
+import { inside, validateIntakeBinding } from "./product-intake.mjs";
+import { validateContentReuse } from "./content-reuse.mjs";
+import { validateBlogMedia, htmlElements } from "./blog-media.mjs";
 
 const HANDLE_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -322,7 +325,7 @@ function validateProductFaqUse(sourceFacts, profile, buyerFaq, errors, warnings)
 
 export function validateProductPackage(
   payload,
-  { profile = {}, mode = "draft", buyerFaq = null } = {},
+  { profile = {}, mode = "draft", buyerFaq = null, intakeBatch = null, audienceIntake = null, audiencePath = null, workspaceRoot = null } = {},
 ) {
   const errors = [];
   const warnings = [];
@@ -350,6 +353,8 @@ export function validateProductPackage(
 
   const role = validateRole(profile, errors);
   const sourceFacts = record(value.sourceFacts);
+  errors.push(...validateIntakeBinding(value, intakeBatch, { workspaceRoot }));
+  errors.push(...validateContentReuse(sourceFacts.contentReuse, { profile, buyerFaq, audienceIntake, audiencePath }, { body: String(value.descriptionHtml ?? ""), brief: sourceFacts.decisionBrief, surface: "product", scopeKeys: stringList(sourceFacts.scopeKeys) }));
   const sourceBasis = validateSourceBasis(sourceFacts.sourceBasis, errors, warnings, "sourceFacts.sourceBasis");
   if (sourceBasis.mode === "faq_seeded") {
     errors.push(
@@ -383,8 +388,10 @@ export function validateProductPackage(
     errors.push(issue("description_h1", "descriptionHtml", "Shopify product body must not contain an H1"));
   }
   const faqCount = (description.match(/<p[^>]*>\s*<strong[^>]*>[^<]*\?\s*<\/strong>\s*<\/p>/gi) ?? []).length;
-  if (faqCount < 2) {
-    errors.push(issue("faq_count", "descriptionHtml", "Provide at least two buyer questions as bold paragraphs"));
+  if (faqCount < (publicMode ? 2 : 1) || (!publicMode && faqCount === 1 && !text(sourceFacts.faqCaveat))) {
+    errors.push(issue("faq_count", "descriptionHtml", "Public packages need two buyer questions; a draft may use one with sourceFacts.faqCaveat"));
+  } else if (!publicMode && faqCount === 1) {
+    warnings.push(issue("faq_count", "descriptionHtml", "Thin-material draft has one FAQ; public mode still requires two"));
   }
   if (/href=["'][^"']*\/pages\/contact/i.test(description)) {
     errors.push(issue("hardcoded_contact", "descriptionHtml", "Do not hardcode a contact-page route; use the configured theme inquiry CTA"));
@@ -448,7 +455,42 @@ export function validateProductPackage(
 
 export function validateProductPackageFile(filePath, options = {}) {
   const parsed = readJsonFile(filePath, "opsy-product-package-validation-v1");
-  return parsed.error ?? validateProductPackage(parsed.value, options);
+  if (parsed.error) return parsed.error;
+  try {
+    const intakeRef = parsed.value.sourceFacts?.intake?.path;
+    const intakeBatch = intakeRef && options.workspaceRoot ? JSON.parse(fs.readFileSync(inside(options.workspaceRoot, intakeRef), "utf8")) : options.intakeBatch;
+    return validateProductPackage(parsed.value, { ...loadReuseSource(parsed.value.sourceFacts?.contentReuse, options), intakeBatch });
+  } catch (error) { return report("opsy-product-package-validation-v1", [issue("intake_unreadable", "sourceFacts.intake", error.message)], []); }
+}
+
+function loadReuseSource(reuse, options) {
+  const audiencePath = reuse?.selection?.sourcePaths?.audienceIntake ?? options.audiencePath ?? null;
+  const audienceIntake = audiencePath && options.workspaceRoot ? JSON.parse(fs.readFileSync(inside(options.workspaceRoot, audiencePath), "utf8")) : options.audienceIntake;
+  return { ...options, audiencePath, audienceIntake };
+}
+
+export function validateProductBatch(queue, options = {}) {
+  if (!Array.isArray(queue?.packages) || !queue.packages.length) throw new Error("A product queue requires packages with candidateId and workspace-relative path");
+  const seenKeys = new Map();
+  const results = queue.packages.map((entry) => {
+    try {
+      if (!entry?.candidateId || queue.packages.filter((other) => other?.candidateId === entry.candidateId).length !== 1) throw new Error("Missing or duplicate queue candidate ID");
+      const file = inside(options.workspaceRoot, entry.path);
+      const parsed = JSON.parse(fs.readFileSync(file, "utf8"));
+      if (parsed.sourceFacts?.intake && parsed.sourceFacts.intake.candidateId !== entry.candidateId) throw new Error("Queue candidate does not match package intake");
+      const validation = validateProductPackageFile(file, options);
+      const result = { candidateId: entry.candidateId, path: entry.path, status: validation.ok ? "passed" : "needs_input", validation };
+      for (const [field, value] of [["variant.sku", text(parsed.variant?.sku)], ["handle", text(parsed.handle)]]) {
+        const key = `${field}:${value.toLowerCase()}`;
+        if (value && seenKeys.has(key)) {
+          const earlier = seenKeys.get(key);
+          for (const item of [earlier, result]) { item.status = "blocked"; item.validation.ok = false; item.validation.status = "fix"; item.validation.errors.push(issue("batch_duplicate", field, `Duplicate ${field} across packages`)); item.validation.counts.errors = item.validation.errors.length; }
+        } else if (value) seenKeys.set(key, result);
+      }
+      return result;
+    } catch (error) { return { candidateId: entry?.candidateId ?? null, status: "blocked", error: error.message }; }
+  });
+  return { ok: results.every((r) => r.status === "passed"), results, passedIds: results.filter((r) => r.status === "passed").map((r) => r.candidateId), approvalGranted: false };
 }
 
 function safeUrl(value) {
@@ -670,6 +712,9 @@ export function validateBlogPackage(
     now = new Date(),
     dataCenterValidation = null,
     buyerFaq = null,
+    audienceIntake = null,
+    audiencePath = null,
+    productEvidence = null,
   } = {},
 ) {
   const errors = [];
@@ -831,6 +876,10 @@ export function validateBlogPackage(
     errors.push(issue("tags", "article.tags", "Provide concise article tags"));
   }
   const body = String(article.bodyHtml ?? "");
+  errors.push(...validateContentReuse(value.contentReuse, { profile, buyerFaq, audienceIntake, audiencePath }, { body, brief: value.buyerDecision, surface: "blog", scopeKeys: stringList(topic.scopeKeys), job: topic.articleFormat }));
+  const mediaValidation = validateBlogMedia(value, { profile, mode, productEvidence });
+  errors.push(...mediaValidation.errors);
+  warnings.push(...mediaValidation.warnings);
   if (/<h1\b/i.test(body)) errors.push(issue("body_h1", "article.bodyHtml", "Article body must not contain an H1"));
   const headingCount = (body.match(/<h[23]\b/gi) ?? []).length;
   if (headingCount < 2) errors.push(issue("buyer_headings", "article.bodyHtml", "Use at least two buyer-question H2/H3 sections"));
@@ -879,6 +928,11 @@ export function validateBlogPackage(
   if (text(cta.label) !== text(profile?.profile?.primary_inquiry_cta) || !safeUrl(cta.url)) {
     errors.push(issue("cta", "article.cta", "Use the profile-approved CTA label and a real site-relative or HTTPS URL"));
   }
+  const bodyLinks = htmlElements(body, "a").map((a) => a.href);
+  const absolute = (url) => { try { return new URL(url, `https://${publicHost}`).href; } catch { return ""; } };
+  for (const link of [...links, cta.url]) {
+    if (!bodyLinks.some((href) => absolute(href) === absolute(link))) errors.push(issue("body_link_missing", "article.bodyHtml", `Declared internal link or CTA is absent from body: ${link}`));
+  }
 
   return report("opsy-blog-package-validation-v1", errors, warnings, {
     mode,
@@ -894,12 +948,18 @@ export function validateBlogPackage(
     decision_status: decision.status,
     heading_count: headingCount,
     inline_image_count: inlineImages.length,
+    media_status: mediaValidation.needsMedia ? "needs_media" : "mapped",
   });
 }
 
 export function validateBlogPackageFile(filePath, options = {}) {
   const parsed = readJsonFile(filePath, "opsy-blog-package-validation-v1");
-  return parsed.error ?? validateBlogPackage(parsed.value, options);
+  if (parsed.error) return parsed.error;
+  try {
+    const evidenceRef = parsed.value.productEvidence?.path;
+    const productEvidence = evidenceRef && options.workspaceRoot ? JSON.parse(fs.readFileSync(inside(options.workspaceRoot, evidenceRef), "utf8")) : options.productEvidence;
+    return validateBlogPackage(parsed.value, { ...loadReuseSource(parsed.value.contentReuse, options), productEvidence });
+  } catch (error) { return report("opsy-blog-package-validation-v1", [issue("evidence_unreadable", "productEvidence", error.message)], []); }
 }
 
 export function validateNextActions(payload) {

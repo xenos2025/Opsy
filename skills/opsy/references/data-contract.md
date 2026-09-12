@@ -4,8 +4,12 @@ This is a **provider-delivered local snapshot contract**, not a Google
 connection contract. The enterprise owner does not configure API credentials,
 OAuth, service accounts, GA4 properties, or GSC properties in Opsy. If no valid
 package exists, report `not_delivered`. Product may continue from merchant and
-sales evidence. Blog must return `scoring_blocked` until valid
-`gsc_queries` and `ga4_landing_pages` snapshots are delivered.
+sales evidence. Blog `data_backed` selection requires valid `gsc_queries` and
+`ga4_landing_pages` snapshots. A valid empty/not-yet-populated manifest plus
+accepted, language/scope-matched Blog FAQ questions permits `faq_seeded`
+cold-start selection and drafting, with no numeric demand claims. Return
+`scoring_blocked` for an invalid manifest or when neither source lane qualifies;
+follow [blog-package-contract.md](blog-package-contract.md).
 
 ## Layout
 
