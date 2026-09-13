@@ -52,6 +52,7 @@ function completeProfile(profile) {
   profile.profile.languages = ["en"];
   profile.profile.markets = ["United States"];
   profile.profile.primary_inquiry_cta = "Request a quote";
+  profile.profile.inquiry_cta = { url: "https://example.com/pages/contact", confirmed_at: "2026-07-29T00:10:00Z", evidence_ref: "inbox/profile/cta.md" };
   profile.profile.publications = [
     { id: "gid://shopify/Publication/1", name: "Online Store" },
   ];

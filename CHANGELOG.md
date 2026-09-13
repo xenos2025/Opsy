@@ -10,6 +10,20 @@
 
 ### Added
 
+- 在 `docs/diagrams/references/grc-blog-content-system/` 归档 GRC Blog UML 全景图和图源，补充图示目录入口；属于参考资料，不修改 Opsy 运行逻辑。
+
+- 补齐 CLI 授权闭环：默认完整核心运营权限包，首次授权计划与恢复许可，实时店铺/实际权限核验，授权失效或权限不足时按原完整权限恢复；网络故障不触发 OAuth。增加单次恢复、超时、并发锁、失败冷却、脱敏回执和任务续接；普通本地 status 不再声称实时授权有效。
+
+- 核心审计修复：增加统一任务结果、客户报告和 handoff；续接保留对象 ID 并检查证据变化；历史输出拒绝覆盖。
+- 增加单变体 SKU/价格写入变量生成与回读校验、Blog SEO 特殊字段映射、本地图片分阶段上传及待确认续查；默认仅预览，实际写入需精确授权。
+- 修复最低填写模式对已提供无效证据的放行、Blog CTA 地址确认、缺失指标被计零、历史快照口径不一致和询盘单独报告的来源信息；统一 FAQ 冷启动与草稿/发布门说明。
+
+- 数据契约支持服务方交付的询盘分析数据集：manifest 数据集可声明 `header_row` 保留导出标题/口径行；`inquiry_*` 数据集（口径说明、渠道汇总、核心漏斗、国家转化、CTA 明细、同期对比）进入 `summarize-data` 的有界预览（每表最多 8 行 × 6 列）。客户无需自行总结询盘；点击/意图事件不计为真实询盘，真实询盘以销售回传为准。
+- `summarize-data` 内置有界历史对比：按数据集 `archive_path` 归档快照计算 GSC 点击/曝光与 GA4 会话的头部环比及最多 5 条查询点击变化；明确禁止把 `archive/` 全量读入会话。
+- 商品新增 `--mode minimal` 最低填写通道：身份、证据与安全检查照常拦截；vendor、SEO、SKU、标签、标题候选、FAQ 数量、图片、决策简报、选题队列、落点、受众卡与未填元字段等完整度缺口转入报告 `supplements` 待补充清单，草稿创建后展示；`--mode public` 发布门不变。
+- 商品回读模板增加 `onlineStorePreviewUrl`：草稿创建后引导运营者在 Shopify 后台预览草稿，商品不提供本地可视预览。
+- Windows 中文控制台适配：交互终端自动 `chcp 65001`，JSON 输出统一 ASCII 转义，GBK 管道捕获不再乱码。
+- Product/Blog 起草前增加商家选题队列、单页落点和确认受众卡：`suggest-keywords` 或 `suggest-faq-topics` 成为正式第一步，包内记录 `opsy-topic-queue-v1` 与 `opsy-placement-v1`，`select-content-context` 必须选中一张受众卡。不移植 GRC 打分、全站预埋工作簿或画像库。
 - 移植企业主版 Runtime：状态输出固定 `delivered_snapshots_only`，界面不提供 Google API/GA4/GSC 自助授权或实时查询。
 - 新增 `profile.merchant_context` 企业画像问卷就绪度；`site-foundation` 只保留企业主、销售和基础运营可回答的画像，不提供 Tracking、CWV、结构化数据或技术报告。
 - 新增 `opsy-product-package-v1` 与 `validate-product-package`，支持商家材料优先、服务方数据可选的商品包，并校验标题候选、买家决策、FAQ、元字段定义和首图。
@@ -36,6 +50,10 @@
 
 ### Changed
 
+- 09 号 UML 总图连线统一改为标准 90° 直角折线（`linetype ortho`），同步 PlantUML、SVG 与 PNG。
+- 2026-09-13：同步更新 09 号 PlantUML / SVG / PNG 总图，保留原有 UML 组件视觉风格；补充三项核心与辅助工作流分组、可选上游边界、CLI 授权恢复、线索与可比历史、选题与执行校验，以及结果报告和任务续接回路。
+- 2026-09-13：README 按产品上架、Blog 发布、运营数据与线索分析重组；明确画像、数据、选题评估对 SEO/GEO 的作用与实现边界。保留原 SVG 组件总图直接展示，新增 Mermaid 架构摘要和 UML 时序图补充 CLI 授权恢复、回读、结果汇报与 handoff；客户介绍同步更新。
+- 补充安装与更新指引：同版本源码需显式 `Force`，先 dry-run；区分源码、宿主安装副本和正式 Release，披露工具链基线与本轮核对版本差异及真实店铺验收状态。
 - 主菜单改为“本周三件事、商品、Blog、404、服务方数据、连接与企业画像”；移除公开站点检查和企业主自行 Google 数据更新入口。
 - `write_capabilities.products` 与 `write_capabilities.blog` 现在把店铺角色和卖家人声作为写入前置证据，缺失项出现在各自的 `missing` 列表里。
 - 加固 Shopify 写入守卫：预读、变量校验、`guard-mutation`、明确批准、响应契约和同通道回读。

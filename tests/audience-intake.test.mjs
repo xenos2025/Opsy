@@ -91,6 +91,9 @@ test("lightweight reuse selects only exact reviewed audience scope and retains a
   source.audiences.push({ ...source.audiences[0], audience_id: "other_buyer" });
   assert.equal(selectContentContext({ audienceIntake: source, task }).items.length, 0);
   assert.ok(selectContentContext({ audienceIntake: source, task }).pending.some((p) => p.includes("Multiple")));
+  const chosen = selectContentContext({ audienceIntake: source, task: { ...task, cardId: "oem_procurement" } });
+  assert.equal(chosen.audienceCard.id, "oem_procurement");
+  assert.ok(chosen.items.some((item) => item.id === "audience-oem_procurement-job"));
 });
 
 test("first_party maturity requires retained first-party evidence", () => {

@@ -16,6 +16,11 @@
     "cli_version": null,
     "api_version": "2026-07",
     "scopes": [],
+    "authorization": {
+      "policy": null,
+      "last_check": null,
+      "last_attempt": null
+    },
     "smoke_test": {
       "status": "not_run",
       "verified_at": null
@@ -29,6 +34,11 @@
     "markets": [],
     "main_theme": null,
     "primary_inquiry_cta": null,
+    "inquiry_cta": {
+      "url": null,
+      "confirmed_at": null,
+      "evidence_ref": null
+    },
     "publications": [],
     "blogs": [],
     "metafield_definitions": [],

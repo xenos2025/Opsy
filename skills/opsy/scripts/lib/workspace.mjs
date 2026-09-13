@@ -279,7 +279,11 @@ export function validateConnectionProfile(profile) {
   addMissing(
     missing,
     "connection.authenticated_at",
-    isIsoDateTime(profile?.connection?.authenticated_at),
+    isIsoDateTime(profile?.connection?.authenticated_at) || (
+      profile?.connection?.authorization?.last_check?.status === "ready" &&
+      profile?.connection?.authorization?.last_check?.live === true &&
+      isIsoDateTime(profile?.connection?.authorization?.last_check?.checked_at)
+    ),
   );
   addMissing(
     missing,
@@ -615,7 +619,15 @@ export function summarizeWriteCapabilities(profile) {
 
   return {
     products,
+    media: capability(["read_files", "write_files"], scopes),
     blog: capability(["read_content", "write_content"], scopes, [
+      {
+        path: "profile.inquiry_cta",
+        ok: (() => {
+          const cta = profile?.profile?.inquiry_cta;
+          try { const url = new URL(cta?.url); return url.protocol === "https:" && !url.username && !url.password && isNonEmptyString(cta?.evidence_ref) && /^\d{4}-\d{2}-\d{2}T.*(?:Z|[+-]\d{2}:\d{2})$/.test(cta?.confirmed_at ?? "") && !Number.isNaN(Date.parse(cta.confirmed_at)); } catch { return false; }
+        })(),
+      },
       {
         path: "profile.blogs",
         ok:

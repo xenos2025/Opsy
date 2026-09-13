@@ -1,6 +1,6 @@
 ---
 name: opsy
-description: Guides enterprise owners, sales, and basic operators through B2B inquiry-focused Shopify work in Codex or WorkBuddy. Use for an Opsy workspace, merchant business profiling, exactly three weekly actions, Product packages from supplier links, Excel/CSV or images, data-backed or FAQ-seeded Blog packages, provider-delivered local data snapshots, 404 handling, existing metafield values, and explicitly approved Shopify Admin GraphQL operations. Do not use for checkout-led DTC stores, live Google API access, or technical site-foundation audits.
+description: Guides enterprise owners, sales, and basic operators through B2B inquiry-focused Shopify work. Use when the user requests Opsy workspace setup, business profiling, three weekly actions, product listing, Blog publishing, provider-delivered local data analysis, redirects, existing metafield values, or explicitly approved Shopify operations. Excludes checkout-led DTC, live Google access, and technical site-foundation audits.
 ---
 
 # Opsy
@@ -24,15 +24,22 @@ Start every request as follows:
 3. Run:
 
    ```text
-   node <skill-root>/scripts/opsy.mjs status --project <project-root> --json
+   node <skill-root>/scripts/opsy.mjs status --project <project-root> --live --recover --apply --json
    ```
 
 4. If Node or the helper is unavailable, inspect `shopify-ops.json` and `<workspace>/config/store-profile.json` manually and apply the same rules from [state-machine.md](references/state-machine.md).
-5. State what was verified, show the exact current-state banner, then show only currently allowed choices.
+5. Read `authorization` from status. Follow [authorization-lifecycle.md](references/authorization-lifecycle.md) for first consent or a recovery blocker; local profile readiness alone is insufficient. For continuing work, run `resume-task --task <task-id>` and read [result-handoff-contract.md](references/result-handoff-contract.md). Preserve known IDs and refresh changed evidence before acting.
+6. State what was verified, show the exact current-state banner, then show only currently allowed choices.
 
 Present choices as operator goals rather than internal Skill or Agent names. Accept either a menu number or a natural-language goal.
 
 ## Route by current state
+
+If live authorization is unverified or recovery needs attention, show its
+status and the next action from [authorization-lifecycle.md](references/authorization-lifecycle.md).
+Keep Shopify writes blocked until the live store/scope check passes. A saved
+full-scope recovery policy can reopen OAuth without repeated scope approval;
+the customer completes any required browser login/consent.
 
 ### Store connection incomplete
 
@@ -83,18 +90,24 @@ Load only the selected workflow:
   descriptions,
   [workflow-product-content.md](references/workflow-product-content.md), plus
   [workflow-buyer-decision.md](references/workflow-buyer-decision.md) and the
-  executable [product-package-contract.md](references/product-package-contract.md)
+  executable [product-package-contract.md](references/product-package-contract.md).
+  Confirm the topic queue, single-object placement, and one audience card from
+  [merchant-selection-contract.md](references/merchant-selection-contract.md)
+  before drafting.
 - [workflow-blog.md](references/workflow-blog.md) and, for Blog drafts,
   [workflow-blog-content.md](references/workflow-blog-content.md), plus
   [workflow-buyer-decision.md](references/workflow-buyer-decision.md) and the
-  executable [blog-package-contract.md](references/blog-package-contract.md)
+  executable [blog-package-contract.md](references/blog-package-contract.md).
+  Use the same [merchant-selection-contract.md](references/merchant-selection-contract.md)
+  gates: `suggest-keywords` or `suggest-faq-topics` first, then one placement
+  and one confirmed audience card.
 - [workflow-404.md](references/workflow-404.md)
 - [workflow-monthly-data.md](references/workflow-monthly-data.md)
 - [workflow-connection-profile.md](references/workflow-connection-profile.md)
 
 `write_ready` means the base connection and lightweight profile passed validation. Before a workflow writes, require that workflow's capability to be `write_ready: true`. If it is false, show its `missing` list and allow only local preparation or the reads needed to refresh those prerequisites.
 
-Product and Blog copy additionally require `store_role` with `business_model: b2b_inquiry`. When the helper reports `store_role.status: blocked`, stop topic commitment and drafting and run store-role intake. If the store closes through direct checkout, route it to the separate Opsy DTC package. When the helper reports `ready_with_warnings`, plan in a neutral, evidence-first voice and keep those writes blocked until the seller voice is confirmed. Never assume the audience, market, content language, or conversion goal.
+Product and Blog copy additionally require `store_role` with `business_model: b2b_inquiry`. When the helper reports `store_role.status: blocked`, stop topic commitment and drafting and run store-role intake. If the store closes through direct checkout, route it to the separate Opsy DTC package. When the helper reports `ready_with_warnings`, plan in a neutral, evidence-first voice and keep those writes blocked until the seller voice is confirmed. Use the confirmed audience, market, content language, and conversion goal.
 
 Blog must inspect `blog_data_center` and `blog_topic_sources` before topic
 selection. Prefer `blog_topic_sources.status: data_backed`, backed by valid
@@ -103,8 +116,8 @@ expand clusters, shape the buyer angle or format, affect surface routing, or
 break ties without changing numeric ranks. For a new site with a valid empty
 data-center manifest, `blog_topic_sources.status: faq_seeded` may create a
 cold-start shortlist from accepted, language/scope-matched FAQ questions. Mark
-it non-numeric and never present it as observed search demand. Do not reuse the
-associated answer unless it independently passes the answer publication gate.
+it non-numeric and explicitly label the search demand as unobserved. Reuse an
+associated answer only after it independently passes the answer publication gate.
 If neither source is usable, return
 `scoring_blocked` and offer provider-data import or FAQ confirmation.
 
@@ -116,10 +129,10 @@ If neither source is usable, return
 - Prefer chat attachments and workspace folders over asking beginners to format JSON.
 - When FAQ documents or sales Q&A are supplied, normalize them through
   [buyer-faq-contract.md](references/buyer-faq-contract.md); accepted questions
-  may guide work, but never publish unconfirmed or conflicting answers.
+  may guide work; publish answers only after confirmation and conflict resolution.
 - For a guided audience intake, use the local-only HTML tool described in
   [audience-intake-contract.md](references/audience-intake-contract.md). Keep
-  the dated evidence under `inbox/profile/`; do not add another config file.
+  the dated evidence under `inbox/profile/` and reuse the existing profile config.
 - Keep reports and previews in the workspace; keep the Skill itself project-neutral.
 
 ## Check axes
@@ -139,10 +152,10 @@ Read [safety-and-approvals.md](references/safety-and-approvals.md) and [shopify-
 
 For every write:
 
-1. Reconfirm the target `myshopify.com` domain and current profile state.
+1. Reconfirm the target `myshopify.com` domain and current profile state. Run `ensure-auth --recover --apply --task <task-id>` through the bundled helper before the write group; proceed only after its live check passes. On authentication failure during execution, preserve the uncertain result and recover authorization before reading current object state; recovery never replays the mutation.
 2. Read the current object through the same Shopify CLI Store channel.
 3. Save a pre-write snapshot for existing objects.
-4. Save the exact query and variables, then run `scripts/opsy.mjs guard-mutation --operation <name> --variables <file> --json`. Stop if it fails.
+4. Save the exact query and variables, then run `scripts/opsy.mjs guard-mutation --operation <name> --variables <file> --json`. Stop if it fails. Temporary signed image staging uses the memory-only exception in [workflow-image-upload.md](references/workflow-image-upload.md).
 5. Show an exact field-level preview or diff, expected effect, and readback plan.
 6. Obtain explicit approval for that exact operation set.
 7. Execute the already-guarded variables with pinned-version `shopify store execute --allow-mutations`.
@@ -162,7 +175,7 @@ Preserve the agency **monthly-loop** suite (Shopify Operations Skill / client `*
 ## Use bundled helpers
 
 - Initialize or inspect a workspace with `scripts/opsy.mjs`; read [project-layout.md](references/project-layout.md).
-- Validate or summarize provider-delivered local snapshots with `scripts/opsy.mjs`; read [data-contract.md](references/data-contract.md). Never present these helpers as live Google queries.
+- Validate or summarize provider-delivered local snapshots with `scripts/opsy.mjs`; read [data-contract.md](references/data-contract.md). Label results as local snapshots with their delivered period and source.
 - Import reviewed merchant tasks from Shopify Operations Skill without
   inheriting write approval; read [agency-handoff.md](references/agency-handoff.md).
 - Validate the shared Product/Blog buyer-decision brief with
@@ -177,10 +190,16 @@ Preserve the agency **monthly-loop** suite (Shopify Operations Skill / client `*
 - Expose accepted Blog FAQ question seeds with `scripts/opsy.mjs suggest-faq-topics`;
   every Blog package records whether FAQ evidence was applied, had no relevant
   match, or was unavailable.
+- Confirm Product/Blog topic rows, one-object placement, and one audience card
+  with `suggest-keywords`, `suggest-faq-topics`, and `select-content-context`;
+  read [merchant-selection-contract.md](references/merchant-selection-contract.md).
 - Locate the local audience HTML tool with `scripts/opsy.mjs audience-wizard`
   and validate its download with `validate-audience-intake`; read
   [audience-intake-contract.md](references/audience-intake-contract.md).
 - Guard mutation variables and verify saved mutation responses with `scripts/opsy.mjs`; read [safety-and-approvals.md](references/safety-and-approvals.md).
+- Map single-variant SKU/price and Blog SEO through [write-field-mapping.md](references/write-field-mapping.md); a local package field alone is not a completed Shopify write.
+- Upload confirmed local images through [workflow-image-upload.md](references/workflow-image-upload.md), then verify their attachment and display separately.
+- End every core task with `record-task-result`: per-object result, customer report and handoff, including partial or blocked work. Read [result-handoff-contract.md](references/result-handoff-contract.md). The three core workflows and their reports require no other Skill; optional agency handoff remains optional.
 - Use GraphQL operations from `assets/graphql/` as reviewed starting points. Verify them against current official Shopify documentation and the selected API version before a live write.
 - Use workspace templates from `assets/workspace/` while keeping the Skill folder in its source package.
 
@@ -193,8 +212,9 @@ Before claiming completion, verify:
 - [ ] the same-channel readback matches the approved change;
 - [ ] the sanitized outcome is recorded;
 - [ ] each promised local artifact exists and its relevant validator passed.
-- [ ] Product/Blog buyer-decision readiness is `pass` before Approval A.
-- [ ] the selected Product or Blog package validator passed in write-ready mode before Approval A.
+- [ ] Product/Blog buyer-decision readiness is `pass` before Approval A, except a Product minimal-fill draft, which defers the brief into `supplements`.
+- [ ] Product passed `draft` or `minimal` before Approval A and `public` before Approval B; Blog passed `write` before either approval (`review` is local preparation only).
+- [ ] the Product or Blog package records a confirmed topic queue, single-object placement, and one audience card — or, for a minimal-fill Product draft, carries those gaps in `supplements` and shows them after the draft readback.
 
 Report partial success per object and classify every unverified mutation attempt as failed or pending verification.
 

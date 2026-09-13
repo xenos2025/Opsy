@@ -121,11 +121,19 @@ separate answer gate marks it `eligible`. An enterprise-wide FAQ does not prove
 a product-specific claim. Record applied IDs under `sourceFacts.faqReview` and
 cite `config/buyer_faq.json#<id>`.
 
-Before drafting, run:
+Before drafting, run the merchant topic queue, then FAQ selection:
 
 ```text
+node <skill-root>/scripts/opsy.mjs suggest-keywords --project <project-root> --json
 node <skill-root>/scripts/opsy.mjs select-faq --project <project-root> --surface product --scope <product-handle-or-family-ref> --include-supporting --json
 ```
+
+If `suggest-keywords` has no delivered snapshot, keep
+`sourceFacts.topicQueue.selectionMode: merchant_materials` with a
+`nonUseReason` and continue from confirmed product facts. When rows exist,
+select at most three `route_hint: product` or `review` queries, record the
+single-object placement, and confirm one `audienceCard` as described in
+[merchant-selection-contract.md](merchant-selection-contract.md).
 
 Use primary rows first. Supporting rows may supply objections, confirmation
 requests, or internal-link ideas, but cannot supply Product answer facts. Use
@@ -196,8 +204,9 @@ node <skill-root>/scripts/opsy.mjs suggest-keywords --project <project-root>
 For Product work, consider only `route_hint: product` and relevant `review`
 rows. Prefer strengthening the owned Product/Collection already mapped to the
 query. Select at most three semantically relevant queries for one candidate,
-record their `evidence_refs` and period, and ask the operator to confirm the
-fit. Do not place a query into copy merely because it has impressions.
+record their `evidence_refs` and period onto `sourceFacts.topicQueue`, and ask
+the operator to confirm the fit. Do not place a query into copy merely because
+it has impressions.
 
 Keyword, GSC, and GA4 signals explain buyer demand; they never prove product
 features, applications, certifications, availability, price, MOQ, lead time,
@@ -232,14 +241,54 @@ Read current definitions for the correct owner type. Match namespace, key, type,
 
 Read the current metafield value and use its `compareDigest` for updates. Use explicit `null` only when the approved intent is create-if-absent. Run the `metafields-set` variable guard before approval and the matching response check after execution.
 
+## Minimal-fill draft lane（最低填写原则）
+
+When the merchant wants to act with only the confirmed core facts, validate
+with `validate-product-package --mode minimal`. The minimal gate still blocks
+identity, evidence, and safety failures: B2B store role, `sourceFacts.sourceBasis`,
+title/handle/description presence, H1 and hardcoded-contact bans, unknown or
+legacy metafield writes, and intake-binding integrity. Completeness gaps —
+vendor, product type, SEO fields, SKU, tags, title candidates, buyer FAQ count,
+media and first-overview, decision brief, topic queue, placement, audience
+card, and unfilled defined metafields — move to the report's `supplements`
+list instead of blocking.
+
+Rules for this lane:
+
+1. Approval A may proceed from a passing minimal validation; the draft stays
+   non-public.
+2. Immediately after the draft readback, show the operator the full
+   `supplements` list as 待补充清单 and save it with the package.
+3. Metafields follow the fill principle: fill only values that match verified
+   definitions now; every defined-but-unfilled PRODUCT metafield appears in
+   `supplements` for later confirmation.
+4. Approval B (activation/publication) still requires `--mode public` to pass;
+   resolve every blocking supplement before offering publication. Merchant
+   acceptance cannot waive an invalid claim, evidence check or public gate.
+
+## Preview happens in Shopify admin
+
+Opsy does not generate a local visual preview for products. After draft
+creation, read the product back (the core readback includes
+`onlineStorePreviewUrl`) and tell the operator to review the draft in Shopify
+admin — the draft product page and its online-store preview link. Field-level
+package previews in chat remain the pre-approval check; the admin draft is the
+visual check.
+
 ## Create new products
+
+Choose the lane first. For a minimal-fill draft, steps 1–3 apply only to
+supplied material: keep missing completeness items in supplements, preserve
+all evidence failures as blockers, and use `--mode minimal` in step 5.
+For a full draft follow all steps with `--mode draft`.
 
 1. Prepare the shared PDP decision brief from
    [workflow-buyer-decision.md](workflow-buyer-decision.md). Translate facts
    into buyer value, record the main objection and fit/not-fit boundary, and
    keep unknown commercial terms unresolved.
 2. Validate it with `validate-decision-brief --surface pdp`. Stop before
-   Approval A unless all five checks return `pass`.
+   Approval A unless all five checks return `pass` when a brief is supplied.
+   Only the minimal-fill lane may defer an absent brief.
 3. Write `descriptionHtml` through
    [workflow-product-content.md](workflow-product-content.md) and show the
    operator its pass/fix/blocked scorecard. Fix failures before building Shopify
@@ -249,9 +298,9 @@ Read the current metafield value and use its `compareDigest` for updates. Use ex
 5. Run `validate-product-package --mode draft`; fix all blocking issues.
 6. Prepare variables with `status: DRAFT` and pass the `product-create-draft` guard.
 7. Ask Approval A for the exact selected candidates.
-8. Execute `assets/graphql/product-create-draft.graphql`, pass the matching response check, then read each product back with the core `product-readback.graphql`. If media was supplied, validate the extra media-read scopes, then use `product-media-readback.graphql` to verify asynchronous media state.
-9. Rerun the package validator with `--mode public`, then prepare and guard the exact activation (`product-activate`) and publication (`publishable-publish`) variables and ask Approval B for those status and publication targets.
-10. Execute only the approved operations, check each response under its own operation name, and read back status and publications.
+8. Execute `assets/graphql/product-create-draft.graphql`, pass the matching response check, then read each product back with the core `product-readback.graphql`. Show the operator the returned `onlineStorePreviewUrl` and the Shopify admin draft link for visual review; for a minimal-fill draft, also present the `supplements` list as the follow-up checklist. If media was supplied, validate the extra media-read scopes, then use `product-media-readback.graphql` to verify asynchronous media state.
+9. Complete confirmed single-variant SKU/price and any media through [write-field-mapping.md](write-field-mapping.md) and [workflow-image-upload.md](workflow-image-upload.md). Obtain exact approval for operations not covered by prior approval. Verify their actual readback, then rerun `--mode public`, prepare and guard activation (`product-activate`) and publication (`publishable-publish`), and ask Approval B for those status and publication targets.
+10. Execute only the approved operations, check each response under its own operation name, and read back status and each selected publication with `product-publication-readback.graphql`. Verify the public URL. Record the per-object result and supplements through [result-handoff-contract.md](result-handoff-contract.md), including partially completed drafts.
 
 Approval A never authorizes Approval B.
 

@@ -1,0 +1,6 @@
+mutation OpsyProductVariantUpdate($productId: ID!, $variants: [ProductVariantsBulkInput!]!) {
+  productVariantsBulkUpdate(productId: $productId, variants: $variants, allowPartialUpdates: false) {
+    productVariants { id sku price }
+    userErrors { field message }
+  }
+}

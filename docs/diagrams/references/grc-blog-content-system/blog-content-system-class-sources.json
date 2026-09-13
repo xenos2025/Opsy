@@ -1,0 +1,139 @@
+{
+  "date": "2026-09-13",
+  "timezone": "Asia/Shanghai",
+  "basis": "local Skill instructions and validator code; no live customer execution",
+  "source_root": "D:\\Shopify Operations Skill\\skills",
+  "source_files": [
+    {
+      "path": "grc-shopify-ops-runtime/SKILL.md",
+      "sha256": "9dc008f2d4b1a8e65c7b1efa627f851e688b924e734023ebebeb8ff2b11eb82e"
+    },
+    {
+      "path": "grc-shopify-ops-blog-content/SKILL.md",
+      "sha256": "9a6a1b061c9c54dcaaf6c9aa42a8b7afc8045595561e865b4e1215f742ac9770"
+    },
+    {
+      "path": "grc-shopify-ops-blog-content/references/client-context.md",
+      "sha256": "c53a7d12560e8ee2e1a2ef5e76a98488fd8af0a0c8c13f6413702b2d0855e9c5"
+    },
+    {
+      "path": "grc-shopify-ops-blog-content/references/content-role-brief.md",
+      "sha256": "7960005e5d5d5167f1554ccde730dadb9c55031b9cea1182000c579519ca2978"
+    },
+    {
+      "path": "grc-shopify-ops-blog-content/references/blog-workflow.md",
+      "sha256": "2e376a87711d5c44d0922ebdfb89aa10aeac5bc51561df620d5d334d5b03f22a"
+    },
+    {
+      "path": "grc-shopify-ops-blog-content/references/tkd-geo-standard.md",
+      "sha256": "541dad63a663c3eb4c1b8ec8a67299c5ec447440364fcb96d10c2e5bf591b3ae"
+    },
+    {
+      "path": "grc-shopify-ops-blog-content/references/validation-checklist.md",
+      "sha256": "9680bb29518d894a4754fca175577faa83d301ddaa4b94f864f0ed0f09639572"
+    },
+    {
+      "path": "grc-shopify-ops-blog-content/references/shopify-write-gate.md",
+      "sha256": "ed2c8da9ac0c26f1460dc8fb0eef99ecdba84750901afa7a53b73d0ce1ca482c"
+    },
+    {
+      "path": "grc-shopify-ops-blog-content/scripts/validate_blog_package.py",
+      "sha256": "7a835b9876deb9f4b8212da391d2b711a2321a54e80d273b65139b579065f532"
+    },
+    {
+      "path": "grc-shopify-ops-runtime/references/buyer-decision-contract.md",
+      "sha256": "b478edff6f1eb90488715432def76eeea52dcf8f1fbdfe99f092ff187c61db78"
+    },
+    {
+      "path": "grc-shopify-ops-runtime/references/shared-write-gate.md",
+      "sha256": "f120465d79e10ad7bdb0b7dc66a8c52ac9b5d57ccf311d8e2e9ef2408756d233"
+    },
+    {
+      "path": "grc-shopify-ops-runtime/references/shared-handoff.md",
+      "sha256": "a07a37eb87497757e13f08d2b33cf2b733933a2e7dac78a40492a7c80300b78e"
+    },
+    {
+      "path": "grc-shopify-ops-runtime/references/plan-execution-contract.md",
+      "sha256": "d5839ea4a30a79b4d3afe509057bc208f3da22342bbd962ccec5efb9bb376df5"
+    },
+    {
+      "path": "grc-shopify-ops-site-foundation/references/audience-context-contract.md",
+      "sha256": "0f3aed9a62df5dbbeb2d2d70acf76402260f7f539ef59dca8d96214e68138b74"
+    },
+    {
+      "path": "grc-shopify-ops-data/references/keyword-scoring.md",
+      "sha256": "925c13a230c0bc68d6e303dbc997781506d95cc87cadaeaba84de3a1a7098b8a"
+    }
+  ],
+  "visual_reference": {
+    "path": "D:/Opsy/docs/diagrams/09-opsy-skill-config-dataflow.svg",
+    "sha256": "71e74229221f3dbde0a9352b49b40df48f54ccdbc44a6e26667d1aca230c59e6",
+    "use": "visual layout and grouped class appearance only; Opsy logic is not Blog evidence"
+  },
+  "diagram_type": "conceptual UML class and dependency model",
+  "compiler": "PlantUML 1.2024.8 / local Java / UTF-8",
+  "dimensions": [
+    2667,
+    4036
+  ],
+  "class_count": 33,
+  "class_names": [
+    "Profile",
+    "Audience",
+    "FAQ",
+    "Context",
+    "DataInputs",
+    "Scorer",
+    "Score",
+    "Runtime",
+    "Role",
+    "Planner",
+    "Plan",
+    "Research",
+    "Brief",
+    "Composer",
+    "Claims",
+    "DecisionRules",
+    "EditorialRules",
+    "SearchRules",
+    "DeliveryRules",
+    "Design",
+    "Body",
+    "Meta",
+    "Media",
+    "Links",
+    "Coverage",
+    "Package",
+    "Validator",
+    "Result",
+    "Approval",
+    "WriteGate",
+    "Readback",
+    "Handoff",
+    "Measure"
+  ],
+  "validation": {
+    "svg_parse": true,
+    "png_svg_dimensions_match": true,
+    "node_overlap": 0,
+    "node_text_outside_rect": 0,
+    "source_references_checked": true,
+    "live_access": false,
+    "viewer": {
+      "decode": true,
+      "zoom": true,
+      "pan": true,
+      "fit": true,
+      "actualSize": true,
+      "errors": 0
+    },
+    "git_diff_check": "pass",
+    "markdown_links": "pass",
+    "visual_review": "Full overview and upper/lower sections reviewed; long edge labels reduced for readability."
+  },
+  "outputs": {
+    "blog-content-system-class.puml": "660446a8fa46e3743c2cb5e3d3dfe09ea3a6884fd7a6ccdd5f6ab82252658298",
+    "blog-content-system-class.svg": "6b714e0b4a488e1d219a9c6691a443861464a16dfa2e28e7f96ac31aa8ccf5f9",
+    "blog-content-system-class.png": "f13cb9fee31dbc68f9780f02792c81ffd1f84fef93fb5f77df156ad25ef3b4a8"
+  }
+}

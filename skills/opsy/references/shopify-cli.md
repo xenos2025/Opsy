@@ -25,13 +25,20 @@ Do not substitute `@latest` in persistent instructions. If another CLI version e
 
 ## Scope packs
 
-Request only what the selected workflows need:
+Use the executable plan and recovery flow in
+[authorization-lifecycle.md](authorization-lifecycle.md). The catalog at
+`assets/authorization-scopes.json` defaults to the complete three-function
+core, with optional redirects/extended profile. During recovery request the
+whole previously confirmed plan, not only a failing operation's scope.
+
+The following mappings explain individual capabilities:
 
 - profile reads: `read_products,read_content,read_online_store_navigation,read_publications,read_themes,read_markets`;
 - product draft/update: `write_products`;
 - product publication: `write_publications`;
 - article create/update: `write_content`;
 - redirects: `write_online_store_navigation`.
+- local image upload: `read_files,write_files`; receipt refresh needs `read_files`.
 
 Shopify mutations also require the matching read scope for validation and readback; keep `read_products`, `read_publications`, `read_content`, and `read_online_store_navigation` when their corresponding write packs are selected. Product media readback can require additional file or image read scopes depending on the returned media type and current schema. Inspect the validated query's reported scopes before authentication and request only the types actually used.
 
@@ -63,7 +70,7 @@ Before presenting an approval preview, validate the saved variables:
 node <skill-root>/scripts/opsy.mjs guard-mutation --operation <name> --variables <variables.json> --json
 ```
 
-Supported operation names are `product-create-draft`, `product-update`, `product-activate`, `article-create-draft`, `article-update`, `article-publish`, `article-schedule`, `publishable-publish`, `url-redirect-create`, and `metafields-set`. Do not relabel one operation as another to bypass a guard.
+Supported operation names are `product-create-draft`, `product-update`, `product-variant-update`, `product-activate`, `article-create-draft`, `article-update`, `article-publish`, `article-schedule`, `publishable-publish`, `url-redirect-create`, `metafields-set`, `staged-image-upload`, and `image-file-create`. Do not relabel one operation as another to bypass a guard. The image helper keeps signed temporary staging material in memory and records a sanitized receipt; see [workflow-image-upload.md](workflow-image-upload.md).
 
 After execution, validate the saved response against the same operation:
 

@@ -1,0 +1,427 @@
+@startuml blog-content-system-class
+' Primary viewpoint: conceptual UML class / dependency model.
+' Operations describe responsibilities; they are not invented callable APIs.
+' Reference visual only: Opsy 09-opsy-skill-config-dataflow.svg.
+!include _b2b-technical-style.puml
+title
+<size:30><b>Blog 内容生产系统 · UML 全景类图</b></size>
+<size:17><color:#64748B>配置与角色 · 数据选题 · 资料检索 · 写作与排版 · 配图与内链 · 校验 · 授权交付 · 效果复盘</color></size>
+end title
+top to bottom direction
+skinparam backgroundColor #F6F9FC
+skinparam defaultFontSize 17
+skinparam defaultFontColor #17243A
+skinparam ArrowFontSize 14
+skinparam ArrowColor #52667E
+skinparam ArrowFontColor #475569
+skinparam nodesep 45
+skinparam ranksep 62
+skinparam packageStyle rectangle
+skinparam packageBackgroundColor #F8FAFC
+skinparam packageBorderColor #94A3B8
+skinparam packageFontSize 19
+skinparam packageFontStyle bold
+skinparam ClassAttributeIconSize 0
+skinparam ClassBorderThickness 1.4
+skinparam ClassFontStyle bold
+skinparam ClassAttributeFontColor #334155
+skinparam ClassAttributeFontSize 17
+skinparam NoteBackgroundColor #FFF8D8
+skinparam NoteBorderColor #B89B56
+skinparam NoteFontColor #4B4634
+skinparam LegendBackgroundColor #FFFFFF
+skinparam LegendBorderColor #94A3B8
+skinparam class {
+  BackgroundColor<<config>> #EEE2FF
+  BorderColor<<config>> #8B5CC7
+  BackgroundColor<<evidence>> #D9EAFB
+  BorderColor<<evidence>> #4C86BC
+  BackgroundColor<<policy>> #FFF3CC
+  BorderColor<<policy>> #B89B56
+  BackgroundColor<<service>> #CDE4FA
+  BorderColor<<service>> #397AB5
+  BackgroundColor<<output>> #D4F3E2
+  BorderColor<<output>> #3A9565
+  BackgroundColor<<gate>> #FFE0BE
+  BorderColor<<gate>> #C87931
+}
+hide stereotype
+
+package "01 / 项目配置与上下文" as Inputs {
+  class "站点与表达配置\nSiteProfile" as Profile <<config>> {
+    config/site_profile.json
+    content_voice_path 指向的表达文件
+    business model / audience / market / language
+    conversion goal / approved primary_cta
+    --
+    事实和口吻均来自活动工作区
+  }
+  class "受众上下文\nAudienceContext" as Audience <<config>> {
+    config/audience_context.json（启用时）
+    audienceTask / audienceSelection
+    产品范围 / 市场 / 排除条件 / source_refs
+    --
+    选中字段记录用途、原文与理由
+    画像是规划输入，不是产品性能证据
+  }
+  class "买家问答配置\nBuyerFAQ" as FAQ <<config>> {
+    config/buyer_faq.json（生效时）
+    faq_ref / scope / language / question
+    planning acceptance / content_use
+    --
+    select_buyer_faq.py：Blog primary-only
+    问题可规划，答案复用另验 eligible
+  }
+  class "工作区历史与页面上下文\nWorkspaceContext" as Context <<evidence>> {
+    ai-log/shopify-store-context.md
+    ai-log/operations-log.md
+    当前 Page / Foundation 输出
+    现有文章、页面、产品与集合清单
+    --
+    路由 / 页面归属 / 更新日期 / 既有素材
+  }
+  Profile -[hidden]down- Audience
+  Audience -[hidden]down- FAQ
+  FAQ -[hidden]down- Context
+}
+
+package "02 / 需求证据与选题来源" as Demand {
+  class "需求数据与评分配置\nDemandInputs" as DataInputs <<evidence>> {
+    gsc_queries.csv / gsc_query_page.csv
+    ga4_landing_pages.csv / KD / Planner 导出
+    config/seo_keyword_scoring.json
+    intent_lexicon.json / format_lexicon.json
+    --
+    source path / window / timezone / limits
+    站龄、KD 来源与数据缺失均须保留
+    gsc_gen_ai_pages.csv 仅观察，不参与评分
+  }
+  class "Data 评分职责\nKeywordScorer" as Scorer <<service>> {
+    所有者：Data Agent
+    score_keyword_opportunities.py
+    --
+    + 按配置计算机会与难度约束
+    + 输出评分表及执行队列
+  }
+  class "已评分机会与队列\nScoredOpportunity" as Score <<evidence>> {
+    keyword_opportunity_scores.csv
+    operations_queue.csv / selected queue_id
+    kd / kd_source / under_kd_cap
+    priority / opportunity_score / action_label
+    intent_class / suggested_format / owned_page
+  }
+  DataInputs <.. Scorer : 读取
+  Scorer -[dashed,norank]-> Score : 创建
+}
+
+package "03 / Blog 单上下文工作职责" as Core {
+  class "Runtime 任务上下文\nRuntimeContext" as Runtime <<gate>> {
+    project / target / scope / primary owner
+    gate mode / Ready / Blocker / warnings
+    LOCAL_ONLY 为默认资料模式
+    来自 Foundation 计划时，校验精确执行项
+    plan-execution.json：executionId / sourceMapId
+    --
+    + 引导 preflight 并选择 Blog 职责
+    + 限定客户读取与写入范围
+  }
+  class "角色简报\nContentRoleBrief" as Role <<output>> {
+    build_content_role_brief.py
+    ready / ready_with_warnings / role_profile_blocked
+    受众、语言、市场、转化目标与确认口吻
+    --
+    + 在承诺选题前构建并注入上下文
+    + role_profile_blocked 停止选题与起草
+  }
+  class "选题规划职责\nTopicPlanner" as Planner <<service>> {
+    data_backed / faq_seeded / scoring_blocked
+    --
+    + 分类意图并核对 Blog 页面归属
+    + 分开更新池、新稿池、观察池
+    + 读取既有排序；不重算机会分
+    + 查重、关键词竞争、冷却期与批次比例
+  }
+  class "已选题目与问题覆盖\nTopicPlan" as Plan <<output>> {
+    cluster / source mode / source refs
+    create or update / commercial target URL
+    one article format / cooldown / ownership
+    fan-out：5–10 个相关问题及来源
+    this_article / owned_surface / gap
+    --
+    仅对已承诺选题制作文章包
+  }
+  class "按主题资料整理职责\nTopicResearch" as Research <<service>> {
+    已选 cluster / 买家问题 / 目标页面
+    --
+    + 从相关资料与文件提取事实和出处
+    + 核对原有答案、产品素材与链接
+    + 读取对应写作规则，登记证据缺口
+    + 不把规则、热度或画像当产品事实
+  }
+  class "买家决策简报\nBuyerDecisionBrief" as Brief <<output>> {
+    buyer-decision.json / surface=blog
+    buyer / primaryAnswer / valueTranslations
+    objections / boundary / nextStep / unresolved
+    demandEvidence[] / claimEvidence[]
+    faqSelection / audienceSelection（适用时）
+    --
+    事实 → 买家要求 → 价值；逐项保留证据引用
+  }
+  class "文章编写职责\nBlogComposer" as Composer <<service>> {
+    单一 Agent 上下文中的规划、写作和核验
+    --
+    + 应用角色简报和买家决策
+    + 选择一种文章类型及叙事方式
+    + 组织正文、描述、媒体和内部路径
+    + 保存来源、缺口及待商家确认项
+  }
+  Runtime -down-> Role : 本次任务采用
+  Role <-down- Planner : 使用角色简报
+  Planner -down-> Plan : 形成选题计划
+  Plan <-down- Research : 按选题范围查资料
+  Research -down-> Brief : 形成决策简报
+  Brief <-down- Composer : 依据简报编写
+}
+
+package "04 / 选题后查询的文件与规则" as ResearchInputs {
+  class "产品与能力证据\nClaimEvidence" as Claims <<evidence>> {
+    产品文档 / 规格 / 检测报告
+    供应商说明 / 商家确认 / Admin 字段
+    sourceRef / supports / status / verifiedAt
+    --
+    verified / merchant_confirmed 可作相应依据
+    general_context 不转为客户专属事实
+  }
+  class "角色与决策规则\nDecisionRules" as DecisionRules <<policy>> {
+    client-context.md
+    content-role-brief.md
+    buyer-decision-contract.md（Runtime）
+    audience-context-contract.md（Foundation）
+    buyer-faq-cold-start.md（Foundation）
+  }
+  class "选题与写作规则\nEditorialRules" as EditorialRules <<policy>> {
+    blog-workflow.md
+    意图、查重、冷却期、批次配额
+    文章类型 / 叙事结构 / 问题覆盖
+    正文、配图、内链、文章包字段
+  }
+  class "搜索与转化规则\nSearchConversionRules" as SearchRules <<policy>> {
+    tkd-geo-standard.md
+    search-policy-contract.md
+    keyword-execution-contract.md
+    conversion-policy-contract.md
+    --
+    标题描述 / 可摘引答案 / 页面归属 / CTA
+  }
+  class "质量与交付规则\nDeliveryRules" as DeliveryRules <<policy>> {
+    validation-checklist.md
+    shopify-write-gate.md（Blog）
+    shared-write-gate.md（Runtime）
+    shared-handoff.md（Runtime）
+  }
+  Claims -[hidden]down- DecisionRules
+  DecisionRules -[hidden]down- EditorialRules
+  EditorialRules -[hidden]down- SearchRules
+  SearchRules -[hidden]down- DeliveryRules
+}
+
+package "05 / 文章生产的六类设计结果" as Writing {
+  class "信息类型与叙事选择\nArticleDesign" as Design <<output>> {
+    procurement_guide / comparison / application
+    technical / market_solution / pattern_roundup
+    --
+    application_led：应用选择 + 转化收束
+    procurement_led：采购清单或实用表格
+    每篇一种类型、一种叙事方式
+  }
+  class "正文与排版\nBodyContent" as Body <<output>> {
+    Body HTML：无 H1，使用 H2 / H3
+    答案前置 / 独立可理解段落 / 实用表格
+    主张附近放证据；写清适用与不适用
+    --
+    每个区块承担一个买家决策任务
+    不固定万能 H2 顺序，不复制近似问题成多篇
+  }
+  class "标题、摘要与描述\nSearchMetadata" as Meta <<output>> {
+    Article title / unique Summary
+    SEO title / Meta description
+    lowercase-kebab-case handle / 3–5 tags
+    --
+    关键词自然靠前，说明买家价值或下一步
+    不把字符建议当搜索引擎硬性限制
+  }
+  class "配图与媒体\nArticleMedia" as Media <<output>> {
+    相关产品／集合的已核实图片来源
+    Featured image URL + alt
+    正文至少 2 个真实 img + alt（写入就绪）
+    允许的 HTTPS / CDN URL，与内容匹配
+    --
+    概念图占位或 text-only 不能冒充写入就绪
+  }
+  class "内部链接与转化路径\nInternalLinkPlan" as Links <<output>> {
+    named commercial target URL
+    相关 PDP / collection / solution / article
+    严格模式至少 2 个不同站内链接
+    approved primary_cta：label + URL
+    --
+    已有页面承接其问题，下一步写清输入与回报
+  }
+  class "问题覆盖映射\nQuestionCoverage" as Coverage <<output>> {
+    question / source / status / owner URL
+    this_article 对应本篇 H2 / H3
+    owned_surface 对应内部链接
+    gap 对应待补清单，不暗中扩稿
+    --
+    plan-based 问题不伪造搜索量
+  }
+  Design -[hidden]right-> Body
+  Body -[hidden]right-> Meta
+  Design -[hidden]down- Media
+  Body -[hidden]down- Links
+  Meta -[hidden]down- Coverage
+}
+
+package "06 / 文章包与质量关口" as Quality {
+  class "可审阅文章包\nArticlePackage" as Package <<output>> {
+    输出目录内正文、元信息、媒体、链接与来源
+    相邻 buyer-decision.json
+    source mode / scored row or FAQ refs
+    角色状态 / 商家确认项 / create-update 决定
+    --
+    文案总结不能替代结构化简报验证
+  }
+  class "文章包核验职责\nPackageValidator" as Validator <<service>> {
+    validate_blog_package.py --strict --check-links
+    validate_buyer_decision.py
+    --
+    + 复验 FAQ、受众、决策证据与内容一致性
+    + 校验字段、正文、图像、内链和质量
+    + QA 默认至少 85；不以降阈值绕过失败
+    + 必要时一次修正并重验，仍失败则交负责人
+  }
+  class "校验结果与待办\nValidationResult" as Result <<output>> {
+    errors / warnings / quality score
+    URL 核验：HTTP 小于 400
+    图像缺失、无依据主张或阻塞项
+    --
+    离线检查应保留链接待核验状态
+    QA 得分不是排名、引用率或买家认可
+  }
+  Package <-right- Validator
+  Validator -down-> Result : 输出检查结论
+}
+
+package "07 / 授权写入、回读与持续运营" as Delivery {
+  class "精确写入授权\nWriteApproval" as Approval <<gate>> {
+    确切店铺 / 对象 / 字段变更
+    draft create / update / live update / publish
+    口吻、主张和来源警告已解决或获批准
+    --
+    选题或计划获准，不自动授权发布
+  }
+  class "Blog 写入关口\nArticleWriteGate" as WriteGate <<gate>> {
+    Runtime gate / 店铺身份 / 已验证渠道
+    当前 schema / 确切 payload / strict pass
+    --
+    + 同次写入正文及媒体，默认不发布
+    + 仅执行已授权对象与字段
+    + 发布需要相应的明确批准
+  }
+  class "文章回读证据\nArticleReadback" as Readback <<evidence>> {
+    Admin re-query：对象、关键字段、图片数量
+    已发布页面：public HTML / DOM
+    目标 URL / 核对时间 / 结果 / 限制
+    --
+    只有 Admin 成功不能证明前台完成
+  }
+  class "交付记录与后续责任\nHandoffRecord" as Handoff <<output>> {
+    outputs 中的文章包、来源与核验结果
+    ai-log/operations-log.md
+    必要时 handoff.md：对象、文件、下一责任方
+    --
+    记录 owner 不自动启动后台 Agent
+  }
+  class "按文章复盘的效果证据\nArticleMeasurement" as Measure <<evidence>> {
+    GSC 问题查询：曝光 / CTR / 排名
+    GA4：AI referral sessions / 文章落地页
+    商业目标参与 / CTA 与内链点击
+    定性引用抽查：问题、日期与助手
+    --
+    记录来源、窗口、时区；未测写 unmeasured
+    曝光不等于点击、引用次数或 Skill 因果效果
+  }
+  Approval <-right- WriteGate
+  WriteGate -down-> Readback : 要求写后核对
+  Readback -down-> Handoff : 保存回读与限制
+  Handoff -right-> Measure
+}
+
+
+' Layout-only constraints keep input and rule columns beside the main model.
+Profile -[hidden]right-> Runtime
+Runtime -[hidden]right-> Claims
+Context -[hidden]down- DataInputs
+Result -[hidden]down-> WriteGate
+Composer -[hidden]down-> Body
+
+Composer -[dashed,norank]-> Writing : 应用六类文章设计
+
+' Static relationships: solid = named association; dotted = uses / creates.
+Role -[dashed,norank]-> Profile : 读取站点与表达配置
+Role -[dashed,norank]-> DecisionRules
+Runtime -[dashed,norank]-> Context : 读取任务上下文
+Planner -[dashed,norank]-> Score : data_backed：消费既有评分
+Planner -[dashed,norank]-> FAQ : faq_seeded：无排名冷启动
+Planner -[dashed,norank]-> Context : 查重 / 归属 / 冷却期
+Planner -[dashed,norank]-> EditorialRules
+Research -[dashed,norank]-> Claims : 按主张查询证据
+Research -[dashed,norank]-> Context : 读取目标页面与素材
+Research -[dashed,norank]-> DecisionRules
+Brief -[dashed,norank]-> Audience : 采用受众字段
+Brief -[dashed,norank]-> FAQ : FAQ 使用记录
+Brief -[dashed,norank]-> Claims : 主张必须对应证据
+Brief -[dashed,norank]-> DecisionRules
+Composer -[dashed,norank]-> EditorialRules
+Composer -[dashed,norank]-> SearchRules
+Design -down- Package : 文章包关联的类型与叙事
+Body -down- Package : 正文
+Meta -down- Package : 元信息
+Media -down- Package : 媒体
+Links -down- Package : 内部路径
+Coverage -down- Package : 问题覆盖
+Package -[dashed,norank]-> Brief : 引用相邻简报
+Validator -[dashed,norank]-> DeliveryRules
+WriteGate -[dashed,norank]-> Package : 读取精确变更
+WriteGate -[dashed,norank]-> Result : 须通过适用检查
+WriteGate -[dashed,norank]-> DeliveryRules
+Measure -[dashed,norank]-> DataInputs : 后续 Data 分析可使用观测
+
+note bottom of Planner
+data_backed：P1/P2 → 机会分 → KD 来源 → 较低 KD。
+更新默认尊重 28 天冷却期，可按配置与例外处理。
+faq_seeded 仅限无可用评分需求的合格冷启动；
+保留精确 FAQ ID，不能补造 KD、流量或机会分。
+两路都不成立时 scoring_blocked。
+end note
+
+note bottom of Research
+选题前已有基础上下文；选题后按主题补查相关文件。
+规则文件约束写法；需求证据解释为何选题；
+主张证据支持文章能说什么。三者不可相互替代。
+不表示每次全库扫描或自动执行外部资料抓取。
+end note
+
+legend bottom
+|= 阅读图例 |= 含义 |
+| 紫色 | 客户项目配置与受众输入 |
+| 蓝色 | 有据可查的数据，或内容生产职责 |
+| 浅黄 | Skill 规则文件与约束 |
+| 绿色 | 简报、文章设计、交付物 |
+| 橙色 | Runtime / 写入授权边界 |
+| 实线 | 有名称的静态关联；不表示执行时间或并行 |
+| 虚线箭头 | 使用者指向依赖对象；“创建”标签表示创建依赖 |
+| 类与操作 | 概念／职责模型；中文操作为职责描述，不是程序 API |
+| 执行方式 | 单上下文 Prompt 组合；无独立 workflow-prompts.json 或自动多 Agent 流水线 |
+| 本图依据 | 2026-09-13 · Asia/Shanghai · 本地 Skill 规则与脚本；没有连接客户账户 |
+endlegend
+@enduml

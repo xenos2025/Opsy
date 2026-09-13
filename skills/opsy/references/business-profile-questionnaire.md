@@ -39,6 +39,11 @@ node <skill-root>/scripts/opsy.mjs audience-wizard --json
 
 ## Blog 数据交付问题
 
+在确认主询盘 CTA 时同时确认按钮文字与实际 HTTPS 目标地址，保留
+`profile.primary_inquiry_cta`，并补充 `profile.inquiry_cta.url`、
+`confirmed_at`、`evidence_ref`。接收询盘的外部地址也须明确确认。
+不要由按钮文字推测联系页；旧画像缺少地址时保留原值并补问。
+
 只问：“服务方是否已经把数据包放到本地工作区？”如果没有，记录
 `not_delivered`。商品资料工作可以继续；Blog 标记 `scoring_blocked`，等待服务方
 交付；如果已有 accepted FAQ questions，可走明确标注、无搜索指标的

@@ -107,7 +107,15 @@ is `data_backed` when valid `gsc_queries` and `ga4_landing_pages` exist,
 no numeric search-demand claims. Do not offer Google authorization or live
 GA4/GSC queries. Missing delivered data never blocks merchant-led Product work.
 
-Before a write, downgrade to `connection_required` or `profile_required` if the validated base evidence changed. Keep the base state but block only the affected workflow when a workflow-specific scope, publication, Blog, or metafield definition is missing.
+Before a write, downgrade to `connection_required` or `profile_required` if the validated base evidence changed. A failed live check of the complete approved authorization plan blocks all Shopify writes. After that check passes, a missing optional capability, publication, Blog, or metafield definition blocks only the affected workflow.
+
+### Live authorization overlay
+
+Local configuration is not proof that a token still works. Plain `status` marks authorization as `not_checked`; an otherwise ready workspace becomes `authorization_required` and all write capabilities are false. Start sessions with `status --live --recover --apply` and run `ensure-auth --recover --apply --task <task-id>` before each write group. The task flag is used only when a saved task exists.
+
+The helper verifies store identity and actual granted scopes through Shopify CLI. Previously approved automatic recovery may open Shopify OAuth using the complete saved permission plan. A changed plan needs new consent. Network errors and ambiguous permission failures do not trigger OAuth. Failed verification can also invalidate saved connection evidence and return the base state to `connection_required`; inspect the attached `authorization` result for the precise cause. The authorization probe itself is allowed during connection setup or repair.
+
+Read [authorization-lifecycle.md](authorization-lifecycle.md) for first-use consent, scope purposes, recovery receipts, cooldowns, administrator handoff, and resuming interrupted tasks. Authorization never substitutes for approval of a product or Blog mutation.
 
 ### Store-role overlay for buyer-facing copy
 

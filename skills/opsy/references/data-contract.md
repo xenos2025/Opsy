@@ -59,12 +59,16 @@ Require:
 }
 ```
 
-Each dataset path must be relative and remain inside `data-center/`. Validate:
+Each dataset path must be relative and remain inside `data-center/`. A dataset
+may declare an optional `header_row` (positive integer, default `1`) when the
+provider export keeps title or caliber-note lines above the real header; it
+counts non-empty CSV lines, and rows above it are ignored by validation and
+summaries. Validate:
 
 - schema and dataset object;
 - file existence;
 - UTF-8 CSV readability;
-- manifest-declared headers as an ordered leading set;
+- manifest-declared headers as an ordered leading set at `header_row`;
 - data-row count;
 - ISO dates and `start_date <= end_date`;
 - non-empty timezone, source, and scope;
@@ -100,7 +104,61 @@ evidence_refs,source_period,selection_status,merchant_decision
 `route_hint` is triage, not topic approval. Owned Product/Collection demand is
 routed to Product; owned Blog demand is routed to Blog updates; existing Page
 or Home intent is protected for review; question-like unowned demand may be
-routed to Blog. Ambiguous demand remains `review`.
+routed to Blog. Ambiguous demand remains `review`. Product and Blog treat this
+file as the first content-selection step when a snapshot exists; the merchant
+confirms at most three rows onto the package topic queue described in
+[merchant-selection-contract.md](merchant-selection-contract.md).
+
+## Provider-delivered inquiry analysis datasets
+
+The merchant does not summarize inquiries alone. When the provider's weekly or
+monthly inquiry review is delivered, its CSV tables enter the same manifest as
+datasets whose names start with `inquiry_`. Suggested names follow the
+provider report: `inquiry_notes`（口径说明）, `inquiry_channels`（渠道汇总）,
+`inquiry_funnel`（核心漏斗）, `inquiry_countries`（国家转化）,
+`inquiry_cta`（CTA 明细）, and `inquiry_compare`（服务方同期对比）. All are
+optional; columns may be Chinese and follow the delivery caliber, and exports
+with title lines use `header_row`.
+
+Rules:
+
+- Caliber interpretation belongs to the delivery notes（口径说明）; do not
+  reinterpret thresholds or de-duplication rules locally.
+- Contact clicks and intent events are never real inquiries; the real-inquiry
+  stage stays pending until sales or support reports back.
+- `summarize-data` renders each `inquiry_*` dataset as a bounded preview (at
+  most 8 rows × 6 columns). Answer detail questions by targeted lookups in the
+  active file, not by loading whole tables into the conversation.
+
+## History comparison (bounded)
+
+`summarize-data` computes the only supported history comparison: headline GSC
+click/impression and GA4 session deltas against each dataset's `archive_path`
+snapshot, plus at most five query movers. A provider-delivered
+`inquiry_compare` dataset is used as-is. Never read full `archive/` files into
+the conversation, and never estimate missing history.
+
+An `archive_path` alone does not establish comparability. Its dataset entry
+must also carry `archive_metadata` with the previous snapshot's `scope`,
+`timezone`, `source_channel`, `filter_signature` when filtered, `date_range`,
+`pulled_at`, `columns`, `row_count`, and `header_row` when needed. Scope,
+timezone, source and filter must match the active snapshot; periods must be
+non-overlapping with equal day counts. Missing/mismatched metadata yields an
+explicit non-comparable result. Unequal calendar months need provider-normalized
+comparison evidence; the helper does not silently normalize them.
+
+Missing metric columns remain `Unavailable`; blank, invalid or negative
+values in supplied standard metric columns fail validation. A GA4 user total
+across channel rows is labelled as a non-deduplicated row sum. Query changes
+include disappeared/new rows as zero only if both snapshots declare
+`row_coverage: complete`; otherwise compare shared rows and disclose coverage.
+Inquiry-only reports still retain their actual period, timezone, path, scope,
+source channel and extraction time.
+
+Local summary, keyword, agency queue and 404 output commands preserve existing
+files. Choose a new `--output` path for a revision; do not overwrite previous
+evidence. Final analysis uses the report and handoff contract in
+[result-handoff-contract.md](result-handoff-contract.md).
 
 ## Optional 404 data
 

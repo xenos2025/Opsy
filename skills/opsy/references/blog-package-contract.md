@@ -37,6 +37,8 @@ Use `schema_version: opsy-blog-package-v1` and include:
   cited as `config/buyer_faq.json#<id>`;
 - cooldown dates and an allowed exception when updating inside 28 days;
 - a passing `buyerDecision` for surface `blog`;
+- `topicQueue`, `placement`, and `audienceCard` from
+  [merchant-selection-contract.md](merchant-selection-contract.md);
 - `article.title`, `handle`, `summary`, `bodyHtml`, `seoTitle`, `metaDescription`, `tags`, `featuredImage`, `internalLinks`, and the profile-approved `cta`.
 
 Supported formats are `procurement_guide`, `comparison`, `application`, `technical`, `market_solution`, and `product_roundup`. Procurement, comparison, and technical formats need a decision-useful table.
@@ -105,6 +107,12 @@ reviewable locally, with `needs_media`; they need mappings before a new write.
 Internal links and the approved CTA must actually occur in the body; declaring
 them only in package metadata is insufficient. Keep the CTA label configured
 in the profile, and verify its destination during scene intake.
+The profile also records `profile.inquiry_cta: {url, confirmed_at, evidence_ref}`.
+Use the exact confirmed HTTPS destination (including path/query), not a URL
+inferred from the label. An approved external inquiry destination is allowed;
+an unconfirmed external or same-store substitute is not. Existing profiles
+keep their data; add this field only after merchant confirmation. Missing CTA
+configuration remains a local-review warning and blocks new Blog writes.
 
 ## Deterministic gate
 
@@ -123,5 +131,10 @@ Blog-primary route, content language, scope, answer-conflict/quarantine state, a
 references; `faq_seeded` packages fail when any numeric search metric is
 present. Answer text may enter the article only when that item also passes the
 public answer gate. A passing package does not authorize a Shopify write.
+
+Record `topicQueue`, `placement`, and `audienceCard` from
+[merchant-selection-contract.md](merchant-selection-contract.md) before
+showing the package as complete. `suggest-keywords` is the first Blog step
+when data exists; otherwise the confirmed FAQ seed queue is the first step.
 
 Use [workflow-blog.md](workflow-blog.md) for the operating sequence, [workflow-blog-content.md](workflow-blog-content.md) for craft, and [workflow-buyer-decision.md](workflow-buyer-decision.md) for buyer usefulness.

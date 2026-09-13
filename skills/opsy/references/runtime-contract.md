@@ -12,7 +12,12 @@ Use this contract at the start of every Opsy session.
 
 ## Session order
 
-1. Run `status` and confirm the project, workspace, and store.
+1. Run `status --live --recover --apply` and confirm the project, workspace,
+   store and actual authorization. Follow [authorization-lifecycle.md](authorization-lifecycle.md)
+   for first approval or a recovery blocker. Local `status` never proves live
+   token validity. Matching prior recovery consent is reused.
+   For continuing work also run `resume-task --task <task-id>`; use the
+   retained IDs and next actions from [result-handoff-contract.md](result-handoff-contract.md).
 2. Read `data_access`, `store_role`, `merchant_context`, `buyer_faq`,
    `blog_data_center`, `blog_topic_sources`, and the selected
    `write_capabilities` entry.
@@ -20,6 +25,9 @@ Use this contract at the start of every Opsy session.
 4. Load only the selected workflow reference.
 5. Keep unknown commercial or product facts unresolved; do not fill them with analytics or model inference.
 6. End with exactly three concrete actions when the operator asks what to do next.
+7. Record each core task with `record-task-result`, including blocked/partial
+   outcomes. Link the customer report and handoff; preserve all known IDs and
+   evidence fingerprints. None of these steps depends on another Skill.
 
 Runtime reads FAQ validation status and selector outputs, not raw FAQ answers.
 Use `select-faq` for Product or Blog scope, preserve returned `faq_ref` values,

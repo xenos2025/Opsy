@@ -122,6 +122,11 @@ test("agency handoff CLI applies a local queue at the workspace boundary", () =>
     );
     assert.ok(fs.existsSync(result.output_path));
     assert.match(fs.readFileSync(result.output_path, "utf8"), /selected_for_execution/);
+    const original = fs.readFileSync(result.output_path, "utf8");
+    const repeated = spawnSync(process.execPath, [path.resolve("skills/opsy/scripts/opsy.mjs"), "import-agency-handoff", "--project", project, "--file", source, "--apply", "--json"], { encoding: "utf8" });
+    assert.equal(repeated.status, 1);
+    assert.match(repeated.stderr, /already exists and was preserved/);
+    assert.equal(fs.readFileSync(result.output_path, "utf8"), original);
   } finally {
     fs.rmSync(project, { recursive: true, force: true });
   }

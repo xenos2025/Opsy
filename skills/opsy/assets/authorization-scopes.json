@@ -1,0 +1,12 @@
+{
+  "schema_version": "opsy-authorization-scopes-v1",
+  "default_features": ["products", "blog", "publication", "media"],
+  "features": {
+    "products": { "label": "产品和单变体运营", "scopes": ["read_products", "write_products"] },
+    "blog": { "label": "Blog 内容运营", "scopes": ["read_content", "write_content"] },
+    "publication": { "label": "商品渠道发布", "scopes": ["read_products", "write_products", "read_publications", "write_publications"] },
+    "media": { "label": "图片上传和回读", "scopes": ["read_files", "write_files"] },
+    "redirects": { "label": "404 跳转运营", "scopes": ["read_online_store_navigation", "write_online_store_navigation"] },
+    "extended_profile": { "label": "按需读取市场与主题档案", "scopes": ["read_markets", "read_themes"] }
+  }
+}

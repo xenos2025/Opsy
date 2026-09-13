@@ -19,6 +19,7 @@ docs/adr/
 Thumbs.db
 
 # Local diagram validation artifacts
+docs/diagrams/*.cmapx
 docs/diagrams/*.fit.json
 docs/diagrams/*.v2.json
 docs/diagrams/*.popup-check.png

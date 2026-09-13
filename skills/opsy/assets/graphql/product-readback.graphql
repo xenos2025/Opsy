@@ -5,6 +5,7 @@ query OpsyProductReadback($id: ID!) {
     handle
     descriptionHtml
     status
+    onlineStorePreviewUrl
     vendor
     productType
     tags

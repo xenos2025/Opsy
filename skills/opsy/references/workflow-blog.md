@@ -1,5 +1,12 @@
 # Workflow: Blog 与内容
 
+For local images use [workflow-image-upload.md](workflow-image-upload.md).
+Map and verify SEO title/meta description separately through
+[write-field-mapping.md](write-field-mapping.md) before declaring the draft
+complete or offering publication. These are additional exact-operation writes;
+draft creation approval alone does not authorize them. End with the per-object
+report and handoff in [result-handoff-contract.md](result-handoff-contract.md).
+
 Blog quality is not “fields filled”. Guide the operator through topic → scene →
 draft craft → package → dual-approval write. Load
 [workflow-blog-content.md](workflow-blog-content.md) before drafting body copy
@@ -8,8 +15,11 @@ saved package.
 
 ## 1. Choose an entry
 
-Always validate the local `data-center` first, then run `suggest-faq-topics` and
-record one topic-source mode.
+Always validate the local `data-center` first. Treat the topic queue as the
+first Blog step, not an optional side path. Follow
+[merchant-selection-contract.md](merchant-selection-contract.md): run
+`suggest-keywords` when data exists, otherwise `suggest-faq-topics`, then
+record one topic-source mode and the merchant-confirmed `topicQueue`.
 
 ### `data_backed` mode
 
@@ -39,7 +49,8 @@ usable GSC/GA4 datasets, as expected for a new site.
    technical-explanation jobs that lead to a real commercial target.
 3. Deduplicate against existing products, pages, articles, and recent drafts.
 4. Record `sourceBasis.mode: faq_seeded`, `topic.selectionMode: faq_seeded`,
-   the exact FAQ ids, `cluster_seed`, rationale, and an empty `topic.metrics`.
+   the exact FAQ ids, `cluster_seed`, rationale, an empty `topic.metrics`, and
+   a `topicQueue` whose rows also carry no search metrics.
 5. Label the shortlist **FAQ-seeded / no observed search-demand score**. Never
    invent impressions, KD, position, opportunity score, or GA4 performance.
 
@@ -87,7 +98,9 @@ First run the lightweight context selector in
 [workflow-buyer-decision.md](workflow-buyer-decision.md). Prefill scene intake
 from exact-scope confirmed profile/FAQ/questionnaire inputs, show what was
 reused, and ask only for missing or conflicting details. Retain selection
-fingerprints and the actual brief/body excerpts in `contentReuse`.
+fingerprints and the actual brief/body excerpts in `contentReuse`. Drafting
+requires exactly one confirmed `audienceCard` and a single-object `placement`
+record from [merchant-selection-contract.md](merchant-selection-contract.md).
 
 Before writing:
 

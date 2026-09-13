@@ -6,8 +6,10 @@ FAQs reads like a catalog export and gives a buyer no reason to inquire.
 
 This is the Product surface craft gate. The shared buyer, evidence, objection,
 boundary, and next-step gate lives in
-[workflow-buyer-decision.md](workflow-buyer-decision.md); both gates must pass
-before Approval A.
+[workflow-buyer-decision.md](workflow-buyer-decision.md). Both gates apply to
+full drafts and public content. The minimal-fill draft branch in
+[workflow-products.md](workflow-products.md) may defer absent completeness
+material; supplied but invalid evidence still blocks.
 
 Opsy is **industry-agnostic**. Pull every noun from the active store profile and
 catalog. Do not import textile, wall-panel, or any other vocabulary from agency
@@ -162,6 +164,6 @@ Show the operator a short scorecard (pass / fix / blocked):
 | CTA | No hardcoded inquiry route in the body |
 | Media | Front overview first, or an explicit media gap kept as draft |
 
-Only packages with store role and seller voice ready, and the other dimensions
-passing, may proceed to Approval A. A media gap keeps the product at draft and
-blocks Approval B.
+Full drafts require the dimensions above to pass. Minimal-fill drafts use their
+explicit completeness exceptions while keeping store role, voice, and evidence
+valid. A media gap keeps the product at draft and blocks Approval B.

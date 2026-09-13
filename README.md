@@ -1,180 +1,245 @@
 # Opsy — Guided Shopify Operations
 
-中文名：**Opsy Shopify 引导式运营助手**
+**让客户通过一个 Skill Agent，搭配项目配置和服务方数据包，完成产品上架、Blog 发布、运营数据分析。**
 
-Opsy 是面向企业主、销售和基础运营的单入口 Skill，兼容 Codex 与 WorkBuddy。它服务 B2B 询盘站，引导完成“本周三件事”、商品运营、Blog 与内容、FAQ 资料整理、404 处理、服务方数据导入和企业画像。Product 可以从企业画像、销售问题和商家材料开始；Blog 总是先检查本地 `data-center`，有 GSC/GA4 时走数据选题，新站无数据时可由已接受的 FAQ 问题生成不带搜索指标的冷启动选题。商品与文章在写入前还要通过共享的买家决策检查和各自的可执行包校验，避免只有关键词和字段、没有清晰购买理由。
+Opsy（Shopify 引导式运营助手）面向以询盘、报价和业务联系为目标的 **B2B Shopify 独立站**，兼容 Codex 与 WorkBuddy。客户用自然语言提出需求、确认业务事实和具体操作；Agent 按 Opsy 自带规则与脚本执行，保存结果，让下一次任务能够接着做。
 
-“操作简单”不代表取消安全控制。Opsy 在连接前只允许企业画像问卷、本地 FAQ 资料整理、连接引导和工作区检查；连接后必须先完成轻量店铺建档；所有 Shopify 写入都要经过预览、明确批准、执行和同通道回读。Opsy 不向企业主开放 Google API，也不提供 Tracking、Core Web Vitals 或结构化数据验收。
+Shopify 操作直接通过 **Shopify CLI** 完成，运行不依赖官方 Shopify 插件、MCP 或其他运营 Skill。仍需宿主 Agent、Node、CLI 和店铺授权；客户资料保留在自己的项目中。
 
-## 为什么配套交付的独立站体验更完整
+[客户版介绍](docs/opsy-core-purpose.md) · [更新日志](CHANGELOG.md) · [授权与恢复](skills/opsy/references/authorization-lifecycle.md) · [结果与交接](skills/opsy/references/result-handoff-contract.md)
 
-Opsy 可以用于符合 V1 范围的 Shopify 独立站；如果站点在建站阶段已经按配套规范完成配置，更多运营能力可以在连接和建档后直接启用。它的优势不是绑定某个站点，而是让建站时建立的结构持续成为运营输入：
+## 三项核心功能
 
-- **元字段可以直接、安全地填写**：建站阶段已经定义好 namespace、key、类型和校验规则，运营者只需要逐项补充业务值，不必理解或修改底层定义。
-- **服务方数据可以本地复用**：标准化的数据交付进入带 manifest、日期范围和归档记录的 `data-center/`。企业主不配置 Google 密钥；Product 没有数据仍可继续，Blog 有数据时优先走数据选题，新站可由已接受 FAQ 问题走非数值化冷启动，两个来源都不可用才返回 `scoring_blocked`。
-- **文案不只完成字段**：PDP 与 Blog 共用买家决策简报，明确目标买家、当前决定、事实到买家价值的转换、主张证据、主要异议、适用边界和下一步；需求数据不能冒充产品事实。
-- **先确认对谁说话，再决定怎么说**：店铺档案里的业务模型、受众、市场、内容语言、转化目标构成店铺角色，卖家人声在其之上决定语气。两者都确认后，商品描述和 Blog 才允许起草，避免把 B2B 与 B2C 的决策混在一篇里。
-- **商品与内容写入更少临时配置**：店铺档案可以复用已确认的发布渠道、Blog、市场、语言、主 CTA 和对象结构，减少初学者在每次操作中重新判断。
-- **多来源商品资料统一整理**：1688 / Alibaba 可访问页面由宿主浏览器采集并保留证据；本地 UTF-8 CSV、普通 `.xlsx` 和图片进入同一候选队列，保留 SKU/规格分组、逐项错误、查重和事实/媒体确认。登录或验证码会转为资料补充，不伪造采集成功；企业主不需要写 JSON。
-- **Blog 复用资料并核对配图**：按商品系列、市场和文章任务复用已确认画像与 FAQ 问题；文章包核对产品标识、已验证 URL、对应媒体及正文位置，并生成含封面、正文图片、产品链接和 CTA 的本地预览。静态校验不替代真实资料和视觉验收。
-- **运营记录可以持续积累**：统一工作区保存画像、素材、数据快照、三项行动、写前备份和操作记录，便于企业主接收服务方数据包并继续安全操作。
-- **散乱 FAQ 可以沉淀为业务配置并参与选题**：Word、PDF、表格、聊天或销售问答先进入本地收件箱，再按来源、语言、范围、问题状态、答案状态、冲突和路由整理进 `config/buyer_faq.json`。已接受问题可扩展数据主题或为新站提供无搜索指标的冷启动主题；只有另行通过发布门的答案才可成为公开事实。
-- **用户画像可以用本地 HTML 分步填写**：工具把完整证据下载到 `inbox/profile/<日期>/audience-intake.json`，只把确认后的摘要写回现有 `store-profile.json`，不增加第六个长期配置文件。
+| 功能 | 输入 | 完成什么 / 交付什么 |
+| --- | --- | --- |
+| **产品上架与更新** | 产品规格、图片、销售材料、已确认画像；搜索数据可选 | 整理商品候选，确认受众与页面落点，生成标题、描述、SEO 和询盘引导；按批准内容写入、回读，交付对象 ID、预览链接和待补充清单 |
+| **Blog 发布与更新** | 画像、产品知识、FAQ、素材，以及服务方本地数据 | 评估选题，组织正文、FAQ、产品链接、配图和 CTA；生成本地预览，经批准创建草稿、核验并发布，交付结果与证据 |
+| **运营数据分析（含线索分析）** | 服务方提供的数据包、manifest 与询盘分析口径 | 分析搜索、页面、渠道及可用询盘数据；在口径可比时做历史对比，交付依据、缺口、结论和下一步行动 |
 
-### 功能与前置配置
+产品可从已确认的商家材料开始。Blog 优先使用有效 GSC + GA4 本地数据；新站可用有效空数据中心和已接受的 FAQ 问题冷启动，不编造搜索指标。线索分析中，点击或联系意图不等于有效询盘；真实询盘与质量需销售回传确认。
 
-| 功能 | 必要条件 | 条件未满足时 |
-|---|---|---|
-| 企业画像问卷 | 企业主、销售或基础运营可确认经营事实 | 记录缺失项；不转成技术审计 |
-| FAQ 资料整理与选题种子 | FAQ 文件或销售问答；问题来源、语言、范围和路由可确认 | 问题可保留为选题/异议信号；未过答案门的内容不成为公开事实 |
-| 商品草稿与发布 | Shopify CLI 已连接；轻量店铺档案有效；店铺角色与卖家人声已确认；目标发布渠道已确认 | 保持只读或准备本地草稿，不写入店铺 |
-| 元字段填写 | 店铺已有匹配的元字段定义及校验规则 | 只跳过受影响字段，并生成建站配置处理项 |
-| Blog 选题、草稿、更新与发布 | 有效本地 `data-center`，或新站有效空 manifest + 已接受的 Blog FAQ 问题；Shopify 写入另需连接、角色、人声和目标 Blog | 两种证据都不可用时返回 `scoring_blocked`；FAQ 冷启动不得声明搜索指标 |
-| 服务方数据摘要与建议 | 有效的本地 `data-center/manifest.json` 和对应快照 | 显示未交付或过期；Product 可继续，Blog 仅可走 FAQ 问题冷启动或保持 `scoring_blocked` |
-| 服务方数据导入 | 服务方提供的兼容本地数据包 | 保留现有快照，不要求企业主连接 Google API |
-| 404 候选补充 | 选填的 `gsc_not_found.csv`、历史记录或已知 handle 变化 | 仍可处理已有候选，不假装已经覆盖 GSC 数据 |
-| 服务商任务交付 | Shopify Operations Skill / Ops Coach 输出 `opsy-agency-handoff-v1` CSV | 仅导入 `ready_for_merchant`；不继承任何 Shopify 写入批准 |
+商品支持最低填写模式：核心事实与安全校验通过即可先创建非公开草稿，直接在 Shopify 后台预览；SEO、图片、已有元字段等缺口列入待补充清单，正式发布前补齐。当前变体写入修复覆盖单变体 SKU / 价格，不承诺任意多变体批量编辑。图片上传、Blog SEO 字段写入也需具体批准与回读。
 
-其他 Shopify 独立站也可以安装 Opsy。连接后的轻量建档会先验证店铺身份和必填证据，再按商品、Blog、404 和元字段能力分别识别 scope 与对象配置：满足条件的写入先开放，缺少的部分形成明确的补配置清单；本地草稿准备不受无关能力缺失影响。Opsy 不会在基础运营中擅自创建元字段定义，也不会在没有有效导出数据时虚构分析结果。
+## 配置如何让运营服务 SEO / GEO
 
-## 安装
+三项功能完成动作；配套配置决定为谁做、先做什么、内容放在哪里、如何复盘。
 
-完整 Shopify 写入流程需要：
+| 配套能力 | 作用 |
+| --- | --- |
+| 企业与买家画像 | 确认业务模型、目标受众、市场、语言、采购顾虑、卖家语气和询盘入口 |
+| FAQ 与业务证据 | 保留问题来源、异议和答案使用资格；搜索需求不能冒充产品事实 |
+| 数据配置 | 声明数据文件、来源、周期与时区；缺失指标显示不可用，历史对比先检查口径 |
+| 选题评估与落点 | 从数据、FAQ 或商家材料生成候选，确认题目、单页落点和受众卡，再开始写作 |
+| 内容与发布检查 | 检查事实、买家价值、SEO 字段、内链、媒体和 CTA；按批准集合执行并核验 |
 
-- Node.js 22.12 或更高版本；
-- npm 或其他 Node 包管理器；
-- Git 2.28 或更高版本；
-- Shopify CLI 4.5.2。
+“题目打分”在当前客户侧实现为**有证据的候选队列、优先级判断与客户确认**，没有独立的关键词难度或机会值数值打分器。SEO / GEO 的目标是内容回答真实问题、表达清晰、事实可追溯；发布完成不代表搜索排名、流量或 AI 引用已经提升，效果需后续数据验证。
 
-Shopify 尚未连接时，仍可完成企业画像问卷和工作区检查。
+配套建站已确认的发布渠道、Blog、市场、语言及元字段定义可以直接复用，减少每次运营重新配置。FAQ 整理、企业画像、本周三件事与 404 处理是辅助入口，共用同一套工作区和执行规则。
 
-### Windows
+## 如何运作
 
-克隆仓库或解压 Release 后，在 PowerShell 运行：
+### 架构与数据流
 
-```powershell
-.\install.ps1
-```
-
-安装器会自动检测 Codex 与 WorkBuddy。也可以显式选择：
-
-```powershell
-.\install.ps1 -Host Both
-.\install.ps1 -Host Codex
-.\install.ps1 -Host WorkBuddy
-```
-
-### macOS / Linux
-
-```bash
-./install.sh
-./install.sh --host both
-```
-
-安装器会比较版本、显示目标路径并在变更前确认。升级时旧 Skill 会被归档，不会改动任何客户运营工作区。版本变更见 [CHANGELOG.md](CHANGELOG.md)。
-
-## 开始使用
-
-在 Codex 或 WorkBuddy 中打开 Shopify 运营项目，然后输入：
-
-```text
-$opsy
-```
-
-Opsy 会寻找 `shopify-ops.json`、判断当前状态，并只展示现在可以执行的选项。全新项目可直接说：
-
-```text
-使用 $opsy 检查这个项目，并预览运营项目文件夹方案。
-```
-
-## 三个状态
-
-| 状态 | 可执行内容 |
-|---|---|
-| 店铺连接未完成 | 企业画像问卷、本地 FAQ 资料整理、连接引导、运营项目文件夹 |
-| 轻量店铺建档未完成 | 完成店铺档案所需的读取与确认，或整理本地 FAQ 资料 |
-| 运营写入就绪 | 本周三件事、商品、Blog、404、服务方数据、连接与企业画像 |
-
-## 就绪后的主菜单
-
-1. 本周三件事
-2. 商品运营
-3. Blog 与内容
-4. 404 处理
-5. 导入服务方数据 / 查看已有摘要
-6. 连接与企业画像
-
-新商品和新文章默认先创建非公开草稿；回读验证后，必须第二次确认才能正式发布。
-
-## 整体架构与数据流
-
-下图集中说明 Opsy 与 Shopify Operations Skill / Opsy DTC 的链接、Runtime 路由、六个内部工作流、长期项目配置、本地证据、客户工作区和双批准写入门。画像事实来自 `config/store-profile.json`；`config/buyer_faq.json` 是独立的 FAQ 问题、异议与答案资格配置。
+组件与配置总图已同步本轮升级，保留原有配色和 UML 组件框样式。图中包含三项核心功能、CLI 授权恢复、线索与历史数据、写入门和任务续接；点击可查看大图，下方 Mermaid 展开说明执行时序。
 
 [![Opsy UML 组件与数据流架构图](docs/diagrams/09-opsy-skill-config-dataflow.svg)](docs/diagrams/09-opsy-skill-config-dataflow.svg)
 
-[PlantUML 源文件](docs/diagrams/09-opsy-skill-config-dataflow.puml) · [SVG](docs/diagrams/09-opsy-skill-config-dataflow.svg) · [PNG 截图](docs/diagrams/09-opsy-skill-config-dataflow.png) · [项目文件清单](docs/opsy-project-file-inventory.md)
+[PlantUML 源文件](docs/diagrams/09-opsy-skill-config-dataflow.puml) · [SVG 大图](docs/diagrams/09-opsy-skill-config-dataflow.svg) · [PNG](docs/diagrams/09-opsy-skill-config-dataflow.png)
 
-原有 01–08 流程图继续保存在 [`docs/diagrams/`](docs/diagrams/) 作为网站、社交媒体、提案和演示使用的营销/讲解素材，不作为执行规则的权威来源。权威规则仍以 `skills/opsy/SKILL.md` 与 `references/` 为准。
+### 升级补充：核心任务与结果交接
 
-### 状态推进（摘要）
-
-```text
-workspace_missing → connection_required → profile_required → write_ready
+```mermaid
+flowchart TB
+    User["客户：提出目标、确认事实与操作"] --> Agent["宿主 Agent + 单一 Opsy Skill"]
+    Provider["服务方：交付配置模板与本地数据包"] --> Workspace
+    Workspace["客户工作区：画像、FAQ、资料、manifest、任务记录"] --> Agent
+    Agent --> Product["产品上架与更新"]
+    Agent --> Blog["Blog 发布与更新"]
+    Agent --> Data["运营数据与线索分析"]
+    Product --> Gate["实时授权核验 + 内容检查 + 具体操作批准"]
+    Blog --> Gate
+    Gate --> CLI["Shopify CLI：授权、获批写入、回读"]
+    CLI <--> Shopify["Shopify 店铺"]
+    CLI --> Result["逐项结果、客户报告、handoff"]
+    Data --> Result
+    Result --> Workspace
+    Result --> User
+    Workspace -. "已有 ID、待办、证据变化" .-> Resume["下次任务续接"]
+    Resume --> Agent
 ```
 
-- **连接未完成**：只允许企业画像问卷、本地 FAQ 资料整理、CLI 连接引导、工作区预览/初始化。
-- **识别到服务商工作区**：保留内部工作区，只允许导入已审核任务、预览 Opsy 兼容建档或继续使用内部 Runtime；不自动创建第二份档案。
-- **建档未完成**：只允许为轻量档案做必要读取与确认；手填 `complete` 不算通过。
-- **写入就绪**：展示六项菜单；写入前仍须该工作流 `write_capabilities.*.write_ready` 为真，否则只显示 `missing` 并允许本地准备。
-- **买家可见文案另有前置**：`store_role.business_model` 必须是 `b2b_inquiry`；企业画像、人声和事实来源保持可追溯。DTC 店铺使用独立 Opsy DTC 包。404、三项行动和服务方数据不受内容角色缺失影响。
+数据分析消费服务方交付的本地快照，不调用 Google OAuth。图中三条业务路径仍受当前项目状态约束；未连接时先完成允许的画像、FAQ、连接和工作区准备。授权由 CLI 管理，Opsy 仅保存权限与核验元数据。
 
-### 每次 Shopify 写入（摘要）
+### UML 时序：授权、执行、恢复与交接
 
-1. 确认目标 `myshopify.com` 与当前档案状态。
-2. 同通道预读；既有对象先写 `backups/`。
-3. 保存 query/variables，跑 `guard-mutation`；展示字段级预览后取得**对该集合**的明确批准。
-4. `shopify store execute --allow-mutations` → `check-response` → 同通道回读 → 记入 `ai-log/operations-log.md`（无凭证）。
-5. 新品/新文章：Approval A ≠ Approval B；批准草稿不等于批准发布。
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Customer as 客户
+    participant Agent as Agent + Opsy
+    participant Workspace as 项目配置与任务记录
+    participant CLI as Shopify CLI
+    participant Shopify as Shopify
+    Customer->>Agent: 提出运营任务
+    Agent->>Workspace: 读取配置、证据与已有任务 ID
+    Agent->>CLI: 实时核验店铺身份与完整计划的权限
+    CLI->>Shopify: 只读查询（CLI 可刷新自身 Token）
+    Shopify-->>CLI: 返回实际授权状态
+    CLI-->>Agent: 返回核验结果
+    opt 首次授权、授权失效或缺少权限
+        Agent->>Workspace: 检查目标店铺、完整权限计划及恢复许可
+        opt 尚无适用许可或计划发生变化
+            Agent-->>Customer: 展示具体权限用途和恢复方式
+            Customer->>Agent: 确认授权计划与恢复偏好
+        end
+        Agent->>CLI: 按已批准的完整权限清单发起 OAuth
+        CLI-->>Customer: 打开 Shopify 浏览器授权
+        Customer->>Shopify: 完成所需登录与同意
+        Agent->>CLI: 再次核验实际店铺与权限
+        CLI->>Shopify: 只读查询
+        Shopify-->>CLI: 返回实际授权状态
+        CLI-->>Agent: 返回核验结果
+        Agent->>Workspace: 保存脱敏核验记录与恢复回执
+    end
+    alt 授权与业务前置通过，执行产品或 Blog 任务
+        Agent-->>Customer: 展示内容、具体字段与草稿操作
+        Customer->>Agent: 批准本次草稿写入
+        Agent->>CLI: 写前核验、备份、守卫、执行与回读
+        CLI->>Shopify: 执行获批操作并读取结果
+        Shopify-->>CLI: 返回对象 ID 与草稿状态
+        CLI-->>Agent: 返回核验结果
+        Agent-->>Customer: 展示已核验草稿与待补充项
+        opt 发布条件满足且客户另行批准发布
+            Customer->>Agent: 批准本次正式发布
+            Agent->>CLI: 再核验授权，发布并回读
+            CLI->>Shopify: 发布与状态核验
+            Shopify-->>CLI: 返回结果
+            CLI-->>Agent: 返回核验结果
+        end
+    else 运营分析且项目与数据前置通过
+        Agent->>Workspace: 读取服务方快照、来源、周期与可比历史
+        Agent->>Agent: 生成有依据的分析、缺口与行动建议
+    else 前置未通过或执行结果不确定
+        Agent->>Workspace: 保留已知 ID、待核验结果与阻塞原因
+    end
+    Agent->>Workspace: 保存 result.json、report.md、handoff.md
+    Agent-->>Customer: 汇报完成项、未完成项、负责人和完成条件
+    Note over Agent,Shopify: 中途授权失败先保留结果；恢复后回读已有对象，不盲目重放写入
+```
 
-### 数据与建议（摘要）
+以上是新品、新文章的典型流程；已有内容更新同样按具体变更取得批准并核验。网络故障、限流和权限拒绝分别报告，不自动当作 Token 失效反复授权。Mermaid 补充图可在 GitHub 和支持 Mermaid 的 Markdown 阅读器查看；原 SVG 总图继续直接展示，更多图见[图示目录](docs/diagrams/README.md)。当前执行流程以本页和 Skill 引用规范为准。
 
-- 数据快照只来自服务方交付的 `data-center/`，不是实时 Google API；Blog 有数据时以其为选题主证据，新站可使用已接受 FAQ 问题的非数值化冷启动通道。
-- `suggest-keywords` 产出数据建议队列；`select-faq` 为 Product/Blog 提供不落盘的安全问题筛选结果；`suggest-faq-topics` 产出不声明搜索需求的 FAQ 种子。Blog 包必须记录 `data_backed` 或 `faq_seeded`、FAQ 影响和运营者确认。
-- GSC/GA4 是需求证据，不能冒充产品事实、认证或商业条款。
+## 首次使用与授权恢复
 
-## 项目兼容
-
-- 全新项目：默认创建 `shopify-ops/` 和根目录 `shopify-ops.json`。
-- 已有仓库：读取定位文件并沿用现有工作区，包括 `_project/`。
-- 只有 `_project/`、没有定位文件：先预览，再选择是否只补定位文件。
-- 已有 `AGENTS.md` 永不覆盖。
-
-## 主要仓库结构（摘要）
+在 Codex 或 WorkBuddy 打开客户项目，输入：
 
 ```text
-skills/opsy/       可分发的唯一主 Skill
-tests/             状态、数据、写入保护和契约测试
-scripts/           仓库校验脚本
-docs/diagrams/     流程 SVG、生成器与配置流交互图
-docs/              新项目文件清单与设计说明
-VERSION            当前发布版本
+使用 $opsy 检查这个项目，并预览运营工作区方案。
+```
+
+1. **定位工作区**：读取 `shopify-ops.json`，沿用已有目录与 `AGENTS.md`；新项目先预览再初始化。
+2. **确认店铺与权限**：展示商品、Blog、发布渠道、媒体的完整权限计划。客户确认后完成 Shopify 浏览器授权，并选择是否允许以后自动发起同一计划的恢复。
+3. **核验并建档**：核验实际店铺身份与已授予权限，补齐画像、角色、语气和业务对象配置。
+4. **开展任务**：确认选题与内容，批准具体操作，检查结果并保存交接。续接时读取已有 ID 和变化的证据。
+
+| 状态 | 可以做什么 |
+| --- | --- |
+| 工作区未建立 | 检查现有项目、预览工作区方案 |
+| 店铺连接未完成 | 企业画像问卷、FAQ 资料整理、连接引导、工作区检查 |
+| 轻量建档未完成 | 完成档案所需的读取与确认，整理 FAQ |
+| 实时授权未核验或需要恢复 | 保留任务和本地资料，完成授权检查；Shopify 写入暂停 |
+| 运营写入就绪 | 进入六项菜单；每项写入仍须满足对应能力与批准条件 |
+
+默认计划包含商品、内容、发布渠道、文件的 8 个读写 scope；404 和扩展建档权限按需加入。权限计划改变时需新的确认；**授权同意不等于草稿或发布批准**。
+
+普通 `status` 只检查本地配置，不能证明 Token 有效。运行时入口使用实时核验，失效或缺权限时复用已确认的完整计划发起恢复，再复核实际权限。恢复有单次尝试、超时、同工作区并发锁及失败冷却；浏览器登录与同意仍需人员完成。详见[授权生命周期](skills/opsy/references/authorization-lifecycle.md)。
+
+## 结果如何汇报与交接
+
+每项产品、Blog 或数据任务，包括部分完成和受阻任务，都保留独立记录：
+
+```text
+outputs/runs/<task_id>/<run_id>/
+  result.json   逐项状态、对象 ID、输入与核验证据
+  report.md     面向客户的结果说明
+  handoff.md    待办、负责人、完成条件与续接信息
+```
+
+报告区分本地准备、Shopify 草稿、已发布与待核验，不将命令退出成功直接当作发布成功。旧记录不覆盖；下一次任务复用对象 ID，检查输入变化。授权中断的回执保存在 `outputs/authorization/`，不保存 Token、Cookie 或原始 OAuth 输出。
+
+## 安装与更新
+
+运行环境：Node.js ≥ 22.12、npm 或其他 Node 包管理器、Git ≥ 2.28，以及 Shopify CLI。仓库工具链基线仍声明 CLI **4.5.2** / Admin GraphQL **2026-07**；本轮授权流程核对使用本机 CLI **4.7.1**。4.5.2 的新流程兼容性与真实店铺 OAuth 尚待实测，详见[授权升级交接](docs/handoffs/2026-09-13-opsy-cli-authorization-handoff.md)。
+
+克隆仓库或解压 Release 后，在仓库根目录执行。安装器自动检测宿主，也支持只选 `Codex` 或 `WorkBuddy`。
+
+**Windows：**
+
+```powershell
+.\install.ps1 -Host Both -DryRun
+.\install.ps1 -Host Both
+```
+
+**macOS / Linux：**
+
+```bash
+./install.sh --host both --dry-run
+./install.sh --host both
+```
+
+更新时先取得所需版本的仓库或 Release，再运行安装器。安装器展示计划并在变更前确认，归档旧 Skill 后安装；客户工作区的画像、资料、数据和结果保持原位。
+
+**同版本源码更新：**当前升级仍在 `0.1.0 / Unreleased`，普通安装可能显示 `up-to-date`。要把审核过的新源码更新到同版本安装副本，需显式使用 `Force`：
+
+```powershell
+.\install.ps1 -Host Both -Force -DryRun
+.\install.ps1 -Host Both -Force
+```
+
+```bash
+./install.sh --host both --force --dry-run
+./install.sh --host both --force
+```
+
+更新后重新加载宿主中的 Opsy，在客户项目执行 `$opsy`，检查状态和已有任务。上述安装命令只安装 Opsy Skill，不代替 Node / Shopify CLI 安装，也不自动完成店铺授权。版本变更见 [CHANGELOG](CHANGELOG.md)。
+
+Windows 中文终端由 helper 在交互模式下切换 UTF-8，JSON 输出采用 ASCII 转义；人读输出仍乱码时可先执行 `chcp 65001`。
+
+## 客户项目与仓库结构
+
+Skill 保存通用方法，客户项目保存经营上下文，两者分开维护。
+
+| 客户文件 / 目录 | 作用 |
+| --- | --- |
+| 项目根目录 `shopify-ops.json` | 定位运营工作区；已有 `_project/` 可以沿用 |
+| 工作区 `config/store-profile.json` | 企业、买家、语言、语气、询盘入口及授权核验元数据 |
+| 工作区 `config/buyer_faq.json` | 问题、异议、来源和答案使用资格 |
+| 工作区 `data-center/manifest.json` | 声明服务方本地数据包、来源、周期与时区 |
+| 工作区 `inbox/`、`outputs/`、`backups/`、`ai-log/` | 输入、产物、写前备份与操作记录 |
+
+新项目默认使用 `shopify-ops/`；已有项目优先保留定位文件、规则和目录。Skill 不复制进客户工作区。详细清单见[项目文件说明](docs/opsy-project-file-inventory.md)。
+
+```text
+skills/opsy/       唯一可分发 Skill：规则、引用、模板、Node 脚本
+tests/             状态、授权、数据、写入与交接测试
+scripts/           仓库校验
+docs/              客户介绍、图示、审计与开发交接
+VERSION            当前版本标识
 opsy-release.json  发布与工具链元数据
-CHANGELOG.md        版本更新日志
-install.*          Codex / WorkBuddy 双宿主安装器
-uninstall.*        可恢复归档卸载器
+CHANGELOG.md        更新日志
+install.*          双宿主安装与更新
+uninstall.*        可恢复归档卸载
 ```
 
-Skill 内只包含项目无关的说明、工具和模板，不包含客户数据。
+## 适用边界与验证状态
 
-## 与相关产品的边界
+Opsy 固定服务 `b2b_inquiry`，以结账成交为主的 DTC 店铺使用独立 Opsy DTC 包。服务商运营套件可交付已审核任务，Opsy 通过本地交接格式导入；该套件是可选上游，三项核心任务、汇报与交接不要求另装其他 Skill。
 
-| 产品 | 给谁 | 形态 | 与 Opsy 的关系 |
-|---|---|---|---|
-| **Opsy**（本仓库） | 企业主 / 销售 / 基础运营 | 单入口 `opsy` + 6 个经营入口 | 本产品 |
-| **Shopify Operations Skill** | 服务商月度运营 | Runtime + 多业务 Agent（数据打分、Blog SEO/GEO、上架、询盘复盘、Ops Coach 等） | 方法来源；不注册进 Opsy，也不被 Opsy 替代 |
-| **客户仓库内 `_project/skills/`**（如 Jacquard Works） | 该店的服务商会话 | 客户适配版月度循环 | 深度工作仍走客户代理；只有运营者明确要 `$opsy` 时才用本 Skill |
+企业画像限于业务问卷；技术 Tracking、CWV、结构化数据、主题与全站技术审计交由相应实施流程。客户不配置 Google API；已有元字段可按定义填写，不擅自创建定义。
 
-重叠主题（三项行动 / Blog / 商品 / 数据 / 404）是**刻意的方法复用**，不是两套菜单并行触发：Opsy 管「企业主可执行的操作面」，多 Agent 套件管「打分、诊断、技术验收和服务商教练」。
+2026-09-13（Asia/Shanghai）的代码验证：**139/139 测试通过**，仓库、Skill、脚本语法与双宿主安装器 dry-run 通过。测试包含合成授权故障与恢复场景，不代表真实店铺 OAuth、图片上传或发布端到端已验收。开发记录见[核心修复交接](docs/handoffs/2026-09-13-opsy-core-repair-handoff.md)与[授权升级交接](docs/handoffs/2026-09-13-opsy-cli-authorization-handoff.md)。
+
+授权实现依据 Shopify 官方 [store auth](https://shopify.dev/docs/api/shopify-cli/store/store-auth) 与[应用授权范围查询](https://shopify.dev/docs/api/admin-graphql/latest/queries/currentappinstallation)核对。运行规则以 [SKILL.md](skills/opsy/SKILL.md) 及其直接引用为准；真实写入前核验所选 API 版本的操作契约。
 
 ## 卸载
 
@@ -186,8 +251,4 @@ Skill 内只包含项目无关的说明、工具和模板，不包含客户数�
 ./uninstall.sh --host both
 ```
 
-卸载采用可恢复归档，只处理共享 `opsy` Skill，不扫描或删除客户工作区。
-
-## 官方平台依据
-
-Opsy V1 于 2026-07-29 按 Shopify 官方 [CLI 要求](https://shopify.dev/docs/api/shopify-cli)、[Store 认证](https://shopify.dev/docs/api/shopify-cli/store/store-auth)、[Store execute](https://shopify.dev/docs/api/shopify-cli/store/store-execute) 和 [Admin GraphQL 2026-07](https://shopify.dev/docs/api/admin-graphql/2026-07) 建立基线。仓库会检查模板结构、operation 契约和安全守卫；每次真实写入前仍须按所选 API 版本用当前官方 schema 或受信任店铺工具重新验证对应模板。
+卸载归档共享的 `opsy` Skill，不扫描或删除客户运营工作区。

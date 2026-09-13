@@ -1,0 +1,50 @@
+{
+  "archived_at": "2026-09-13",
+  "timezone": "Asia/Shanghai",
+  "scope": "reference documentation only; not Opsy implementation",
+  "source_directory": "F:\\website B2B\\07_对外传播与案例\\02_主题传播\\TOPIC-010-资料驱动的Blog内容生产\\图示",
+  "source_unchanged": true,
+  "files": [
+    {
+      "name": "blog-content-system-class-preview.png",
+      "source_sha256": "3936625438db83e59b2ad3a497ce2b0cc2854812ecd0744819c50a83d2db8b87",
+      "copy_sha256": "3936625438db83e59b2ad3a497ce2b0cc2854812ecd0744819c50a83d2db8b87",
+      "byte_identical": true
+    },
+    {
+      "name": "blog-content-system-class-sources.json",
+      "source_sha256": "98b58ce90f0ff0562285e522a40ed1fe392991b1d657d4b7a542e1524048f490",
+      "copy_sha256": "98b58ce90f0ff0562285e522a40ed1fe392991b1d657d4b7a542e1524048f490",
+      "byte_identical": true
+    },
+    {
+      "name": "blog-content-system-class-viewer.html",
+      "source_sha256": "062154d7847b97f6194e406e4211f01b194133055edf84eb13b2f295e7e13ee1",
+      "copy_sha256": "062154d7847b97f6194e406e4211f01b194133055edf84eb13b2f295e7e13ee1",
+      "byte_identical": true
+    },
+    {
+      "name": "blog-content-system-class.png",
+      "source_sha256": "f13cb9fee31dbc68f9780f02792c81ffd1f84fef93fb5f77df156ad25ef3b4a8",
+      "copy_sha256": "f13cb9fee31dbc68f9780f02792c81ffd1f84fef93fb5f77df156ad25ef3b4a8",
+      "byte_identical": true
+    },
+    {
+      "name": "blog-content-system-class.puml",
+      "source_sha256": "660446a8fa46e3743c2cb5e3d3dfe09ea3a6884fd7a6ccdd5f6ab82252658298",
+      "copy_sha256": "274f2b36115052bd13b1611d1762098125e1b7c3c5ef25a75c900ef3c8c44153",
+      "byte_identical": false
+    },
+    {
+      "name": "blog-content-system-class.svg",
+      "source_sha256": "6b714e0b4a488e1d219a9c6691a443861464a16dfa2e28e7f96ac31aa8ccf5f9",
+      "copy_sha256": "6b714e0b4a488e1d219a9c6691a443861464a16dfa2e28e7f96ac31aa8ccf5f9",
+      "byte_identical": true
+    }
+  ],
+  "source_include_adaptation": "PUML include uses bundled _b2b-technical-style.puml; all other diagram source content unchanged",
+  "style_sha256": "c2575d0499178b1460c4599f5aff255638bc9aeb4f570b70b0961e3673a8bd40",
+  "standalone_puml_compile": "pass",
+  "recompiled_png_pixels_match_original": true,
+  "changed_index_diff_check": "pass"
+}

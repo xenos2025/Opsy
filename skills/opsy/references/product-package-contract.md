@@ -20,6 +20,9 @@ Use `schema_version: opsy-product-package-v1` and include:
   `config/buyer_faq.json#<id>`;
 - 2–3 evidence-based `titleCandidates` plus the selected `titleChoice`;
 - a passing `sourceFacts.decisionBrief` for surface `pdp`;
+- `sourceFacts.topicQueue`, `sourceFacts.placement`, and
+  `sourceFacts.audienceCard` from
+  [merchant-selection-contract.md](merchant-selection-contract.md);
 - an optional `mediaCaveat` only for a local draft with a known first-image gap.
 
 ## Imported material binding
@@ -58,6 +61,12 @@ For lightweight audience/FAQ reuse, follow
 [workflow-buyer-decision.md](workflow-buyer-decision.md) and retain
 `sourceFacts.contentReuse`. It is buyer context, not Product claim evidence.
 
+Before drafting, also retain the merchant topic queue, single-object
+placement, and one confirmed `sourceFacts.audienceCard` from
+[merchant-selection-contract.md](merchant-selection-contract.md). The topic
+queue is the first Product content step: use `suggest-keywords` when a
+snapshot exists, otherwise `merchant_materials` with a `nonUseReason`.
+
 ## Deterministic gate
 
 Run:
@@ -67,6 +76,13 @@ node <skill-root>/scripts/opsy.mjs validate-product-package --project <project-r
 ```
 
 Use `--mode public` only for the activation/publication preview. It requires `status: ACTIVE`, resolved confirmation markers, and a valid first overview image. A passing package does not authorize a Shopify write.
+
+Use `--mode minimal` for the minimal-fill draft lane
+(见 [workflow-products.md](workflow-products.md)). It keeps identity, evidence,
+and safety checks blocking, moves completeness gaps to the report's
+`supplements` array, and lists every defined-but-unfilled PRODUCT metafield as
+a supplement. Show the supplements to the operator after draft creation and
+resolve them before offering `--mode public`.
 
 The validator blocks unsupported business role, unnamed evidence, ineligible
 FAQ questions or answer reuse, unknown or legacy metafields, H1 in

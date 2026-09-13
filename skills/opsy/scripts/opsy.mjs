@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
@@ -23,6 +24,10 @@ import { readProductTable } from "./lib/product-table.mjs";
 import { importProductSources, assessBatch, inside, prepareProductDrafts } from "./lib/product-intake.mjs";
 import { selectContentContext } from "./lib/content-reuse.mjs";
 import { blogPreview } from "./lib/blog-media.mjs";
+import { prepareVariantUpdate, prepareArticleSeo, verifyWriteFields } from "./lib/write-fields.mjs";
+import { uploadImage, refreshImageUpload } from "./lib/image-upload.mjs";
+import { recordTaskResult, resumeTask } from "./lib/task-results.mjs";
+import { authorizationPlan, ensureAuthorization, listAuthorizations, withAuthorizationState } from "./lib/authorization.mjs";
 import {
   validateBlogPackageFile,
   validateNextActionsFile,
@@ -61,16 +66,25 @@ function parseArgs(values) {
   return options;
 }
 
+function asciiSafeJson(value) {
+  // Escape non-ASCII characters so Chinese text survives Windows consoles and
+  // pipes that decode child output with a legacy code page (for example GBK).
+  return JSON.stringify(value, null, 2).replace(
+    /[\u007f-\uffff]/g,
+    (char) => `\\u${char.charCodeAt(0).toString(16).padStart(4, "0")}`,
+  );
+}
+
 function output(value, asJson) {
   if (asJson) {
-    process.stdout.write(`${JSON.stringify(value, null, 2)}\n`);
+    process.stdout.write(`${asciiSafeJson(value)}\n`);
     return;
   }
   if (typeof value === "string") {
     process.stdout.write(value.endsWith("\n") ? value : `${value}\n`);
     return;
   }
-  process.stdout.write(`${JSON.stringify(value, null, 2)}\n`);
+  process.stdout.write(`${asciiSafeJson(value)}\n`);
 }
 
 function requireOption(options, name) {
@@ -134,15 +148,25 @@ function help() {
   return `Opsy helper
 
 Commands:
+  auth-plan [--store <shop.myshopify.com>] [--features products,blog,publication,media,redirects,extended_profile] [--project <path>] [--json]
+  auth-stores [--json]
+  ensure-auth [--store <shop.myshopify.com>] [--features <list>] [--recover] [--approval <workspace-relative.json>] [--task <id>] [--apply] [--project <path>] [--json]
+  record-task-result --file <workspace-relative.json> [--project <path>] [--apply] [--json]
+  resume-task --task <id> [--project <path>] [--json]
+  prepare-product-variant --file <package.json> --readback <response.json> [--output <workspace-relative.json>] [--project <path>] [--apply] [--json]
+  prepare-article-seo --file <package.json> --readback <response.json> [--output <workspace-relative.json>] [--project <path>] [--apply] [--json]
+  verify-write-fields --surface product|blog --file <package.json> --readback <response.json> [--json]
+  upload-image --file <workspace-relative.png> --store <shop.myshopify.com> --alt <confirmed-text> [--approval <workspace-relative.json>] [--project <path>] [--apply] [--json]
+  refresh-image-upload --receipt <workspace-relative.json> --store <shop.myshopify.com> [--project <path>] [--apply] [--json]
   prepare-product-packages --file <workspace-relative-intake.json> [--project <path>] [--apply] [--json]
-  validate-product-batch --file <queue.json> [--mode draft|public] [--project <path>] [--json]
+  validate-product-batch --file <queue.json> [--mode draft|minimal|public] [--project <path>] [--json]
   inspect-product-table --file <csv|xlsx> [--sheet <name>] [--header-row <n>] [--json]
   import-product-sources --kind table|image|1688|alibaba --batch <id> [--file <path>] [--url <url>] [--access accessible|login_required|captcha|unavailable|not_attempted] [--columns <agent-mapping.json>] [--sheet <name>] [--header-row <n>] [--project <path>] [--apply] [--json]
   check-product-intake --file <intake.json> [--existing <local-products.json>] [--json]
-  select-content-context --surface product|blog --job <pdp|article-format> --scope <ref,ref> --market <market> --language <code> [--audience <workspace-relative-file>] [--project <path>] [--json]
+  select-content-context --surface product|blog --job <pdp|article-format> --scope <ref,ref> --market <market> --language <code> [--card <audience-id>] [--audience <workspace-relative-file>] [--project <path>] [--json]
   preview-blog-package --file <package.json> [--output <workspace-relative.html>] [--project <path>] [--apply] [--json]
   doctor [--json]
-  status [--project <path>] [--json]
+  status [--project <path>] [--live] [--recover --apply] [--json]
   init --project <path> [--workspace <name>] [--agents auto|yes|no] [--apply] [--json]
   validate-data [--project <path>] [--json]
   summarize-data [--project <path>] [--output <path>] [--apply] [--json]
@@ -153,7 +177,7 @@ Commands:
   import-agency-handoff --file <path> [--project <path>] [--output <path>] [--apply] [--json]
   refresh-404 [--project <path>] [--output <path>] [--apply] [--json]
   validate-decision-brief --file <path> [--surface page|pdp|blog] [--project <path>] [--json]
-  validate-product-package --file <path> [--mode draft|public] [--project <path>] [--json]
+  validate-product-package --file <path> [--mode draft|minimal|public] [--project <path>] [--json]
   validate-blog-package --file <path> [--mode review|write] [--project <path>] [--json]
   validate-next-actions --file <path> [--json]
   validate-buyer-faq --file <path> [--strict] [--json]
@@ -165,9 +189,81 @@ Commands:
 }
 
 async function main() {
+  if (process.platform === "win32" && process.stdout.isTTY) {
+    // Interactive Windows consoles often default to a legacy code page (GBK on
+    // Chinese systems); switch the console to UTF-8 so Chinese output renders.
+    try {
+      spawnSync("chcp.com", ["65001"], { stdio: "ignore" });
+    } catch {
+      // Display-only concern; never block the actual command.
+    }
+  }
   const [command = "help", ...rest] = process.argv.slice(2);
   const options = parseArgs(rest);
   const asJson = Boolean(options.json);
+
+  if (command === "auth-plan") {
+    output(authorizationPlan(projectProfile(options), { store: options.store, features: options.features ? commaList(options.features) : undefined }), asJson);
+    return;
+  }
+
+  if (command === "auth-stores") {
+    const result = listAuthorizations();
+    output(result, asJson);
+    process.exitCode = result.ok ? 0 : 2;
+    return;
+  }
+
+  if (command === "ensure-auth") {
+    const root = workspaceRoot(options);
+    const result = await ensureAuthorization({ workspaceRoot: root, store: options.store, features: options.features ? commaList(options.features) : undefined, recover: Boolean(options.recover), apply: Boolean(options.apply), approval: options.approval ? readJson(inside(root, options.approval)) : null, task: options.task });
+    output(result, asJson);
+    process.exitCode = result.ok ? 0 : 2;
+    return;
+  }
+
+  if (command === "record-task-result" || command === "resume-task") {
+    const root = workspaceRoot(options);
+    const result = command === "resume-task" ? resumeTask(root, requireOption(options, "task")) : recordTaskResult(root, readJson(inside(root, requireOption(options, "file"))), { apply: Boolean(options.apply) });
+    output(result, asJson);
+    process.exitCode = result.ok ? 0 : 2;
+    return;
+  }
+
+  if (["prepare-product-variant", "prepare-article-seo", "verify-write-fields"].includes(command)) {
+    const payload = readJson(path.resolve(requireOption(options, "file")));
+    const readback = readJson(path.resolve(requireOption(options, "readback")));
+    const result = command === "prepare-product-variant" ? prepareVariantUpdate(payload, readback) : command === "prepare-article-seo" ? prepareArticleSeo(payload, readback) : verifyWriteFields(requireOption(options, "surface"), payload, readback);
+    if (options.apply) {
+      const target = inside(workspaceRoot(options), requireOption(options, "output"));
+      if (result.validation?.ok === false || result.ok === false) throw new Error("Field preparation or verification failed");
+      fs.mkdirSync(path.dirname(target), { recursive: true });
+      fs.writeFileSync(target, JSON.stringify(result.variables ?? result, null, 2), { flag: "wx" });
+      result.output_path = target;
+    }
+    output(result, asJson);
+    process.exitCode = (result.validation?.ok ?? result.ok) ? 0 : 2;
+    return;
+  }
+
+  if (command === "upload-image" || command === "refresh-image-upload") {
+    const root = workspaceRoot(options);
+    const store = requireOption(options, "store");
+    let state = inspectState(projectPath(options));
+    const reads = command === "refresh-image-upload";
+    if (store !== state.store) throw new Error("Store differs from the project profile");
+    if (reads || options.apply) {
+      const authorization = await ensureAuthorization({ workspaceRoot: root, store, recover: Boolean(options.apply), apply: Boolean(options.apply) });
+      if (!authorization.ok) { output(authorization, asJson); process.exitCode = 2; return; }
+      state = inspectState(projectPath(options));
+      const scopes = new Set(authorization.effective_scopes);
+      if (state.state !== "write_ready" || !scopes.has("read_files") || (!reads && !scopes.has("write_files"))) throw new Error("Image operation needs current store readiness and read_files; upload also needs write_files");
+    }
+    const result = reads ? await refreshImageUpload({ workspaceRoot: root, receiptFile: requireOption(options, "receipt"), store, apply: Boolean(options.apply) }) : await uploadImage({ workspaceRoot: root, file: requireOption(options, "file"), store, alt: requireOption(options, "alt"), apply: Boolean(options.apply), approval: options.approval ? readJson(inside(root, options.approval)) : null });
+    output(result, asJson);
+    process.exitCode = result.ok ? 0 : 2;
+    return;
+  }
 
   if (command === "help" || command === "--help" || command === "-h") {
     output(help(), false);
@@ -227,7 +323,7 @@ async function main() {
   if (command === "select-content-context") {
     const profile = projectProfile(options);
     const audienceIntake = audienceSource(options, profile);
-    output(selectContentContext({ profile, buyerFaq: projectBuyerFaq(options), audienceIntake, audiencePath: audienceIntake ? options.audience ?? profile.profile?.store_role?.audience_intake_path ?? null : null, task: { surface: requireOption(options, "surface"), job: requireOption(options, "job"), scopeKeys: commaList(requireOption(options, "scope")), market: requireOption(options, "market"), language: requireOption(options, "language") } }), asJson);
+    output(selectContentContext({ profile, buyerFaq: projectBuyerFaq(options), audienceIntake, audiencePath: audienceIntake ? options.audience ?? profile.profile?.store_role?.audience_intake_path ?? null : null, task: { surface: requireOption(options, "surface"), job: requireOption(options, "job"), scopeKeys: commaList(requireOption(options, "scope")), market: requireOption(options, "market"), language: requireOption(options, "language"), cardId: options.card ?? null } }), asJson);
     return;
   }
 
@@ -250,7 +346,14 @@ async function main() {
     } catch {
       // inspectState owns workspace/config errors; data validation is supplemental.
     }
-    const result = inspectState(requestedProject, { dataCenterValidation });
+    let authorization = { ok: false, live: false, status: "not_checked" };
+    if (options.recover && (!options.live || !options.apply)) throw new Error("status recovery requires --live --recover --apply");
+    if (options.live) {
+      const initial = inspectState(requestedProject, { dataCenterValidation });
+      if (initial.store && initial.workspace_root) authorization = await ensureAuthorization({ workspaceRoot: initial.workspace_root, recover: Boolean(options.recover), apply: Boolean(options.apply) });
+      else authorization = { ok: false, live: false, status: "store_not_configured" };
+    }
+    const result = withAuthorizationState(inspectState(requestedProject, { dataCenterValidation }), authorization);
     output(result, asJson);
     process.exitCode = result.ok ? 0 : 2;
     return;
@@ -294,7 +397,7 @@ async function main() {
     );
     if (options.apply) {
       fs.mkdirSync(path.dirname(target), { recursive: true });
-      fs.writeFileSync(target, result.markdown, "utf8");
+      fs.writeFileSync(target, result.markdown, { encoding: "utf8", flag: "wx" });
     }
     output(
       asJson
@@ -334,7 +437,7 @@ async function main() {
     }
     if (options.apply) {
       fs.mkdirSync(path.dirname(target), { recursive: true });
-      fs.writeFileSync(target, result.csv, "utf8");
+      fs.writeFileSync(target, result.csv, { encoding: "utf8", flag: "wx" });
     }
     if (asJson) {
       const { csv: _csv, ...jsonResult } = result;
@@ -412,7 +515,7 @@ async function main() {
     }
     if (options.apply) {
       fs.mkdirSync(path.dirname(target), { recursive: true });
-      fs.writeFileSync(target, result.csv, "utf8");
+      fs.writeFileSync(target, result.csv, { encoding: "utf8", flag: "wx" });
     }
     if (asJson) {
       const { csv: _csv, ...jsonResult } = result;
@@ -442,7 +545,7 @@ async function main() {
     const target = path.resolve(options.output ?? result.output_path);
     if (options.apply) {
       fs.mkdirSync(path.dirname(target), { recursive: true });
-      fs.writeFileSync(target, result.csv, "utf8");
+      fs.writeFileSync(target, result.csv, { encoding: "utf8", flag: "wx" });
     }
     output(
       asJson
@@ -480,8 +583,8 @@ async function main() {
 
   if (command === "validate-product-package") {
     const mode = options.mode ?? "draft";
-    if (!["draft", "public"].includes(mode)) {
-      throw new Error("--mode must be draft or public");
+    if (!["draft", "minimal", "public"].includes(mode)) {
+      throw new Error("--mode must be draft, minimal, or public");
     }
     const result = validateProductPackageFile(
       path.resolve(requireOption(options, "file")),
@@ -568,6 +671,6 @@ async function main() {
 }
 
 main().catch((error) => {
-  process.stderr.write(`Opsy error: ${error.message}\n`);
+  process.stderr.write(`Opsy error: ${error.code === "EEXIST" ? "Output already exists and was preserved. Choose a new output path or run_id; for an image upload, verify the existing receipt before retrying." : error.message}\n`);
   process.exitCode = 1;
 });

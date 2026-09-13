@@ -6,6 +6,7 @@ import { summarizeStoreRole } from "./workspace.mjs";
 import { inside, validateIntakeBinding } from "./product-intake.mjs";
 import { validateContentReuse } from "./content-reuse.mjs";
 import { validateBlogMedia, htmlElements } from "./blog-media.mjs";
+import { validateAudienceCard, validatePlacement, validateTopicQueue } from "./merchant-selection.mjs";
 
 const HANDLE_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -110,11 +111,12 @@ function addRequired(errors, value, issuePath) {
 }
 
 function report(schemaVersion, errors, warnings, details = {}) {
+  const supplements = Array.isArray(details.supplements) ? details.supplements : [];
   return {
     schema_version: schemaVersion,
     ok: errors.length === 0,
     status: errors.length === 0 ? "pass" : "fix",
-    counts: { errors: errors.length, warnings: warnings.length },
+    counts: { errors: errors.length, warnings: warnings.length, supplements: supplements.length },
     errors,
     warnings,
     ...details,
@@ -329,17 +331,22 @@ export function validateProductPackage(
 ) {
   const errors = [];
   const warnings = [];
+  const supplements = [];
   const value = record(payload);
   const publicMode = mode === "public";
-  if (!new Set(["draft", "public"]).has(mode)) {
-    errors.push(issue("mode", "mode", "mode must be draft or public"));
+  const minimalMode = mode === "minimal";
+  // In minimal mode, completeness gaps defer to the post-draft supplement list;
+  // identity, evidence, and safety checks still block.
+  const deferrable = minimalMode ? supplements : errors;
+  if (!new Set(["draft", "public", "minimal"]).has(mode)) {
+    errors.push(issue("mode", "mode", "mode must be draft, minimal, or public"));
   }
   if (value.schema_version !== "opsy-product-package-v1") {
     errors.push(issue("schema_version", "schema_version", "must equal opsy-product-package-v1"));
   }
 
-  const requiredFields = ["title", "handle", "vendor", "productType", "descriptionHtml"];
-  for (const field of requiredFields) addRequired(errors, value[field], field);
+  for (const field of ["title", "handle", "descriptionHtml"]) addRequired(errors, value[field], field);
+  for (const field of ["vendor", "productType"]) addRequired(deferrable, value[field], field);
   if (text(value.handle) && !HANDLE_RE.test(text(value.handle))) {
     errors.push(issue("handle", "handle", "handle must be lowercase kebab-case"));
   }
@@ -347,15 +354,29 @@ export function validateProductPackage(
   if (text(value.status).toUpperCase() !== expectedStatus) {
     errors.push(issue("status", "status", `${mode} mode requires status ${expectedStatus}`));
   }
-  addRequired(errors, value?.seo?.title, "seo.title");
-  addRequired(errors, value?.seo?.description, "seo.description");
-  addRequired(errors, value?.variant?.sku, "variant.sku");
+  addRequired(deferrable, value?.seo?.title, "seo.title");
+  addRequired(deferrable, value?.seo?.description, "seo.description");
+  addRequired(deferrable, value?.variant?.sku, "variant.sku");
 
   const role = validateRole(profile, errors);
   const sourceFacts = record(value.sourceFacts);
   errors.push(...validateIntakeBinding(value, intakeBatch, { workspaceRoot }));
   errors.push(...validateContentReuse(sourceFacts.contentReuse, { profile, buyerFaq, audienceIntake, audiencePath }, { body: String(value.descriptionHtml ?? ""), brief: sourceFacts.decisionBrief, surface: "product", scopeKeys: stringList(sourceFacts.scopeKeys) }));
+  (sourceFacts.audienceCard == null ? deferrable : errors).push(...validateAudienceCard(sourceFacts.audienceCard, { profile, audienceIntake, surface: "product" }));
   const sourceBasis = validateSourceBasis(sourceFacts.sourceBasis, errors, warnings, "sourceFacts.sourceBasis");
+  const productQueueMode = text(sourceFacts.topicQueue?.selectionMode) || (sourceBasis.mode === "delivered_data" ? "data_backed" : "merchant_materials");
+  (sourceFacts.topicQueue == null ? deferrable : errors).push(...validateTopicQueue(sourceFacts.topicQueue, { surface: "product", selectionMode: productQueueMode }));
+  (sourceFacts.placement == null ? deferrable : errors).push(...validatePlacement(sourceFacts.placement, {
+    surface: "product",
+    selectionMode: productQueueMode,
+    title: value.title,
+    seoTitle: value?.seo?.title,
+    seoDescription: value?.seo?.description,
+    body: String(value.descriptionHtml ?? ""),
+    alt: Array.isArray(value.media) ? value.media.map((item) => item?.alt).join(" ") : "",
+    ownUrls: [`/products/${text(value.handle)}`],
+    queue: sourceFacts.topicQueue,
+  }));
   if (sourceBasis.mode === "faq_seeded") {
     errors.push(
       issue(
@@ -369,26 +390,30 @@ export function validateProductPackage(
     sourceFacts,
     profile,
     buyerFaq,
-    errors,
+    sourceFacts.faqReview == null ? deferrable : errors,
     warnings,
   );
   const candidates = stringList(sourceFacts.titleCandidates);
   if (candidates.length < 2 || candidates.length > 3) {
-    errors.push(issue("title_candidates", "sourceFacts.titleCandidates", "Provide 2-3 evidence-based title candidates"));
+    deferrable.push(issue("title_candidates", "sourceFacts.titleCandidates", "Provide 2-3 evidence-based title candidates"));
   }
   if (!text(sourceFacts.titleChoice) || text(sourceFacts.titleChoice) !== text(value.title)) {
-    errors.push(issue("title_choice", "sourceFacts.titleChoice", "Chosen title must equal the package title"));
+    deferrable.push(issue("title_choice", "sourceFacts.titleChoice", "Chosen title must equal the package title"));
   } else if (!candidates.includes(text(sourceFacts.titleChoice))) {
-    errors.push(issue("title_choice_candidate", "sourceFacts.titleChoice", "Chosen title must be one of titleCandidates"));
+    deferrable.push(issue("title_choice_candidate", "sourceFacts.titleChoice", "Chosen title must be one of titleCandidates"));
   }
 
-  const decision = addDecisionIssues(sourceFacts.decisionBrief, "pdp", profile, errors);
+  const decision = addDecisionIssues(sourceFacts.decisionBrief, "pdp", profile, sourceFacts.decisionBrief == null ? deferrable : errors);
   const description = String(value.descriptionHtml ?? "");
   if (/<h1\b/i.test(description)) {
     errors.push(issue("description_h1", "descriptionHtml", "Shopify product body must not contain an H1"));
   }
   const faqCount = (description.match(/<p[^>]*>\s*<strong[^>]*>[^<]*\?\s*<\/strong>\s*<\/p>/gi) ?? []).length;
-  if (faqCount < (publicMode ? 2 : 1) || (!publicMode && faqCount === 1 && !text(sourceFacts.faqCaveat))) {
+  if (minimalMode) {
+    if (faqCount < 2) {
+      supplements.push(issue("faq_count", "descriptionHtml", "Add buyer FAQ questions; public mode requires two"));
+    }
+  } else if (faqCount < (publicMode ? 2 : 1) || (!publicMode && faqCount === 1 && !text(sourceFacts.faqCaveat))) {
     errors.push(issue("faq_count", "descriptionHtml", "Public packages need two buyer questions; a draft may use one with sourceFacts.faqCaveat"));
   } else if (!publicMode && faqCount === 1) {
     warnings.push(issue("faq_count", "descriptionHtml", "Thin-material draft has one FAQ; public mode still requires two"));
@@ -404,7 +429,7 @@ export function validateProductPackage(
   markerCheck(description, errors, warnings, "descriptionHtml", publicMode);
 
   const tags = stringList(value.tags);
-  if (tags.length === 0) errors.push(issue("tags", "tags", "Provide at least one routing tag"));
+  if (tags.length === 0) deferrable.push(issue("tags", "tags", "Provide at least one routing tag"));
   const collections = stringList(value.collections);
   if (collections.length === 0) warnings.push(issue("collections", "collections", "No collection target is recorded"));
 
@@ -422,22 +447,32 @@ export function validateProductPackage(
 
   const media = Array.isArray(value.media) ? value.media : [];
   if (media.length === 0) {
-    errors.push(issue("media", "media", "Provide at least one product image"));
+    deferrable.push(issue("media", "media", "Provide at least one product image"));
   } else {
     for (const [index, rawItem] of media.entries()) {
       const item = record(rawItem);
       if (!text(item.path) && !text(item.src)) {
         errors.push(issue("media_source", `media[${index}]`, "Each media item needs a path or src"));
       }
-      addRequired(errors, item.alt, `media[${index}].alt`);
+      addRequired(deferrable, item.alt, `media[${index}].alt`);
     }
     if (!firstMediaLooksLikeOverview(media)) {
       const hasCaveat = text(sourceFacts.mediaCaveat);
-      if (!publicMode && hasCaveat) {
+      if (minimalMode) {
+        supplements.push(issue("first_media", "media[0]", "Confirm and place an honestly named front or pack overview as the first media"));
+      } else if (!publicMode && hasCaveat) {
         warnings.push(issue("first_media", "media[0]", "Draft keeps an explicit first-media gap"));
       } else {
         errors.push(issue("first_media", "media[0]", "First media must be an honestly named front or pack overview"));
       }
+    }
+  }
+
+  for (const key of definitions) {
+    if (!text(metafields[key])) {
+      supplements.push(
+        issue("metafield_unfilled", `metafields.${key}`, `Defined PRODUCT metafield ${key} has no value yet; fill it from confirmed facts when available`),
+      );
     }
   }
 
@@ -450,6 +485,7 @@ export function validateProductPackage(
     faq_item_count: faqSelection.item_count,
     faq_uses: faqSelection.uses,
     faq_count: faqCount,
+    supplements,
   });
 }
 
@@ -877,6 +913,19 @@ export function validateBlogPackage(
   }
   const body = String(article.bodyHtml ?? "");
   errors.push(...validateContentReuse(value.contentReuse, { profile, buyerFaq, audienceIntake, audiencePath }, { body, brief: value.buyerDecision, surface: "blog", scopeKeys: stringList(topic.scopeKeys), job: topic.articleFormat }));
+  errors.push(...validateAudienceCard(value.audienceCard, { profile, audienceIntake, surface: "blog" }));
+  errors.push(...validateTopicQueue(value.topicQueue, { surface: "blog", selectionMode }));
+  errors.push(...validatePlacement(value.placement, {
+    surface: "blog",
+    selectionMode,
+    title: article.title,
+    seoTitle: article.seoTitle,
+    seoDescription: article.metaDescription,
+    body,
+    alt: [article.featuredImage?.alt, ...imageTags(body).map((tag) => tag.match(/\balt=["']([^"']+)["']/i)?.[1] ?? "")].join(" "),
+    ownUrls: [`/blogs/news/${text(article.handle)}`, `https://${normalizedHost(profile?.store?.primary_domain)}/blogs/news/${text(article.handle)}`].filter(Boolean),
+    queue: value.topicQueue,
+  }));
   const mediaValidation = validateBlogMedia(value, { profile, mode, productEvidence });
   errors.push(...mediaValidation.errors);
   warnings.push(...mediaValidation.warnings);
@@ -930,6 +979,13 @@ export function validateBlogPackage(
   }
   const bodyLinks = htmlElements(body, "a").map((a) => a.href);
   const absolute = (url) => { try { return new URL(url, `https://${publicHost}`).href; } catch { return ""; } };
+  const approvedCta = profile?.profile?.inquiry_cta;
+  const approvedCtaUrlValid = (() => { try { const url = new URL(approvedCta?.url); return url.protocol === "https:" && !url.username && !url.password; } catch { return false; } })();
+  if (!approvedCtaUrlValid || !/^\d{4}-\d{2}-\d{2}T.*(?:Z|[+-]\d{2}:\d{2})$/.test(approvedCta?.confirmed_at ?? "") || Number.isNaN(Date.parse(approvedCta?.confirmed_at)) || !text(approvedCta?.evidence_ref)) {
+    (writeMode ? errors : warnings).push(issue("cta_confirmation", "profile.inquiry_cta", "Confirm the inquiry URL, confirmed_at, and evidence_ref in the existing store profile before writing"));
+  } else if (absolute(cta.url) !== absolute(approvedCta.url)) {
+    errors.push(issue("cta_destination", "article.cta.url", "CTA destination differs from the confirmed profile URL"));
+  }
   for (const link of [...links, cta.url]) {
     if (!bodyLinks.some((href) => absolute(href) === absolute(link))) errors.push(issue("body_link_missing", "article.bodyHtml", `Declared internal link or CTA is absent from body: ${link}`));
   }

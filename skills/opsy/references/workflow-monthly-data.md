@@ -51,9 +51,28 @@ The summary contains:
 - reporting period and freshness;
 - available GSC and GA4 headline metrics;
 - strongest observable queries, pages, or channels;
-- explicit inquiry evidence when a relevant field exists;
+- bounded previews of provider-delivered `inquiry_*` analysis datasets when
+  present, otherwise explicit inquiry evidence when a relevant field exists;
 - at most three operational prompts;
-- comparison only when a compatible prior snapshot is present.
+- a bounded history comparison against archived snapshots when readable.
+
+## Inquiry analysis is provider-delivered
+
+The merchant is not asked to summarize inquiries. The provider's weekly or
+monthly inquiry review arrives as `inquiry_*` datasets under the manifest (see
+[data-contract.md](data-contract.md)). Explain results using the delivered
+caliber notes; contact clicks and intent events are never real inquiries, and
+the real-inquiry stage stays pending until sales or support reports back.
+Answer detail questions with targeted lookups in the active files; do not load
+whole inquiry tables or the raw report into the conversation.
+
+## History comparison stays bounded
+
+Use only the `历史对比（有界）` section produced by `summarize-data`, or a
+provider-delivered `inquiry_compare` dataset. Never read full
+`data-center/archive/` files into the conversation, and never estimate missing
+history. If no readable archive exists, say so and continue without a
+comparison.
 
 The keyword queue is saved, when approved, as:
 
@@ -68,10 +87,12 @@ GSC supplies demand evidence. GA4 only describes how an already-owned landing
 page was used. Neither source proves product capability, certification,
 commercial terms, or buyer outcome. Ads planner data is not required.
 
-Every row starts as `selection_status: suggested`. Product and Blog workflows
-must still check store fit, duplication, claim evidence, and buyer decision
-before an operator selects it. Generating the queue never authorizes content
-creation or a Shopify write.
+Every row starts as `selection_status: suggested`. Product and Blog treat this
+preview as their first content-selection step when a snapshot exists: the
+merchant confirms at most three rows onto the package topic queue in
+[merchant-selection-contract.md](merchant-selection-contract.md). They must
+still check store fit, duplication, claim evidence, and buyer decision.
+Generating the queue never authorizes content creation or a Shopify write.
 
 After a successful update, refresh the read-only 404 queue. Read [data-contract.md](data-contract.md) for the exact manifest contract.
 

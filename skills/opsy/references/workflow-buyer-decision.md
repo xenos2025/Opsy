@@ -6,7 +6,7 @@ For Product and Blog, reuse existing confirmed profile, sales questions,
 objections and accepted FAQ questions before repeating intake. Run:
 
 ```text
-node <skill-root>/scripts/opsy.mjs select-content-context --project <root> --surface blog --job comparison --scope <exact-product-family-ref> --market <market> --language <code> --json
+node <skill-root>/scripts/opsy.mjs select-content-context --project <root> --surface blog --job comparison --scope <exact-product-family-ref> --market <market> --language <code> [--card <audience-id>] --json
 ```
 
 Use `--surface product --job pdp` for Product. `--job` is the actual article
@@ -15,8 +15,11 @@ expand a family, country, audience or task. The selector reads the existing
 store profile and buyer FAQ. If the profile records a workspace-relative
 `audience_intake_path`, reuse that file; alternatively pass `--audience` with a
 retained workspace-relative questionnaire path. Missing optional intake keeps
-the existing profile/FAQ lane usable. Do not create an audience library or a
-new operator menu.
+the existing profile/FAQ lane usable and may select the implicit
+`profile-primary` card. Multiple confirmed intake rows stay `needs_input`
+until `--card` names one. Do not create an audience library or a
+new operator menu. Save the chosen card as `audienceCard` /
+`sourceFacts.audienceCard`.
 
 Only merchant-confirmed/data-revised profile context and reviewed, valid
 questionnaire rows are selectable. Multiple matching questionnaire audiences
@@ -65,8 +68,9 @@ time, fill the artifact locally, then show a plain-language summary.
 - one decision stage: `discover`, `evaluate`, `validate`, or `inquire`;
 - verified product/article materials and merchant confirmations;
 - active store profile, configured seller voice, and approved primary CTA;
-- keyword suggestions generated from the delivered data-center: optional for
-  Product, required for Blog topic selection.
+- keyword suggestions generated from the delivered data-center: the first
+  Product/Blog content step when a snapshot exists; otherwise Product records
+  `merchant_materials` and Blog uses the FAQ-seeded queue.
 
 Keyword, GSC, GA4, and inquiry-pattern inputs are **demand evidence**. They can
 support buyer questions, the decision being served, and the decision stage.

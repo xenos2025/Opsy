@@ -44,4 +44,7 @@ Hub needs are recorded as `provider_handoff`. The downloaded intake is dated
 evidence, not a sixth project config file. Promote only the confirmed summary
 to `profile.store_role.primary_audience`, `secondary_audiences`,
 `audience_status`, and `audience_intake_path`; preserve the detailed evidence
-under `inbox/profile/`.
+under `inbox/profile/`. Several questionnaire rows may exist; drafting still
+requires exactly one confirmed audience card from
+[merchant-selection-contract.md](merchant-selection-contract.md). Do not add
+an audience library or `audience_context.json`.

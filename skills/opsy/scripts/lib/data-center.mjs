@@ -52,8 +52,10 @@ export function parseCsv(text) {
   return rows;
 }
 
-export function csvObjects(text) {
-  const rows = parseCsv(text);
+export function csvObjects(text, { headerRow = 1 } = {}) {
+  const allRows = parseCsv(text);
+  const skip = Math.max(0, Math.trunc(headerRow) - 1);
+  const rows = allRows.slice(skip);
   if (rows.length === 0) return { headers: [], rows: [] };
   const [headers, ...dataRows] = rows;
   return {
@@ -152,6 +154,12 @@ export function validateDataCenter(dataCenterPath) {
       if (!Array.isArray(dataset.columns) || dataset.columns.some((column) => typeof column !== "string")) {
         itemErrors.push("columns must be an array of strings");
       }
+      if (
+        dataset.header_row !== undefined &&
+        (!Number.isInteger(dataset.header_row) || dataset.header_row < 1)
+      ) {
+        itemErrors.push("header_row must be a positive integer when present");
+      }
 
       if (dataset.archive_path) {
         try {
@@ -169,7 +177,9 @@ export function validateDataCenter(dataCenterPath) {
       itemErrors.push(`active file is missing: ${dataset.path}`);
     } else if (activePath && fs.existsSync(activePath)) {
       try {
-        const parsed = csvObjects(readUtf8(activePath));
+        const parsed = csvObjects(readUtf8(activePath), {
+          headerRow: Number.isInteger(dataset.header_row) ? dataset.header_row : 1,
+        });
         if (
           Array.isArray(dataset.columns) &&
           !declaredColumnsMatch(parsed.headers, dataset.columns)
@@ -191,6 +201,13 @@ export function validateDataCenter(dataCenterPath) {
           itemErrors.push(
             `row_count differs: expected ${dataset.row_count}, got ${parsed.rows.length}`,
           );
+        }
+        if (/^(gsc_|ga4_)/.test(name)) {
+          for (const field of ["clicks", "impressions", "ctr", "position", "sessions", "totalUsers", "engagedSessions", "averageSessionDuration"]) {
+            if (parsed.headers.includes(field) && parsed.rows.some((row) => metricValue(row[field]) === null)) {
+              itemErrors.push(`metric ${field} contains missing, negative, or invalid numeric values`);
+            }
+          }
         }
       } catch (error) {
         itemErrors.push(`CSV cannot be read as UTF-8: ${error.message}`);
@@ -228,12 +245,63 @@ function numberValue(value) {
   return String(value).trim().endsWith("%") ? parsed / 100 : parsed;
 }
 
+function metricValue(value) {
+  if (value == null || String(value).trim() === "") return null;
+  const raw = String(value).trim();
+  if (!/^(?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d+)?%?$/.test(raw)) return null;
+  const number = Number(raw.replaceAll(",", "").replace(/%$/, ""));
+  return Number.isFinite(number) ? number / (raw.endsWith("%") ? 100 : 1) : null;
+}
+
+function metricTotal(dataset, field) {
+  if (!dataset?.headers.includes(field)) return null;
+  const values = dataset.rows.map((row) => metricValue(row[field]));
+  return values.some((value) => value === null) ? null : values.reduce((a, b) => a + b, 0);
+}
+
+const metricDisplay = (value) => value === null ? "Unavailable" : formatInt(value);
+
+function datasetHeaderRow(dataset) {
+  return Number.isInteger(dataset?.header_row) ? dataset.header_row : 1;
+}
+
 function loadNamedDataset(dataCenterPath, manifest, name) {
   const dataset = manifest.datasets?.[name];
   if (!dataset?.path) return null;
   const filePath = resolveInside(dataCenterPath, dataset.path, `${name}.path`);
   if (!fs.existsSync(filePath)) return null;
-  return { meta: dataset, filePath, ...csvObjects(readUtf8(filePath)) };
+  return {
+    meta: dataset,
+    filePath,
+    ...csvObjects(readUtf8(filePath), { headerRow: datasetHeaderRow(dataset) }),
+  };
+}
+
+function loadArchiveDataset(dataCenterPath, dataset) {
+  const meta = dataset?.archive_metadata;
+  if (!dataset?.archive_path || !meta) return null;
+  const range = meta.date_range;
+  if (!validDate(range?.start_date) || !validDate(range?.end_date) || range.start_date > range.end_date) return null;
+  const currentRange = dataset.date_range;
+  const span = (r) => Date.parse(r.end_date) - Date.parse(r.start_date);
+  if (range.end_date >= currentRange.start_date || span(range) !== span(currentRange)) return null;
+  if (!["scope", "timezone", "source_channel"].every((key) => meta[key] && meta[key] === dataset[key])) return null;
+  if (meta.filter_signature !== dataset.filter_signature || !Array.isArray(meta.columns) || !Number.isInteger(meta.row_count)) return null;
+  if (!validDateTime(meta.pulled_at)) return null;
+  let filePath;
+  try {
+    filePath = resolveInside(dataCenterPath, dataset.archive_path, "archive_path");
+  } catch {
+    return null;
+  }
+  if (!fs.existsSync(filePath)) return null;
+  try {
+    const parsed = csvObjects(readUtf8(filePath), { headerRow: datasetHeaderRow(meta) });
+    if (!declaredColumnsMatch(parsed.headers, meta.columns) || parsed.rows.length !== meta.row_count) return null;
+    return { filePath, meta, period: `${range.start_date} — ${range.end_date}`, ...parsed };
+  } catch {
+    return null;
+  }
 }
 
 function sum(rows, field) {
@@ -269,25 +337,32 @@ export function buildMonthlySummary(dataCenterPath) {
   const ga4Channels = loadNamedDataset(root, manifest, "ga4_channels");
   const ga4Landing = loadNamedDataset(root, manifest, "ga4_landing_pages");
   const standard = [gscQueries, gscPages, ga4Channels, ga4Landing].filter(Boolean);
+  const inquiryDatasets = Object.keys(manifest.datasets ?? {})
+    .filter((name) => name.startsWith("inquiry_"))
+    .sort()
+    .map((name) => ({ name, dataset: loadNamedDataset(root, manifest, name) }))
+    .filter((entry) => entry.dataset);
+  const consumed = [...standard, ...inquiryDatasets.map((entry) => entry.dataset)];
   const periods = [
     ...new Set(
-      standard.map(
+      consumed.map(
         (dataset) =>
           `${dataset.meta.date_range?.start_date ?? "unknown"} → ${dataset.meta.date_range?.end_date ?? "unknown"}`,
       ),
     ),
   ];
-  const timezones = [...new Set(standard.map((dataset) => dataset.meta.timezone).filter(Boolean))];
+  const timezones = [...new Set(consumed.map((dataset) => dataset.meta.timezone).filter(Boolean))];
   const endDate =
-    standard
+    consumed
       .map((dataset) => dataset.meta.date_range?.end_date)
       .filter(Boolean)
       .sort()
       .at(-1) ?? "unknown";
 
   const lines = [
-    `# 上月数据摘要 — ${endDate.slice(0, 7)}`,
+    `# 交付数据摘要 — ${endDate.slice(0, 7)}`,
     "",
+    `- 报告生成：${new Date().toISOString()}（UTC）；依据为服务方交付的本地快照`,
     `- 数据范围：${periods.length > 0 ? periods.join("；") : "无标准 GSC/GA4 数据集"}`,
     `- 时区：${timezones.length > 0 ? timezones.join("；") : "未提供"}`,
     `- Manifest 更新：${manifest.updated_at ?? "未提供"}`,
@@ -298,29 +373,29 @@ export function buildMonthlySummary(dataCenterPath) {
   ];
 
   if (gscQueries) {
-    const clicks = sum(gscQueries.rows, "clicks");
-    const impressions = sum(gscQueries.rows, "impressions");
-    const ctr = impressions > 0 ? clicks / impressions : 0;
+    const clicks = metricTotal(gscQueries, "clicks");
+    const impressions = metricTotal(gscQueries, "impressions");
+    const ctr = clicks !== null && impressions > 0 ? clicks / impressions : null;
     const weightedPosition =
-      impressions > 0
+      impressions > 0 && metricTotal(gscQueries, "position") !== null
         ? gscQueries.rows.reduce(
             (total, row) => total + numberValue(row.position) * numberValue(row.impressions),
             0,
           ) / impressions
-        : 0;
+        : null;
     lines.push(
-      `- GSC：${formatInt(clicks)} clicks，${formatInt(impressions)} impressions，CTR ${(ctr * 100).toFixed(2)}%，加权平均排名 ${weightedPosition.toFixed(2)}`,
+      `- GSC：${metricDisplay(clicks)} clicks，${metricDisplay(impressions)} impressions，CTR ${ctr === null ? "Unavailable" : `${(ctr * 100).toFixed(2)}%`}，加权平均排名 ${weightedPosition === null ? "Unavailable" : weightedPosition.toFixed(2)}`,
     );
   } else {
     lines.push("- GSC：Unavailable（缺少 `gsc_queries`）");
   }
 
   if (ga4Channels) {
-    const sessions = sum(ga4Channels.rows, "sessions");
-    const users = sum(ga4Channels.rows, "totalUsers");
-    const engaged = sum(ga4Channels.rows, "engagedSessions");
+    const sessions = metricTotal(ga4Channels, "sessions");
+    const users = metricTotal(ga4Channels, "totalUsers");
+    const engaged = metricTotal(ga4Channels, "engagedSessions");
     lines.push(
-      `- GA4：${formatInt(sessions)} sessions，${formatInt(users)} users，${formatInt(engaged)} engaged sessions${sessions > 0 ? `，engagement rate ${((engaged / sessions) * 100).toFixed(2)}%` : ""}`,
+      `- GA4：${metricDisplay(sessions)} sessions，${metricDisplay(users)} users（渠道行求和，非跨渠道去重人数），${metricDisplay(engaged)} engaged sessions${sessions > 0 && engaged !== null ? `，engagement rate ${((engaged / sessions) * 100).toFixed(2)}%` : ""}`,
     );
   } else {
     lines.push("- GA4：Unavailable（缺少 `ga4_channels`）");
@@ -329,18 +404,24 @@ export function buildMonthlySummary(dataCenterPath) {
   const inquiryFields = standard.flatMap((dataset) =>
     dataset.headers.filter((header) => /inquir|lead|form|keyevents|conversion/i.test(header)),
   );
-  lines.push(
-    inquiryFields.length > 0
-      ? `- 询盘证据字段：${[...new Set(inquiryFields)].join(", ")}（需按业务定义解释）`
-      : "- 询盘证据：Unavailable（当前标准数据集没有明确询盘字段）",
-  );
+  if (inquiryDatasets.length > 0) {
+    lines.push(
+      `- 询盘证据：服务方交付的询盘分析数据集（${inquiryDatasets.map((entry) => `\`${entry.name}\``).join("、")}），口径以交付说明为准`,
+    );
+  } else {
+    lines.push(
+      inquiryFields.length > 0
+        ? `- 询盘证据字段：${[...new Set(inquiryFields)].join(", ")}（需按业务定义解释）`
+        : "- 询盘证据：Unavailable（当前标准数据集没有明确询盘字段；等待服务方交付询盘分析数据集）",
+    );
+  }
 
   const queries = topRows(gscQueries, "query", "clicks");
   if (queries.length > 0) {
     lines.push("", "## 点击最高的查询", "", "| Query | Clicks | Impressions | CTR | Position |", "|---|---:|---:|---:|---:|");
     for (const row of queries) {
       lines.push(
-        `| ${escapeCell(row.query)} | ${formatInt(numberValue(row.clicks))} | ${formatInt(numberValue(row.impressions))} | ${(numberValue(row.ctr) * 100).toFixed(2)}% | ${numberValue(row.position).toFixed(2)} |`,
+        `| ${escapeCell(row.query)} | ${metricDisplay(metricValue(row.clicks))} | ${metricDisplay(metricValue(row.impressions))} | ${metricValue(row.ctr) === null ? "Unavailable" : `${(metricValue(row.ctr) * 100).toFixed(2)}%`} | ${metricValue(row.position) === null ? "Unavailable" : metricValue(row.position).toFixed(2)} |`,
       );
     }
   }
@@ -350,8 +431,44 @@ export function buildMonthlySummary(dataCenterPath) {
     lines.push("", "## 点击最高的页面", "", "| Page | Clicks | Impressions |", "|---|---:|---:|");
     for (const row of pages) {
       lines.push(
-        `| ${escapeCell(row.page)} | ${formatInt(numberValue(row.clicks))} | ${formatInt(numberValue(row.impressions))} |`,
+        `| ${escapeCell(row.page)} | ${metricDisplay(metricValue(row.clicks))} | ${metricDisplay(metricValue(row.impressions))} |`,
       );
+    }
+  }
+
+  if (inquiryDatasets.length > 0) {
+    lines.push(
+      "",
+      "## 服务方询盘分析（交付口径）",
+      "",
+      "点击与意图事件不等于真实询盘；真实询盘以销售或客服回传为准。口径解释以交付包说明为准。",
+    );
+    const MAX_INQUIRY_ROWS = 8;
+    const MAX_INQUIRY_COLUMNS = 6;
+    for (const { name, dataset } of inquiryDatasets) {
+      const headers = dataset.headers.slice(0, MAX_INQUIRY_COLUMNS);
+      const range = dataset.meta.date_range;
+      lines.push(
+        "",
+        `### \`${name}\`（${range?.start_date ?? "?"} → ${range?.end_date ?? "?"}，共 ${dataset.rows.length} 行）`,
+        "",
+      );
+      if (headers.length === 0) continue;
+      lines.push(
+        `| ${headers.map(escapeCell).join(" | ")} |`,
+        `|${headers.map(() => "---").join("|")}|`,
+      );
+      for (const row of dataset.rows.slice(0, MAX_INQUIRY_ROWS)) {
+        lines.push(`| ${headers.map((header) => escapeCell(row[header])).join(" | ")} |`);
+      }
+      const hiddenRows = dataset.rows.length - MAX_INQUIRY_ROWS;
+      const hiddenColumns = dataset.headers.length - headers.length;
+      if (hiddenRows > 0 || hiddenColumns > 0) {
+        lines.push(
+          "",
+          `（截断展示：${hiddenRows > 0 ? `另有 ${hiddenRows} 行` : ""}${hiddenRows > 0 && hiddenColumns > 0 ? "，" : ""}${hiddenColumns > 0 ? `另有 ${hiddenColumns} 列` : ""}保留在 \`${dataset.meta.path}\`，按需定点查询，不要整表读入会话。）`,
+        );
+      }
     }
   }
 
@@ -360,7 +477,7 @@ export function buildMonthlySummary(dataCenterPath) {
     const candidate = [...gscQueries.rows]
       .filter((row) => numberValue(row.impressions) > 0)
       .sort((left, right) => numberValue(right.impressions) - numberValue(left.impressions))
-      .find((row) => numberValue(row.ctr) < 0.03);
+      .find((row) => metricValue(row.ctr) !== null && metricValue(row.ctr) < 0.03);
     if (candidate) {
       prompts.push(
         `复核高曝光低 CTR 查询“${candidate.query}”对应页面的标题、摘要和搜索意图匹配。`,
@@ -382,17 +499,67 @@ export function buildMonthlySummary(dataCenterPath) {
     prompts.slice(0, 3).forEach((prompt) => lines.push(`- ${prompt}`));
   }
 
+  lines.push("", "## 历史对比（有界）", "");
+  const comparisons = [];
+  const gscArchive = gscQueries ? loadArchiveDataset(root, gscQueries.meta) : null;
+  const compare = (label, current, prior, fields) => {
+    if (!current || !prior) return;
+    for (const field of fields) {
+      const before = metricTotal(prior, field), after = metricTotal(current, field);
+      if (before === null || after === null) {
+        comparisons.push(`- ${label} ${field}：不可比（双方均需完整有效指标）`);
+      } else {
+        const delta = after - before;
+        comparisons.push(`- ${label} vs ${prior.period}：${field} ${formatInt(before)} → ${formatInt(after)}（${delta >= 0 ? "+" : ""}${formatInt(delta)}）`);
+      }
+    }
+  };
+  compare("GSC", gscQueries, gscArchive, ["clicks", "impressions"]);
+  if (gscQueries && gscArchive && metricTotal(gscQueries, "clicks") !== null && metricTotal(gscArchive, "clicks") !== null) {
+    if (gscQueries.headers.includes("query") && gscArchive.headers.includes("query")) {
+      const aggregate = (rows) => {
+        const result = new Map();
+        for (const row of rows) {
+          const key = String(row.query ?? "").trim().toLocaleLowerCase();
+          result.set(key, (result.get(key) ?? 0) + metricValue(row.clicks));
+        }
+        return result;
+      };
+      const priorByQuery = aggregate(gscArchive.rows), currentByQuery = aggregate(gscQueries.rows);
+      const complete = gscQueries.meta.row_coverage === "complete" && gscArchive.meta.row_coverage === "complete";
+      const keys = complete ? new Set([...priorByQuery.keys(), ...currentByQuery.keys()]) : new Set([...currentByQuery.keys()].filter((key) => priorByQuery.has(key)));
+      const movers = [...keys]
+        .map((query) => ({ query, delta: (currentByQuery.get(query) ?? 0) - (priorByQuery.get(query) ?? 0) }))
+        .filter((row) => row.query && row.delta !== 0)
+        .sort((left, right) => Math.abs(right.delta) - Math.abs(left.delta))
+        .slice(0, 5);
+      for (const mover of movers) {
+        comparisons.push(
+          `  - 查询点击变化：${escapeCell(mover.query)} ${mover.delta > 0 ? "+" : ""}${formatInt(mover.delta)}`,
+        );
+      }
+      if (!complete) comparisons.push("- 查询变化仅比较双方都有的查询；未声明完整覆盖，缺行不视为零。");
+    }
+  }
+  const ga4Archive = ga4Channels ? loadArchiveDataset(root, ga4Channels.meta) : null;
+  compare("GA4", ga4Channels, ga4Archive, ["sessions"]);
+  if (comparisons.length > 0) {
+    lines.push(
+      ...comparisons,
+      "",
+      "- 比较已核对来源、范围、时区、筛选条件与等长时间窗口；不要将全量归档读入会话。字段不完整时仅显示不可比。",
+    );
+  } else {
+    lines.push("- 本摘要未发现可读的兼容归档快照，因此不提供环比；不要以模型推断补齐历史数据。");
+  }
+
   lines.push(
-    "",
-    "## 比较说明",
-    "",
-    "- 本摘要未发现并校验兼容的前一期 manifest，因此不提供环比。",
     "",
     "## 数据来源",
     "",
-    ...standard.map(
+    ...[...consumed, gscArchive, ga4Archive].filter(Boolean).map(
       (dataset) =>
-        `- \`${path.basename(dataset.filePath)}\`：${dataset.meta.source_channel}；${dataset.meta.date_range.start_date} → ${dataset.meta.date_range.end_date}；pulled_at ${dataset.meta.pulled_at}`,
+        `- \`${path.relative(root, dataset.filePath).replaceAll("\\", "/")}\`：${dataset.meta.source_channel}；scope ${dataset.meta.scope}；${dataset.meta.date_range.start_date} → ${dataset.meta.date_range.end_date}；timezone ${dataset.meta.timezone}；pulled_at ${dataset.meta.pulled_at}`,
     ),
     "",
   );
@@ -453,7 +620,8 @@ function sourcePeriod(dataset) {
 }
 
 function metricText(value) {
-  const number = numberValue(value);
+  const number = metricValue(value);
+  if (number === null) return "";
   return Number.isInteger(number) ? String(number) : String(Number(number.toFixed(4)));
 }
 
@@ -516,9 +684,9 @@ export function buildKeywordSuggestions(dataCenterPath, { limit = 50 } = {}) {
     for (const row of ga4Landing.rows) {
       const pathname = pagePath(row.landingPagePlusQueryString);
       if (!pathname) continue;
-      const current = landingByPath.get(pathname) ?? { sessions: 0, engagedSessions: 0 };
-      current.sessions += numberValue(row.sessions);
-      current.engagedSessions += numberValue(row.engagedSessions);
+      const current = landingByPath.get(pathname) ?? { sessions: ga4Landing.headers.includes("sessions") ? 0 : null, engagedSessions: ga4Landing.headers.includes("engagedSessions") ? 0 : null };
+      if (current.sessions !== null) current.sessions += metricValue(row.sessions);
+      if (current.engagedSessions !== null) current.engagedSessions += metricValue(row.engagedSessions);
       landingByPath.set(pathname, current);
     }
   }
@@ -589,8 +757,8 @@ export function buildKeywordSuggestions(dataCenterPath, { limit = 50 } = {}) {
         impressions: metricText(row.impressions),
         ctr: metricText(row.ctr),
         position: metricText(row.position),
-        ga4_sessions: metricText(landing?.sessions ?? 0),
-        ga4_engaged_sessions: metricText(landing?.engagedSessions ?? 0),
+        ga4_sessions: metricText(landing?.sessions),
+        ga4_engaged_sessions: metricText(landing?.engagedSessions),
         evidence_refs: [
           "gsc_queries",
           owned ? "gsc_query_page" : null,

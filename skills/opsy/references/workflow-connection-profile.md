@@ -101,9 +101,18 @@ If prerequisites are satisfied and CLI is missing, show the pinned installation 
 
 ## Authenticate
 
-Normalize and reconfirm the target `*.myshopify.com` domain. Choose the smallest scope pack required for the next operations. Run interactive `shopify store auth`; never automate credential entry.
+Normalize and reconfirm the target `*.myshopify.com` domain. Follow
+[authorization-lifecycle.md](authorization-lifecycle.md): `auth-plan` defaults
+to the complete core-operation scope pack; record real store/scope and automatic
+recovery consent, then use `ensure-auth --recover --approval <file> --apply`.
+Keep optional features explicit. The helper runs Shopify CLI interactive auth
+when necessary; the customer completes login/consent.
 
-After authentication, run a read-only smoke query. Record the authenticated domain in `connection.store_domain`, the same canonical domain in `store.myshopify_domain`, granted scope names, CLI/API versions, authentication and verification timestamps, and smoke pass/fail. Do not store tokens or credential-file paths. The two recorded domains must match before the connection gate can pass.
+The helper verifies the store and actual granted scopes with a read-only query,
+then saves connection metadata in the existing profile. Token issue time stays
+unknown when unavailable; the live-check timestamp is the verification evidence.
+No token or credential-file path enters the profile. The two recorded domains
+must match. Follow the same lifecycle for expired authorization or added features.
 
 ## Build the lightweight profile
 

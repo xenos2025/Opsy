@@ -1,0 +1,7 @@
+query OpsyAuthorizationStatus {
+  shop { id myshopifyDomain }
+  currentAppInstallation {
+    id
+    accessScopes { handle }
+  }
+}

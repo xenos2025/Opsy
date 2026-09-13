@@ -23,6 +23,7 @@ function profile() {
     },
     profile: {
       primary_inquiry_cta: "Request a quote",
+      inquiry_cta: { url: "https://example.com/pages/request-a-quote", confirmed_at: "2026-09-01T00:00:00Z", evidence_ref: "merchant-confirmation#cta" },
       store_role: {
         status: "ready",
         business_model: "b2b_inquiry",
@@ -292,6 +293,96 @@ function decisionBrief(surface = "pdp") {
   };
 }
 
+function merchantAudienceCard() {
+  return {
+    id: "profile-primary",
+    source: "profile",
+    label: "Procurement engineers",
+    market: "United States",
+    language: "en",
+  };
+}
+
+function productTopicQueue() {
+  return {
+    schema_version: "opsy-topic-queue-v1",
+    source: "merchant_materials",
+    sourcePath: null,
+    period: null,
+    selectionMode: "merchant_materials",
+    merchantConfirmed: true,
+    confirmedAt: "2026-09-01T09:00:00Z",
+    rows: [],
+    nonUseReason: "No delivered GSC/GA4 snapshot; listing uses confirmed product facts",
+  };
+}
+
+function productPlacement() {
+  return {
+    schema_version: "opsy-placement-v1",
+    primary: { query: "precision industrial component", carriers: ["title", "seo_title"] },
+    secondary: [{ query: "oem assembly", carriers: ["body", "seo_description"] }],
+    doNotOccupy: [],
+    occupiedReason: "No colliding owned URL in the current local snapshot",
+    evidenceRefs: ["inbox/products/example/source-notes.md"],
+  };
+}
+
+function blogTopicQueue() {
+  return {
+    schema_version: "opsy-topic-queue-v1",
+    source: "suggest-keywords",
+    sourcePath: "outputs/monthly/keyword-suggestions-2026-08.csv",
+    period: "2026-08",
+    selectionMode: "data_backed",
+    merchantConfirmed: true,
+    confirmedAt: "2026-09-01T09:00:00Z",
+    rows: [
+      {
+        query: "compare industrial components",
+        route_hint: "blog",
+        owned_page: "/blogs/news/compare-industrial-components",
+        evidence_refs: ["data-center/gsc_queries.csv", "data-center/ga4_landing_pages.csv"],
+        source_period: "2026-08-01/2026-08-31",
+        selection_status: "selected",
+      },
+    ],
+  };
+}
+
+function faqSeededTopicQueue() {
+  return {
+    schema_version: "opsy-topic-queue-v1",
+    source: "suggest-faq-topics",
+    sourcePath: "config/buyer_faq.json",
+    period: null,
+    selectionMode: "faq_seeded",
+    merchantConfirmed: true,
+    confirmedAt: "2026-09-01T09:00:00Z",
+    rows: [
+      {
+        query: "compare industrial components",
+        route_hint: "blog",
+        faq_ref: "faq-compare-inputs",
+        owned_page: "",
+        evidence_refs: ["config/buyer_faq.json#faq-compare-inputs"],
+        source_period: "",
+        selection_status: "selected",
+      },
+    ],
+  };
+}
+
+function blogPlacement() {
+  return {
+    schema_version: "opsy-placement-v1",
+    primary: { query: "compare industrial components", carriers: ["title", "seo_title"] },
+    secondary: [{ query: "application fit", carriers: ["body"] }],
+    doNotOccupy: ["/blogs/news/older-comparison"],
+    evidenceRefs: ["outputs/monthly/keyword-suggestions-2026-08.csv"],
+  };
+}
+
 function productPackage() {
   return {
     schema_version: "opsy-product-package-v1",
@@ -304,7 +395,7 @@ function productPackage() {
       "<p>We help procurement engineers confirm whether this component fits the documented application before requesting a sample.</p><h2>Specifications</h2><ul><li>Application: OEM assembly</li></ul><h2>Common Questions</h2><p><strong>What is this best used for?</strong></p><p>Use it only for the documented application range.</p><p><strong>What should a buyer provide?</strong></p><p>Provide the application, quantity, and required option.</p>",
     seo: {
       title: "Precision Industrial Component for OEM Assembly",
-      description: "Review the documented application and prepare the details needed for a fit, sample, or quote request.",
+      description: "Review OEM assembly application details and prepare the facts needed for a fit, sample, or quote request.",
     },
     tags: ["b2b"],
     collections: ["all"],
@@ -338,6 +429,9 @@ function productPackage() {
       ],
       titleChoice: "Precision Industrial Component for OEM Assembly",
       decisionBrief: decisionBrief("pdp"),
+      audienceCard: merchantAudienceCard(),
+      topicQueue: productTopicQueue(),
+      placement: productPlacement(),
     },
   };
 }
@@ -378,6 +472,9 @@ function blogPackage() {
         rationale: "The accepted sales question added comparison inputs and a buyer-question angle without changing the data rank or authorizing its answer.",
       },
     },
+    topicQueue: blogTopicQueue(),
+    placement: blogPlacement(),
+    audienceCard: merchantAudienceCard(),
     buyerDecision: decisionBrief("blog"),
     article: {
       title: "How to Compare Industrial Components for OEM Assembly",
@@ -417,7 +514,7 @@ test("merchant context reports a usable owner-operated profile", () => {
 
 test("one FAQ is valid only for an explicitly caveated product draft", () => {
   const p = productPackage();
-  p.descriptionHtml = '<h2>Questions</h2><p><strong>What should I provide?</strong></p><p>Provide application details.</p>';
+  p.descriptionHtml = '<h2>Questions</h2><p><strong>What should I provide?</strong></p><p>Provide OEM assembly application details.</p>';
   assert.equal(validateProductPackage(p, { profile: profile(), buyerFaq: buyerFaq() }).ok, false);
   p.sourceFacts.faqCaveat = "Only one question has confirmed material";
   assert.equal(validateProductPackage(p, { profile: profile(), buyerFaq: buyerFaq() }).ok, true);
@@ -510,6 +607,7 @@ test("content reuse replays exact task scope, source fingerprints and actual exc
 
 test("content reuse selects accepted FAQ questions without leaking unapproved answers", () => {
   const selection = selectContentContext({ profile: profile(), buyerFaq: buyerFaq(), task: { surface: "blog", job: "comparison", scopeKeys: ["industrial-components"], market: "United States", language: "en" } });
+  assert.equal(selection.audienceCard?.id, "profile-primary");
   assert.ok(selection.items.some((i) => i.id === "faq-faq-compare-inputs"));
   assert.ok(selection.items.every((i) => i.authority === "question_only" || i.authority === "planning_only"));
   assert.ok(!JSON.stringify(selection).includes("draft_answer"));
@@ -528,6 +626,32 @@ test("batch package validation isolates malformed and duplicate candidates", (t)
   assert.deepEqual(duplicates.passedIds, []);
   const duplicateIds = validateProductBatch({ packages: [{ candidateId: "same", path: "good.json" }, { candidateId: "same", path: "broken.json" }] }, { workspaceRoot: root, profile: profile(), buyerFaq: buyerFaq() });
   assert.deepEqual(duplicateIds.passedIds, []);
+});
+
+test("Product and Blog require a confirmed topic queue, placement and audience card", () => {
+  const product = productPackage();
+  delete product.sourceFacts.topicQueue;
+  assert.ok(validateProductPackage(product, { profile: profile(), buyerFaq: buyerFaq() }).errors.some((item) => item.code === "topic_queue"));
+  const blog = blogPackage();
+  blog.placement.primary.query = "unplaced invented query";
+  assert.ok(validateBlogForTest(blog).errors.some((item) => item.code === "placement_queue" || item.code === "placement_missing"));
+  const missingCard = blogPackage();
+  delete missingCard.audienceCard;
+  assert.ok(validateBlogForTest(missingCard).errors.some((item) => item.code === "audience_card"));
+});
+
+test("FAQ-seeded queues cannot carry search metrics on selected rows", () => {
+  const payload = blogPackage();
+  payload.sourceBasis = { mode: "faq_seeded", references: ["config/buyer_faq.json"] };
+  payload.topic.selectionMode = "faq_seeded";
+  payload.topic.selectionBasis = "accepted_faq_question_cold_start";
+  payload.topic.evidenceRefs = ["config/buyer_faq.json#faq-compare-inputs"];
+  payload.topic.faqReview.influence = ["cluster_seed"];
+  payload.topicQueue = faqSeededTopicQueue();
+  payload.topicQueue.rows[0].impressions = 80;
+  const result = validateBlogForTest(payload, { mode: "review", dataCenterValidation: emptyDataCenterValidation() });
+  assert.equal(result.ok, false);
+  assert.match(result.errors.map((item) => item.code).join(" "), /faq_seeded_metrics/);
 });
 
 test("local Blog preview includes a sandboxed rendering and explicit validation status", () => {
@@ -590,6 +714,83 @@ test("product package blocks metafields absent from the verified profile", () =>
   assert.match(result.errors.map((item) => item.message).join(" "), /metafield definition/i);
 });
 
+test("minimal mode defers completeness gaps to supplements without blocking the draft", () => {
+  const payload = productPackage();
+  delete payload.vendor;
+  delete payload.productType;
+  payload.seo = {};
+  payload.variant = {};
+  payload.tags = [];
+  payload.media = [];
+  payload.metafields = {};
+  payload.descriptionHtml =
+    "<p>We help procurement engineers confirm whether this component fits the documented application before requesting a sample.</p>";
+  delete payload.sourceFacts.titleCandidates;
+  delete payload.sourceFacts.titleChoice;
+  delete payload.sourceFacts.decisionBrief;
+  delete payload.sourceFacts.topicQueue;
+  delete payload.sourceFacts.placement;
+  delete payload.sourceFacts.audienceCard;
+  delete payload.sourceFacts.faqReview;
+
+  const draft = validateProductPackage(payload, { profile: profile(), mode: "draft", buyerFaq: buyerFaq() });
+  assert.equal(draft.ok, false);
+
+  const minimal = validateProductPackage(payload, { profile: profile(), mode: "minimal", buyerFaq: buyerFaq() });
+  assert.equal(minimal.ok, true, JSON.stringify(minimal, null, 2));
+  assert.ok(minimal.supplements.length > 0);
+  const supplementPaths = minimal.supplements.map((item) => item.path).join(" ");
+  assert.match(supplementPaths, /seo\.title/);
+  assert.match(supplementPaths, /variant\.sku/);
+  assert.match(supplementPaths, /media/);
+  assert.ok(minimal.supplements.some((item) => item.code === "metafield_unfilled"));
+  assert.equal(minimal.counts.supplements, minimal.supplements.length);
+});
+
+test("minimal mode still blocks identity, status, and unsafe writes", () => {
+  const active = productPackage();
+  active.status = "ACTIVE";
+  const activeResult = validateProductPackage(active, { profile: profile(), mode: "minimal", buyerFaq: buyerFaq() });
+  assert.equal(activeResult.ok, false);
+  assert.match(activeResult.errors.map((item) => item.code).join(" "), /status/);
+
+  const unknownMetafield = productPackage();
+  unknownMetafield.metafields["custom.certification"] = "Certified";
+  const metafieldResult = validateProductPackage(unknownMetafield, { profile: profile(), mode: "minimal", buyerFaq: buyerFaq() });
+  assert.equal(metafieldResult.ok, false);
+  assert.match(metafieldResult.errors.map((item) => item.code).join(" "), /metafield_definition/);
+
+  const untitled = productPackage();
+  untitled.title = "";
+  const titleResult = validateProductPackage(untitled, { profile: profile(), mode: "minimal", buyerFaq: buyerFaq() });
+  assert.equal(titleResult.ok, false);
+});
+
+test("minimal defers absent material but blocks ineligible or malformed supplied evidence", () => {
+  const payload = productPackage();
+  payload.sourceFacts.faqReview.uses = ["answer_fact"];
+  const result = validateProductPackage(payload, { profile: profile(), buyerFaq: buyerFaq(), mode: "minimal" });
+  assert.equal(result.ok, false);
+  assert.ok(result.errors.some((error) => error.code === "faq_answer_ineligible"));
+  const invalidBrief = productPackage();
+  invalidBrief.sourceFacts.decisionBrief = { schema_version: "invalid" };
+  assert.equal(validateProductPackage(invalidBrief, { profile: profile(), mode: "minimal" }).ok, false);
+});
+
+test("Blog CTA must match the confirmed destination including approved external routes", () => {
+  const payload = blogPackage();
+  payload.article.cta.url = "https://wrong.example/request";
+  payload.article.bodyHtml += '<a href="https://wrong.example/request">Request a quote</a>';
+  const wrong = validateBlogForTest(payload);
+  assert.equal(wrong.ok, false);
+  assert.ok(wrong.errors.some((error) => error.code === "cta_destination"));
+  const approved = profile();
+  approved.profile.inquiry_cta.url = payload.article.cta.url;
+  assert.equal(validateBlogForTest(payload, { profile: approved }).ok, true);
+  delete approved.profile.inquiry_cta;
+  assert.equal(validateBlogForTest(payload, { profile: approved }).ok, false);
+});
+
 test("product package rejects live Google source modes", () => {
   const payload = productPackage();
   payload.sourceFacts.sourceBasis.mode = "live_ga4";
@@ -624,6 +825,8 @@ test("accepted FAQ question evidence can seed a cold-start Blog topic without se
   payload.topic.faqReview.influence = ["cluster_seed", "buyer_angle", "fan_out"];
   payload.topic.faqReview.rationale =
     "The accepted sales question is the cold-start topic seed; no search-demand score is claimed and its draft answer is not treated as a fact.";
+  payload.topicQueue = faqSeededTopicQueue();
+  payload.placement.evidenceRefs = ["config/buyer_faq.json#faq-compare-inputs"];
   const result = validateBlogForTest(payload, {
     dataCenterValidation: emptyDataCenterValidation(),
   });
@@ -643,6 +846,7 @@ test("FAQ-seeded Blog topics cannot invent search metrics", () => {
   payload.topic.evidenceRefs = ["config/buyer_faq.json#faq-compare-inputs"];
   payload.topic.metrics = { impressions: 100 };
   payload.topic.faqReview.influence = ["cluster_seed"];
+  payload.topicQueue = faqSeededTopicQueue();
   const result = validateBlogForTest(payload, {
     mode: "review",
     dataCenterValidation: emptyDataCenterValidation(),

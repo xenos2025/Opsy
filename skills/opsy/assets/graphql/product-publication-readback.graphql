@@ -1,0 +1,8 @@
+query OpsyProductPublicationReadback($id: ID!, $publicationId: ID!) {
+  product(id: $id) {
+    id
+    status
+    onlineStoreUrl
+    publishedOnPublication(publicationId: $publicationId)
+  }
+}

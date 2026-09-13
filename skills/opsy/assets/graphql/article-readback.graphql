@@ -9,6 +9,8 @@ query OpsyArticleReadback($id: ID!) {
     isPublished
     publishedAt
     updatedAt
+    seoTitle: metafield(namespace: "global", key: "title_tag") { id type value compareDigest }
+    seoDescription: metafield(namespace: "global", key: "description_tag") { id type value compareDigest }
     blog {
       id
       title

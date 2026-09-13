@@ -27,9 +27,9 @@ do not ask the operator to paste analytics rows manually.
 
 Read `profile.merchant_context` for real buyer roles, sales questions,
 objections, confirmed commercial facts, restricted claims, and content owner.
-These refine scene intake after the data-selected cluster exists. They cannot
-replace missing provider-delivered data; missing data returns
-`scoring_blocked` before this craft step.
+These refine scene intake after the data-backed or FAQ-seeded topic is confirmed.
+A valid empty manifest and accepted FAQ questions support non-numeric cold-start
+writing. Return `scoring_blocked` only when neither source lane qualifies.
 
 ## Store role (before the writer role)
 

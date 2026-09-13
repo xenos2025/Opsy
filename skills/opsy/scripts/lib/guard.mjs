@@ -28,6 +28,25 @@ export function validateMutationVariables(operation, variables) {
     if (variables.product?.status !== "DRAFT") {
       errors.push("product-create-draft requires product.status = DRAFT");
     }
+  } else if (operation === "product-variant-update") {
+    if (!/^gid:\/\/shopify\/Product\/\d+$/.test(variables.productId ?? "")) errors.push("product-variant-update requires productId");
+    if (!Array.isArray(variables.variants) || variables.variants.length !== 1) errors.push("Exactly one existing variant is supported");
+    for (const item of Array.isArray(variables.variants) ? variables.variants : []) {
+      if (!/^gid:\/\/shopify\/ProductVariant\/\d+$/.test(item?.id ?? "")) errors.push("Existing variant id is required");
+      if (!isNonEmptyString(item?.inventoryItem?.sku)) errors.push("Confirmed variant SKU is required");
+      if (Object.keys(item ?? {}).some((key) => !["id", "inventoryItem", "price"].includes(key)) || Object.keys(item?.inventoryItem ?? {}).some((key) => key !== "sku")) errors.push("Only SKU and optional price may be updated");
+      if (item?.price != null && !/^\d+(?:\.\d+)?$/.test(String(item.price))) errors.push("Price must be a non-negative decimal");
+    }
+  } else if (operation === "staged-image-upload") {
+    if (!Array.isArray(variables.input) || variables.input.length !== 1) errors.push("Stage exactly one image");
+    for (const item of Array.isArray(variables.input) ? variables.input : []) {
+      if (item?.resource !== "IMAGE" || item.httpMethod !== "POST" || !["image/png", "image/jpeg", "image/webp"].includes(item.mimeType) || !isNonEmptyString(item.filename)) errors.push("Only one POST image upload is supported");
+    }
+  } else if (operation === "image-file-create") {
+    if (!Array.isArray(variables.files) || variables.files.length !== 1) errors.push("Create exactly one image file");
+    for (const item of Array.isArray(variables.files) ? variables.files : []) {
+      if (item?.contentType !== "IMAGE" || !/^https:\/\//.test(item.originalSource ?? "") || !isNonEmptyString(item.alt)) errors.push("Image source and alt are required");
+    }
   } else if (operation === "article-create-draft") {
     if (!variables.article || typeof variables.article !== "object") {
       errors.push("article input is required");
@@ -169,6 +188,9 @@ function collectUserErrors(value, location = "$", found = []) {
 }
 
 const responseContracts = {
+  "product-variant-update": "data.productVariantsBulkUpdate.productVariants",
+  "staged-image-upload": "data.stagedUploadsCreate.stagedTargets",
+  "image-file-create": "data.fileCreate.files",
   "product-create-draft": "data.productCreate.product.id",
   "product-update": "data.productUpdate.product.id",
   "product-activate": "data.productUpdate.product.id",
@@ -193,7 +215,13 @@ function valueAtPath(value, dottedPath) {
 
 function fulfillsContract(value, dottedPath) {
   const found = valueAtPath(value, dottedPath);
-  if (dottedPath.endsWith(".metafields")) {
+  if (/\.(productVariants|files)$/.test(dottedPath)) {
+    return Array.isArray(found) && found.length > 0 && found.every((item) => isNonEmptyString(item?.id));
+  }
+  if (dottedPath.endsWith(".stagedTargets")) {
+    return Array.isArray(found) && found.length === 1 && found.every((item) => isNonEmptyString(item?.url) && isNonEmptyString(item?.resourceUrl) && Array.isArray(item?.parameters));
+  }
+  if (/\.(metafields|productVariants|stagedTargets|files)$/.test(dottedPath)) {
     return Array.isArray(found) && found.length > 0;
   }
   if (dottedPath.endsWith(".id")) {

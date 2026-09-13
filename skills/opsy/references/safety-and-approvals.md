@@ -57,6 +57,10 @@ Approve only the selected, individually verified `path → target` pairs. Do not
 ## Execution rules
 
 - Use the same Shopify CLI Store channel for pre-read, mutation, and readback.
+- Before each write group run `ensure-auth --recover --apply --task <task-id>`
+  through the helper; see [authorization-lifecycle.md](authorization-lifecycle.md).
+  Recover only the previously approved store/scope plan and verify actual scopes.
+  An interrupted mutation remains pending verification until object readback.
 - Before requesting approval, run `guard-mutation` against the exact saved variables and the operation name defined in [shopify-cli.md](shopify-cli.md).
 - Pass `--allow-mutations` only after explicit approval.
 - Save query, variables, and sanitized response under `<workspace>/tmp/opsy/<operation-id>/`.
@@ -70,4 +74,4 @@ For `metafields-set`, read the current value and carry its returned `compareDige
 
 ## Credential hygiene
 
-Never open, print, copy, summarize, or commit Shopify CLI credential stores, `.env` secrets, tokens, cookies, private keys, OAuth refresh data, or Authorization headers. Check authentication with `shopify store auth list`, `shopify store info`, or a scoped read query.
+Never open, print, copy, summarize, or commit Shopify CLI credential stores, `.env` secrets, tokens, cookies, private keys, OAuth refresh data, or Authorization headers. Use `auth-stores` only for the local registration inventory; use `ensure-auth` for live store/scope verification. A local auth listing or `store info` metadata alone cannot prove an operational token is valid.
