@@ -6,7 +6,9 @@ Opsy（Shopify 引导式运营助手）面向以询盘、报价和业务联系�
 
 Shopify 操作直接通过 **Shopify CLI** 完成，运行不依赖官方 Shopify 插件、MCP 或其他运营 Skill。仍需宿主 Agent、Node、CLI 和店铺授权；客户资料保留在自己的项目中。
 
-[客户版介绍](docs/opsy-core-purpose.md) · [更新日志](CHANGELOG.md) · [授权与恢复](skills/opsy/references/authorization-lifecycle.md) · [结果与交接](skills/opsy/references/result-handoff-contract.md)
+[客户版介绍](docs/opsy-core-purpose.md) · [客户交接 SOP](docs/opsy-customer-handover-sop.md) · [更新日志](CHANGELOG.md) · [授权与恢复](skills/opsy/references/authorization-lifecycle.md) · [结果与交接](skills/opsy/references/result-handoff-contract.md)
+
+交付时可直接复制使用：[客户项目交接清单模板文件夹](docs/templates/customer-handover/README.md)。
 
 ## 三项核心功能
 
