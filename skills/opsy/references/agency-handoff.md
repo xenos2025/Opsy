@@ -7,6 +7,10 @@ Shopify write approval.
 
 ## Input contract
 
+For configuration handover, use the customer configuration standard in
+[client-config-standard.md](client-config-standard.md). Provider config
+files are not automatically imported or renamed into Opsy's store profile.
+
 The agency exports `opsy-merchant-handoff.csv` with these columns:
 
 ```text

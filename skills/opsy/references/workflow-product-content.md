@@ -1,5 +1,11 @@
 # Product description craft (voice, structure, FAQ, media order)
 
+Read [content-voice-contract.md](content-voice-contract.md) before drafting:
+`config/content_voice.json` is the shared Product/Blog voice, with legacy
+inline fallback only when absent. All voice checks below refer to that
+effective source. Select product FAQ evidence through
+[buyer-faq-contract.md](buyer-faq-contract.md); do not copy unconfirmed answers.
+
 Use this after product facts are collected and before Shopify draft approval.
 Filled fields do not make a useful PDP. A description that only lists specs and
 FAQs reads like a catalog export and gives a buyer no reason to inquire.

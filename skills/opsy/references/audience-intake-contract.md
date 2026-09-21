@@ -41,7 +41,7 @@ evidence references, and review state.
 
 Only Product and Blog are executable Opsy routes. Page, Collection, and FAQ
 Hub needs are recorded as `provider_handoff`. The downloaded intake is dated
-evidence, not a sixth project config file. Promote only the confirmed summary
+evidence, not another project config file. Promote only the confirmed summary
 to `profile.store_role.primary_audience`, `secondary_audiences`,
 `audience_status`, and `audience_intake_path`; preserve the detailed evidence
 under `inbox/profile/`. Several questionnaire rows may exist; drafting still

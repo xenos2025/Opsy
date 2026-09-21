@@ -1,0 +1,6 @@
+{
+  "schema_version": "ai-search-intent-v1",
+  "status": "draft",
+  "prompts_path": "config/ai-search/prompts.csv",
+  "review_ref": ""
+}

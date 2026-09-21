@@ -124,7 +124,7 @@ The status helper also returns `store_role` with one of three values:
 | Status | Meaning | Effect |
 | --- | --- | --- |
 | `blocked` | one or more `profile.store_role` fields are missing or `business_model` is not `b2b_inquiry` | stop Product and Blog topic commitment and drafting; run store-role intake or route a checkout-led store to Opsy DTC |
-| `ready_with_warnings` | the six role fields are confirmed but `profile.content_voice.status` is not `ready` | planning may continue in a neutral, evidence-first voice; Product and Blog writes stay blocked |
+| `ready_with_warnings` | role fields are confirmed but the effective voice is incomplete, invalid or unconfirmed (or audience remains research-only) | planning may continue in a neutral, evidence-first voice; Product and Blog writes stay blocked |
 | `ready` | role and seller voice are both confirmed | Product and Blog copy may proceed to their craft gates |
 
 Both gaps also appear in `write_capabilities.products.missing` and

@@ -21,7 +21,7 @@
 | `publication_approver` | 谁批准 Shopify 发布 |
 | `updated_at` | 企业主最后确认时间，ISO 时间戳 |
 
-同时确认 `profile.store_role` 和 `profile.content_voice`。字段与就绪规则见 [workflow-connection-profile.md](workflow-connection-profile.md)。所有字段确认后，把 `merchant_context.status` 设为 `ready`。
+同时确认 `profile.store_role` 和商品/Blog 共用的 `config/content_voice.json`。语气来源与旧档案兼容见 [content-voice-contract.md](content-voice-contract.md)，档案字段见 [workflow-connection-profile.md](workflow-connection-profile.md)。所有业务字段确认后，把 `merchant_context.status` 设为 `ready`。
 
 ## 用户画像 HTML 工具
 

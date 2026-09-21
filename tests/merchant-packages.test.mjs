@@ -39,7 +39,13 @@ function profile() {
       content_voice: {
         status: "ready",
         role: "We are sales engineers helping buyers confirm fit",
+        expertise: ["Fit verification"],
+        buyer_relationship: "Help procurement engineers check fit",
+        tone: ["Practical"],
+        must_do: ["Use confirmed facts"],
         must_not: ["Invent certifications"],
+        signature_proof: [],
+        updated_at: "2026-09-01T00:00:00Z",
       },
       merchant_context: {
         status: "ready",
@@ -1056,6 +1062,26 @@ test("CLI validates Product and Blog packages against the project profile", () =
       );
       assert.equal(command.status, 0, `${commandName}: ${command.stderr}`);
       assert.equal(JSON.parse(command.stdout).ok, true, commandName);
+      const voicePath = path.join(configDirectory, "content_voice.json");
+      const voice = { schema_version: "content-voice-v1", ...storedProfile.profile.content_voice, tone: ["Clear and calm"] };
+      const run = () => spawnSync(process.execPath, [
+        path.resolve("skills/opsy/scripts/opsy.mjs"), commandName, "--project", project,
+        "--file", file, "--mode", mode, "--json",
+      ], { encoding: "utf8" });
+      fs.writeFileSync(voicePath, JSON.stringify(voice));
+      assert.equal(run().status, 0, `${commandName} must consume the standalone voice`);
+      for (const invalid of [
+        { ...voice, status: "not_started" },
+        { ...voice, tone: 123 },
+        { schema_version: "content-voice-v1", status: "ready" },
+        { ...voice, schema_version: "unknown" },
+      ]) {
+        fs.writeFileSync(voicePath, JSON.stringify(invalid));
+        const rejected = run();
+        assert.equal(rejected.status, 2, `${commandName} must not fall back to the valid inline voice`);
+        assert.ok(JSON.parse(rejected.stdout).errors.some((item) => item.code === "store_role"));
+      }
+      fs.unlinkSync(voicePath);
     }
     const previewArgs = [path.resolve("skills/opsy/scripts/opsy.mjs"), "preview-blog-package", "--project", project, "--file", path.join(project, "blog.json"), "--apply", "--json"];
     const preview = spawnSync(process.execPath, previewArgs, { encoding: "utf8" });

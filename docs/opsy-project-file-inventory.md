@@ -2,24 +2,24 @@
 
 ## 审计口径
 
-- 日期：2026-09-01
+- 日期：2026-09-22
 - 时区：Asia/Shanghai
 - 范围：仅当前仓库中的 Opsy B2B 项目，不包含 `Shopify Operations Skill`
 - 依据：当前 `initializeWorkspace()` 实现、workspace 模板、项目结构合同、Runtime/Product/Blog/FAQ/画像/本周三件事合同和工作区测试
 - 结论类型：本地代码与模板实证；不包含客户项目、线上 Shopify 状态或服务方外部系统
-- 配套图：[`diagrams/opsy-project-config-dataflow.html`](diagrams/opsy-project-config-dataflow.html)，展示来源、长期配置和 Opsy 各能力的消费路径
+- 配套图：[`diagrams/opsy-project-config-dataflow.html`](diagrams/opsy-project-config-dataflow.html)为早期结构参考；独立语气配置与当前清单以本文和 [客户配置标准](../skills/opsy/references/client-config-standard.md)为准。
 
 ## 结论
 
 全新空项目执行 Opsy 初始化后：
 
-- 固定创建 **9 个文件**；
-- 新空项目使用 `--agents auto` 时再创建根目录 `AGENTS.md`，合计 **10 个文件**；
-- 真正长期参与 Opsy 判断的机器配置只有 **4 组**：
+- 固定创建 **12 个文件**（11 个工作区模板 + marker）；
+- 新空项目使用 `--agents auto` 时再创建根目录 `AGENTS.md`，合计 **13 个文件**；
+- 长期机器配置分为 **6 组**，AI 问题为可选规划上下文：
   `shopify-ops.json`、`config/store-profile.json`、
-  `config/buyer_faq.json`、`data-center/manifest.json + 其声明的 CSV`；
+  `config/buyer_faq.json`、`config/content_voice.json`、`data-center/manifest.json + 其声明的 CSV`、`config/ai_search_intent.json + config/ai-search/prompts.csv`；
 - `business-questionnaire.md` 是经营事实填写入口，不是并列事实库；
-- `audience-intake.json` 是日期证据，只把确认摘要提升到 `store-profile.json`，不能成为第 5 份长期业务配置；
+- `audience-intake.json` 是日期证据，只把确认摘要提升到 `store-profile.json`，不增加长期业务配置；
 - Product 可在没有服务方数据包时工作；Blog 优先使用服务方 GSC/GA4 快照，新站也可用合格 FAQ 问题进入无指标的 `faq_seeded` 冷启动。
 
 ## 初始化时创建的文件
@@ -30,9 +30,12 @@
 | `AGENTS.md` | 条件创建 | `assets/workspace/AGENTS.template.md` | 项目安全与数据边界；所有 Opsy 工作开始前读取；已有文件绝不覆盖 |
 | `shopify-ops/README.md` | 是 | workspace 模板 | 给使用者解释目录用途；不作为业务事实输入 |
 | `shopify-ops/.gitignore` | 是 | workspace 模板 | 默认隔离 `inbox/`、`outputs/`、`backups/`、`tmp/`；不参与内容决策 |
-| `shopify-ops/config/store-profile.json` | 是 | 中性模板；后续由 Shopify 回读、经营问卷和已确认画像摘要更新 | Runtime 状态门禁；企业画像；Product 的产品线、受众、语气与负责人；Blog 的市场、语言、受众与 CTA；本周三件事的阻塞判断 |
+| `shopify-ops/config/store-profile.json` | 是 | 中性模板；后续由 Shopify 回读、经营问卷和已确认画像摘要更新 | Runtime 状态门禁；企业画像；Product 的产品线、受众与负责人；Blog 的市场、语言、受众与 CTA；兼容旧档案语气 |
 | `shopify-ops/config/business-questionnaire.md` | 是 | 中性问卷模板；企业主、销售或基础运营填写 | Opsy 企业画像入口；已确认摘要写入 `store-profile.json`；本文件不是另一个长期事实库 |
 | `shopify-ops/config/buyer_faq.json` | 是 | 空模板；由 `inbox/faq/` 中资料清洗、复核后更新 | Runtime 检查 FAQ 状态；Product 使用问题、异议和合格答案；Blog 用于数据选题影响或 `faq_seeded` 冷启动；其他页面路由给服务方 |
+| `shopify-ops/config/content_voice.json` | 是 | 中性模板；服务方或 Agent 整理，客户确认 | 商品与 Blog 共用写作规则；运行时优先读取此文件，仅缺失时兼容旧档案语气 |
+| `shopify-ops/config/ai_search_intent.json` | 是 | draft 中性模板 | select-ai-prompts 显式读取唯一库路径、状态与审核记录 |
+| `shopify-ops/config/ai-search/prompts.csv` | 是 | 空表头 | 按审核状态、市场语言与业务范围选出规划问题；不替代 FAQ、产品事实或选题证据 |
 | `shopify-ops/data-center/manifest.json` | 是 | 空模板；服务方交付数据时更新 | Runtime 判断数据是否交付；Blog 数据选题必须使用有效 `gsc_queries` 与 `ga4_landing_pages`；Product 只把它作为可选优先级证据 |
 | `shopify-ops/ai-log/operations-log.md` | 是 | 空日志模板；每次操作后追加脱敏摘要 | 写入安全、结果追踪和后续复核；不保存凭据，不自动证明业务事实 |
 | `shopify-ops/ai-log/handle-changes.csv` | 是 | 空日志模板；handle 变更时追加 | 404、链接和改名后的追踪；不是 Product/Blog 的内容事实源 |
@@ -85,7 +88,8 @@ Opsy 对外只有一个 `skills/opsy/`，下面是同一 Skill 内的逻辑能�
 | 配置 | Product 商品运营 | Blog 内容增长 | 本周三件事 |
 | --- | --- | --- | --- |
 | `shopify-ops.json` | 定位项目、workspace 和当前店铺，确保商品包在正确项目中生成 | 定位项目、workspace 和当前店铺，确保文章包使用同一站点上下文 | 确认项目入口和可用能力，避免把动作排到错误项目 |
-| `store-profile.json` | 决定产品线、买家角色、市场、语气、CTA、负责人和允许使用的字段 | 决定市场、语言、买家角色、写作语气、商业目标页和 CTA | 提供业务角色、负责人、缺失事实和当前阻塞 |
+| `store-profile.json` | 决定产品线、买家角色、市场、CTA、负责人和允许使用的字段 | 决定市场、语言、买家角色、商业目标页和 CTA | 提供业务角色、负责人、缺失事实和当前阻塞 |
+| `content_voice.json` | 控制标题、描述、FAQ 的卖家角色与表达 | 控制正文、FAQ、CTA 的共用写作规则 | 语气未就绪时提示补齐；不改变问答事实资格 |
 | `buyer_faq.json` | 提供买家问题、采购异议和确认项；只有合格答案能写成商品事实 | 影响选题、文章结构和答案证据；新站可用合格问题走 `faq_seeded` 冷启动 | 把冲突、待确认答案和缺失业务事实排进候选动作 |
 | `manifest.json + CSV` | 只可选用于排商品优化优先级，不能证明产品参数或卖点 | 有数据时用 GSC/GA4 判断需求、更新对象和优先级；无数据时改走 FAQ 冷启动 | 用于判断本周先做哪篇内容，或是否需要取得、修复服务方数据包 |
 

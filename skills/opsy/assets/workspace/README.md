@@ -1,10 +1,20 @@
 # Shopify operations workspace
 
-This directory stores the enterprise profile, provider-delivered data snapshots, incoming materials, Product/Blog packages, exactly-three action plans, write backups, and a sanitized operation log. Data is optional for Product and required for Blog.
+This directory stores the enterprise profile, provider-delivered data snapshots, incoming materials, Product/Blog packages, exactly-three action plans, write backups, and a sanitized operation log. Product can use confirmed merchant materials; Blog needs valid delivered data or accepted FAQ cold-start evidence.
 
 Start Opsy from the project root and let it read `shopify-ops.json`. Do not place credentials, tokens, cookies, private keys, OAuth data, or Authorization headers here.
 
 ## Working folders
+
+The initial `config/` contains `store-profile.json`, `business-questionnaire.md`,
+`buyer_faq.json` and `content_voice.json`. FAQ evidence and seller voice serve
+both Product and Blog. Audience summary and inquiry facts stay in the store
+profile; voice has its own file. The other two config files are
+`ai_search_intent.json` and `ai-search/prompts.csv` (initially draft/empty).
+Reviewed questions live in that library; AI research files remain dated evidence.
+Ask Opsy to read its `references/client-config-standard.md` for per-file
+purposes, consumers, examples, and provider handover mappings. Run
+`node <skill-root>/scripts/opsy.mjs list-configs --json` for its read-only inventory.
 
 - `config/`: confirmed store profile, operating facts, and routed buyer FAQ evidence.
 - `data-center/`: active monthly datasets, manifest, and archives.

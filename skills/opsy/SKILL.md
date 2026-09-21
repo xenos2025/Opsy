@@ -68,8 +68,8 @@ Display **“轻量店铺建档未完成”** prominently.
 Allow only the reads required to complete or refresh the lightweight store
 profile, plus local FAQ material normalization. Keep operational writes
 disabled. Read [workflow-connection-profile.md](references/workflow-connection-profile.md),
-and capture `profile.store_role`, `profile.content_voice`, and
-`profile.merchant_context` from the enterprise profile questionnaire so
+and capture `profile.store_role`, `profile.merchant_context`, and the shared
+`config/content_voice.json` from the enterprise profile questionnaire so
 Product and Blog work is not blocked later.
 
 ### Write ready
@@ -122,6 +122,13 @@ If neither source is usable, return
 `scoring_blocked` and offer provider-data import or FAQ confirmation.
 
 ## Guide the operator
+
+Before Product or Blog drafting or updates, read the effective shared voice
+from [content-voice-contract.md](references/content-voice-contract.md) and
+select applicable evidence from [buyer-faq-contract.md](references/buyer-faq-contract.md).
+Independent `config/content_voice.json` takes precedence; use legacy
+`profile.content_voice` only when that file is absent. Never infer readiness
+from `status: ready` alone; inspect the helper's voice validation.
 
 - Ask one necessary question at a time and give a recommended default.
 - Separate verified facts, assumptions, and missing inputs.
@@ -202,6 +209,8 @@ Preserve the agency **monthly-loop** suite (Shopify Operations Skill / client `*
 - End every core task with `record-task-result`: per-object result, customer report and handoff, including partial or blocked work. Read [result-handoff-contract.md](references/result-handoff-contract.md). The three core workflows and their reports require no other Skill; optional agency handoff remains optional.
 - Use GraphQL operations from `assets/graphql/` as reviewed starting points. Verify them against current official Shopify documentation and the selected API version before a live write.
 - Use workspace templates from `assets/workspace/` while keeping the Skill folder in its source package.
+- For project setup or provider-config synchronization, read [client-config-standard.md](references/client-config-standard.md). Use `list-configs --json` for the six-file config inventory, including the empty AI prompt library; preserve customer values.
+- Before Product/Blog drafting when AI-search policy exists, use [ai-search-config-contract.md](references/ai-search-config-contract.md) and `select-ai-prompts` for reviewed planning questions. This does not replace FAQ/topic evidence or publication gates.
 
 ## Verification
 

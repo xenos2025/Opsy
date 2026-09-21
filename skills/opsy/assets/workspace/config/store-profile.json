@@ -57,18 +57,6 @@
       "conversion_goal": null,
       "updated_at": null
     },
-    "content_voice": {
-      "status": "not_started",
-      "role": null,
-      "expertise": [],
-      "buyer_relationship": null,
-      "tone": [],
-      "must_do": [],
-      "must_not": [],
-      "signature_proof": [],
-      "example_phrasing": null,
-      "updated_at": null
-    },
     "merchant_context": {
       "status": "not_started",
       "product_families": [],

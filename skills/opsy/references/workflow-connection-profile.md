@@ -26,8 +26,8 @@ Ask one question at a time and propose a default. Capture only operational facts
 - **store role** for buyer-facing copy — see the intake below;
 - **content voice / seller role** for Blog and buyer-facing copy (who is speaking:
   role, expertise, buyer relationship, tone, must-do / must-not). Save under
-  `profile.content_voice` when confirmed — see
-  [workflow-blog-content.md](workflow-blog-content.md).
+  the effective shared voice source when confirmed — see
+  [content-voice-contract.md](content-voice-contract.md).
 - product families, buyer roles, real sales questions, purchase objections,
   confirmed commercial facts, restricted claims, and approvers under
   `profile.merchant_context`; use
@@ -128,7 +128,7 @@ Read and record only facts required for safe operations:
 - approval and publication policy;
 - `profile.store_role` when the operator can confirm it (optional for connection
   unlock; required before Product and Blog drafting);
-- `profile.content_voice` when the operator can confirm it (optional for
+- shared `config/content_voice.json` when the operator can confirm it (optional for
   connection unlock; required before Product and Blog draft Approval A).
 - `profile.merchant_context` from the enterprise profile questionnaire
   (reported separately as `not_started`, `ready_with_gaps`, or `ready`).

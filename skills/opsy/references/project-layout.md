@@ -16,6 +16,11 @@ Prefer a root-level `shopify-ops.json`:
 
 ## New project
 
+Read [client-config-standard.md](client-config-standard.md) for the initial
+inventory, per-file purpose, consumers, and provider handover boundaries.
+`node <skill-root>/scripts/opsy.mjs list-configs --json` lists the
+six config files (including the prompt CSV) and all eleven workspace templates without a client project.
+
 Preview with:
 
 ```text
@@ -40,6 +45,9 @@ project/
     config/store-profile.json
     config/business-questionnaire.md
     config/buyer_faq.json
+    config/ai_search_intent.json
+    config/ai-search/prompts.csv
+    config/content_voice.json
     data-center/manifest.json
     data-center/archive/
     inbox/products/
@@ -55,6 +63,9 @@ project/
 ```
 
 The initializer adds missing files only. It never overwrites existing files.
+An existing profile with inline voice does not receive an empty independent
+voice template. With a marker, init still only backfills FAQ and intake folders;
+voice migration requires an explicit reviewed change.
 An existing `config/faq-library.json` is preserved as legacy evidence and
 reported for manual migration into `buyer_faq.json`.
 

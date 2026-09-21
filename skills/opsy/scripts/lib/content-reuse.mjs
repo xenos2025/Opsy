@@ -2,6 +2,7 @@ import { selectBuyerFaq } from "./buyer-faq.mjs";
 import { validateAudienceIntake } from "./audience-intake.mjs";
 import { fingerprint } from "./product-intake.mjs";
 import { resolveAudienceCard } from "./merchant-selection.mjs";
+import { profileVoiceStatus } from "./content-voice.mjs";
 
 const list = (v) => Array.isArray(v) ? v : [];
 const jobs = new Set(["pdp", "procurement_guide", "comparison", "application", "technical", "market_solution", "product_roundup"]);
@@ -56,7 +57,8 @@ export function selectContentContext({ profile = {}, buyerFaq = null, audienceIn
     task: resolvedTask,
     audienceCard,
     audienceCards: resolved.cards,
-    sourcePaths: { profile: "config/store-profile.json", buyerFaq: "config/buyer_faq.json", audienceIntake: audiencePath },
+    contentVoice: { ...profileVoiceStatus(profile), value: profile.profile?.content_voice ?? null },
+    sourcePaths: { profile: "config/store-profile.json", contentVoice: profileVoiceStatus(profile).source, buyerFaq: "config/buyer_faq.json", audienceIntake: audiencePath },
     sources: { profile: fingerprint(profile), buyerFaq: buyerFaq ? fingerprint(buyerFaq) : null, audienceIntake: audienceIntake ? fingerprint(audienceIntake) : null },
     items, pending, status: items.length && audienceCard ? "selected" : "needs_input",
   };

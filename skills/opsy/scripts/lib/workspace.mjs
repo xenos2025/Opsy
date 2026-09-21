@@ -2,10 +2,49 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildFaqTopicSeeds, validateBuyerFaqFile } from "./buyer-faq.mjs";
+import { loadContentProfile, profileVoiceStatus } from "./content-voice.mjs";
 
 const moduleDir = path.dirname(fileURLToPath(import.meta.url));
 export const skillRoot = path.resolve(moduleDir, "..", "..");
 export const workspaceAssets = path.join(skillRoot, "assets", "workspace");
+
+// One inventory for the read-only checklist and fresh-workspace scaffolding.
+const workspaceFiles = [
+  ["config/ai_search_intent.json", "AI 搜索问题库路径与启用审核记录", "ai-prompts.mjs / select-ai-prompts"],
+  ["config/ai-search/prompts.csv", "审核采用的 AI 搜索问题；初始为空", "ai-prompts.mjs / Product、Blog 起草前的规划参考"],
+  ["README.md", "工作区使用说明", "运营者与宿主 Agent"],
+  [".gitignore", "本地资料与输出的版本控制排除规则", "Git"],
+  ["config/store-profile.json", "店铺、授权核验、企业画像、语气与询盘事实", "workspace.mjs / authorization.mjs / Product / Blog"],
+  ["config/business-questionnaire.md", "企业画像问卷与待确认业务事实", "Agent 按 business-profile-questionnaire.md 工作流读取"],
+  ["config/buyer_faq.json", "FAQ 来源、问题路由与答案使用资格", "buyer-faq.mjs / Product / Blog"],
+  ["config/content_voice.json", "商品与 Blog 共用的卖家角色、语气、写作要求与禁用表达", "content-voice.mjs / Product / Blog"],
+  ["data-center/manifest.json", "服务方本地数据文件及周期口径索引", "data-center.mjs"],
+  ["ai-log/operations-log.md", "脱敏任务完成记录", "运营者与 Agent 按工作流维护"],
+  ["ai-log/handle-changes.csv", "旧路径与新路径的变更证据", "data-center.mjs build404Queue"],
+];
+
+export function workspaceConfigInventory() {
+  const files = workspaceFiles.map(([target, purpose, consumer]) => ({
+    target,
+    source: `assets/workspace/${target}`,
+    purpose,
+    consumer,
+    add_to_existing_marker: target === "config/buyer_faq.json",
+  }));
+  return {
+    schema_version: "opsy-workspace-inventory-v1",
+    mode: "read-only",
+    scope: "Fresh Opsy workspace templates; this is not a client readiness audit or an agency-config migration.",
+    standard: "references/client-config-standard.md",
+    counts: { config: files.filter((file) => file.target.startsWith("config/")).length, workspace_templates: files.length },
+    files,
+    project_files: [
+      { target: "shopify-ops.json", condition: "Generate only when no marker exists; an existing _project receives only this marker by default." },
+      { target: "AGENTS.md", source: "assets/workspace/AGENTS.template.md", condition: "Only when absent and the project is empty with agents=auto, or agents=yes is explicitly selected." },
+    ],
+    existing_workspace_policy: "Preserve existing files. With a marker, add only missing buyer_faq.json and inbox/faq, inbox/profile directories. Do not auto-add content_voice.json over a legacy profile voice. A marker-only legacy initialization does not populate workspace files.",
+  };
+}
 
 export function readJson(filePath) {
   return JSON.parse(fs.readFileSync(filePath, "utf8"));
@@ -198,20 +237,15 @@ export function initializeWorkspace(options) {
       fs.mkdirSync(path.join(plan.workspaceRoot, relative), { recursive: true });
     }
 
-    const files = [
-      ["README.md", "README.md"],
-      [".gitignore", ".gitignore"],
-      ["config/store-profile.json", "config/store-profile.json"],
-      ["config/business-questionnaire.md", "config/business-questionnaire.md"],
-      ["config/buyer_faq.json", "config/buyer_faq.json"],
-      ["data-center/manifest.json", "data-center/manifest.json"],
-      ["ai-log/operations-log.md", "ai-log/operations-log.md"],
-      ["ai-log/handle-changes.csv", "ai-log/handle-changes.csv"],
-    ];
-    for (const [sourceRelative, targetRelative] of files) {
+    for (const { source, target } of workspaceConfigInventory().files) {
+      // A pre-existing profile may own a legacy voice; never mask it with an empty template.
+      if (target === "config/content_voice.json" && fs.existsSync(path.join(plan.workspaceRoot, "config", "store-profile.json"))) {
+        const existing = safeReadJson(path.join(plan.workspaceRoot, "config", "store-profile.json"));
+        if (existing.error || existing.value?.profile?.content_voice) continue;
+      }
       copyIfMissing(
-        path.join(workspaceAssets, sourceRelative),
-        path.join(plan.workspaceRoot, targetRelative),
+        path.join(skillRoot, source),
+        path.join(plan.workspaceRoot, target),
         created,
       );
     }
@@ -439,7 +473,7 @@ const MERCHANT_DATA_ACCESS = Object.freeze({
 
 export function summarizeStoreRole(profile) {
   const role = profile?.profile?.store_role;
-  const voice = profile?.profile?.content_voice;
+  const voice = profileVoiceStatus(profile);
   const missing = [];
   const errors = [];
 
@@ -509,7 +543,11 @@ export function summarizeStoreRole(profile) {
   }
 
   const warnings = [
-    ...(voice?.status === "ready" ? [] : ["profile.content_voice.status"]),
+    ...(voice.ready ? [] : [
+      "profile.content_voice.status",
+      ...voice.missing.map((field) => `profile.content_voice.${field}`),
+      ...voice.errors.map((error) => `profile.content_voice.${error.path}`),
+    ]),
     ...(role?.audience_status === "research_draft"
       ? ["profile.store_role.audience_status:research_draft"]
       : []),
@@ -824,7 +862,15 @@ export function inspectState(projectPath, { dataCenterValidation = null } = {}) 
     };
   }
 
-  const profile = parsed.value;
+  let profile;
+  try {
+    profile = loadContentProfile(project.workspaceRoot);
+  } catch (error) {
+    return { ok: false, state: "workspace_invalid", banner: "内容语气配置无效",
+      project_root: project.projectRoot, workspace_root: project.workspaceRoot,
+      error: error.message, data_access: MERCHANT_DATA_ACCESS, choices: ["修复 config/content_voice.json"] };
+  }
+  const contentVoice = profileVoiceStatus(profile);
   const connectionValidation = validateConnectionProfile(profile);
   const profileValidation = validateLightweightProfile(profile);
   const manifestPath = path.join(project.workspaceRoot, "data-center", "manifest.json");
@@ -886,6 +932,7 @@ export function inspectState(projectPath, { dataCenterValidation = null } = {}) 
       store: profile?.store?.myshopify_domain ?? null,
       connection_validation: connectionValidation,
       buyer_faq: buyerFaq,
+      content_voice: contentVoice,
       data_access: MERCHANT_DATA_ACCESS,
       choices: ["企业画像问卷", "整理 FAQ 资料", "连接与店铺档案", "检查运营项目文件夹"],
     };
@@ -904,6 +951,7 @@ export function inspectState(projectPath, { dataCenterValidation = null } = {}) 
       profile_validation: profileValidation,
       store_role: summarizeStoreRole(profile),
       merchant_context: summarizeMerchantContext(profile),
+      content_voice: contentVoice,
       buyer_faq: buyerFaq,
       blog_data_center: blogDataCenter,
       blog_topic_sources: blogTopicSources,
@@ -933,6 +981,7 @@ export function inspectState(projectPath, { dataCenterValidation = null } = {}) 
     profile_validation: profileValidation,
     store_role: summarizeStoreRole(profile),
     merchant_context: summarizeMerchantContext(profile),
+    content_voice: contentVoice,
     buyer_faq: buyerFaq,
     blog_data_center: blogDataCenter,
     blog_topic_sources: blogTopicSources,

@@ -20,9 +20,11 @@ import {
   validateBuyerFaqFile,
 } from "./lib/buyer-faq.mjs";
 import { validateAudienceIntakeFile } from "./lib/audience-intake.mjs";
+import { loadContentProfile, validateContentVoice } from "./lib/content-voice.mjs";
 import { readProductTable } from "./lib/product-table.mjs";
 import { importProductSources, assessBatch, inside, prepareProductDrafts } from "./lib/product-intake.mjs";
 import { selectContentContext } from "./lib/content-reuse.mjs";
+import { selectAiPrompts } from "./lib/ai-prompts.mjs";
 import { blogPreview } from "./lib/blog-media.mjs";
 import { prepareVariantUpdate, prepareArticleSeo, verifyWriteFields } from "./lib/write-fields.mjs";
 import { uploadImage, refreshImageUpload } from "./lib/image-upload.mjs";
@@ -40,6 +42,7 @@ import {
 } from "./lib/guard.mjs";
 import {
   initializeWorkspace,
+  workspaceConfigInventory,
   inspectState,
   readJson,
   readProject,
@@ -114,7 +117,7 @@ function projectProfile(options) {
   if (!fs.existsSync(profilePath)) {
     throw new Error(`Store profile is missing: ${profilePath}`);
   }
-  return readJson(profilePath);
+  return loadContentProfile(project.workspaceRoot);
 }
 
 function projectBuyerFaq(options, { required = false } = {}) {
@@ -168,6 +171,9 @@ Commands:
   doctor [--json]
   status [--project <path>] [--live] [--recover --apply] [--json]
   init --project <path> [--workspace <name>] [--agents auto|yes|no] [--apply] [--json]
+  list-configs [--json]
+  select-ai-prompts --surface product|blog --language <code> --market <market> --scope <key> [--project <path>] [--json]
+  validate-content-voice --file <content_voice.json> [--json]
   validate-data [--project <path>] [--json]
   summarize-data [--project <path>] [--output <path>] [--apply] [--json]
   suggest-keywords [--project <path>] [--limit <1-200>] [--output <path>] [--apply] [--json]
@@ -356,6 +362,25 @@ async function main() {
     const result = withAuthorizationState(inspectState(requestedProject, { dataCenterValidation }), authorization);
     output(result, asJson);
     process.exitCode = result.ok ? 0 : 2;
+    return;
+  }
+
+  if (command === "list-configs") {
+    output(workspaceConfigInventory(), asJson);
+    return;
+  }
+
+  if (command === "select-ai-prompts") {
+    const surface = requireOption(options, "surface");
+    if (!["product", "blog"].includes(surface)) throw new Error("Opsy supports Product and Blog planning only");
+    output(selectAiPrompts(workspaceRoot(options), { surface, language: requireOption(options, "language"), market: requireOption(options, "market"), scope: requireOption(options, "scope") }), asJson);
+    return;
+  }
+
+  if (command === "validate-content-voice") {
+    const result = validateContentVoice(readJson(path.resolve(requireOption(options, "file"))), { standalone: true });
+    output(result, asJson);
+    process.exitCode = result.ready ? 0 : 2;
     return;
   }
 

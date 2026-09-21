@@ -28,7 +28,7 @@ Show the files and locations first. A workspace initializer may add only missing
 
 1. Present the validated article package, a shared Blog buyer-decision brief
    with all five checks at `pass`, **and** the craft scorecard from
-   `workflow-blog-content.md` (writer role from `profile.content_voice`, topic,
+   `workflow-blog-content.md` (writer role from the effective shared content voice, topic,
    body, images, table, links/CTA). Do not offer Approval A when
    `content_voice` is not `ready`, or for encyclopedia-style drafts that lack
    a scene, commercial target, or write-ready media when a Shopify write is

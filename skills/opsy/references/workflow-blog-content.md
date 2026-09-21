@@ -62,8 +62,8 @@ the separate answer gate; conflicting and quarantined rows remain out.
 Human tone comes from a **configured seller role**, not from the content-job
 template. Before outlining or drafting any Blog article:
 
-1. Read `<workspace>/config/store-profile.json` → `profile.content_voice`.
-2. If `status` is not `ready`, run **voice intake** (below), save the profile,
+1. Resolve `config/content_voice.json` using [content-voice-contract.md](content-voice-contract.md); only if absent, use legacy `profile.content_voice`.
+2. If voice validation is not ready, run **voice intake** (below), save the effective voice source,
    then continue. Do not invent a persona from another store or industry.
 3. Internalize the role as a writing prefix for the whole draft. Content jobs
    change structure (table, scene, checklist); they must not replace the human
@@ -71,7 +71,7 @@ template. Before outlining or drafting any Blog article:
 4. Write **as that seller helping a buyer decide**, not as a generic SEO
    article engine or a slogan brand.
 
-### `profile.content_voice` fields
+### Shared `content_voice.json` fields
 
 | Field | Purpose |
 | --- | --- |
@@ -100,8 +100,10 @@ Propose defaults from the enterprise profile questionnaire, then confirm:
 5. What may this seller claim from real experience, and what must stay
    “confirm with us”?
 
-Save answers into `profile.content_voice`, set `status: ready`, and show the
-saved block to the operator once before the first draft.
+Save answers into the effective voice source, set `status: ready` only after
+confirmation and validation, and show the saved block before the first draft.
+The independent file uses `schema_version: content-voice-v1`; legacy inline
+fields remain readable only when no independent file exists.
 
 ### How the role makes copy more human
 

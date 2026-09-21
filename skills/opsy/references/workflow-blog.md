@@ -81,7 +81,7 @@ and drafting, then run store-role intake from
 checkout-led store to Opsy DTC instead of blending consumer and procurement
 decisions in this Skill.
 
-Then load `profile.content_voice` and follow **Writer role (always first)** in
+Then resolve the shared voice via [content-voice-contract.md](content-voice-contract.md) and follow **Writer role (always first)** in
 [workflow-blog-content.md](workflow-blog-content.md).
 
 - If `content_voice.status` is not `ready`, run voice intake, save the profile,

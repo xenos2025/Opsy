@@ -11,6 +11,11 @@ not overwrite or delete them. Normalize reviewed rows into `buyer_faq.json`.
 
 ## Intake
 
+This configuration serves both product listing/update and Blog publishing.
+Select questions, objections and eligible answers for the current task;
+use [content-voice-contract.md](content-voice-contract.md) for how to express
+them. Voice preferences never upgrade an unconfirmed answer into a fact.
+
 1. Stage a sanitized working copy under
    `<workspace>/inbox/faq/<YYYY-MM-DD-batch>/source-NNN.<extension>`.
 2. Extract question and answer candidates. Repair formatting only; do not

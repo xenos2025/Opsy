@@ -2,7 +2,7 @@
 
 This is the merchant-facing substitute for agency keyword scoring, the
 sitewide embedding workbook, and the Foundation audience library. It does not
-add a fifth project config file, a KD scorer, or Google API access.
+add another project config file, a KD scorer, or Google API access.
 
 Use it before drafting Product or Blog copy. The agent writes the records;
 the operator confirms in plain language.

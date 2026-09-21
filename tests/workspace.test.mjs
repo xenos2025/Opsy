@@ -3,9 +3,12 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { spawnSync } from "node:child_process";
 import { validateDataCenter } from "../skills/opsy/scripts/lib/data-center.mjs";
 import {
   initializeWorkspace,
+  workspaceConfigInventory,
+  skillRoot,
   inspectState,
   readJson,
   writeJson,
@@ -17,6 +20,16 @@ function tempProject() {
 
 function cleanup(directory) {
   fs.rmSync(directory, { recursive: true, force: true });
+}
+
+// Persist the canonical voice when a test changes its effective profile.
+function saveProfile(profilePath, profile) {
+  writeJson(profilePath, profile);
+  if (profile.profile.content_voice) {
+    writeJson(path.join(path.dirname(profilePath), "content_voice.json"), {
+      schema_version: "content-voice-v1", ...profile.profile.content_voice,
+    });
+  }
 }
 
 function completeConnection(profile) {
@@ -82,10 +95,12 @@ function completeStoreRole(profile) {
     conversion_goal: "Quote request",
     updated_at: "2026-07-29T00:12:00Z",
   };
-  profile.profile.content_voice.status = "ready";
-  profile.profile.content_voice.role =
-    "We are the sales engineers who specify these components";
-  profile.profile.content_voice.updated_at = "2026-07-29T00:12:00Z";
+  profile.profile.content_voice = {
+    status: "ready", role: "We are the sales engineers who specify these components",
+    expertise: ["Fit verification"], buyer_relationship: "Help buyers check fit",
+    tone: ["Practical"], must_do: ["Use confirmed facts"], must_not: ["Invent certifications"],
+    signature_proof: [], updated_at: "2026-07-29T00:12:00Z",
+  };
 }
 
 function completeBlogData(project) {
@@ -188,6 +203,51 @@ function inspectValidatedState(project) {
     ),
   });
 }
+
+test("inventory is read-only and exactly describes freshly installed template bytes", () => {
+  const project = tempProject();
+  try {
+    const result = spawnSync(process.execPath, [
+      path.join(skillRoot, "scripts", "opsy.mjs"), "list-configs", "--json",
+    ], { cwd: project, encoding: "utf8" });
+    assert.equal(result.status, 0, result.stderr);
+    assert.deepEqual(fs.readdirSync(project), []);
+    const inventory = JSON.parse(result.stdout);
+    assert.deepEqual(inventory, workspaceConfigInventory());
+    assert.equal(inventory.mode, "read-only");
+    assert.deepEqual(inventory.counts, { config: 6, workspace_templates: 11 });
+
+    initializeWorkspace({ projectPath: project, agents: "no", apply: true });
+    const root = path.join(project, "shopify-ops");
+    const actual = fs.readdirSync(root, { recursive: true, withFileTypes: true })
+      .filter((entry) => entry.isFile())
+      .map((entry) => path.relative(root, path.join(entry.parentPath, entry.name)).replaceAll("\\", "/"));
+    assert.deepEqual(actual.sort(), inventory.files.map((file) => file.target).sort());
+    for (const file of inventory.files) {
+      assert.deepEqual(fs.readFileSync(path.join(root, file.target)), fs.readFileSync(path.join(skillRoot, file.source)));
+      // Reinitialization must not reset any customer file to its starter.
+      fs.appendFileSync(path.join(root, file.target), "\ncustomer-owned\n");
+    }
+    initializeWorkspace({ projectPath: project, agents: "no", apply: true });
+    for (const file of inventory.files) {
+      assert.ok(fs.readFileSync(path.join(root, file.target), "utf8").endsWith("\ncustomer-owned\n"));
+    }
+  } finally {
+    cleanup(project);
+  }
+});
+
+test("config standard covers all templates and bundled example links resolve", () => {
+  const inventory = workspaceConfigInventory();
+  const standard = path.join(skillRoot, inventory.standard);
+  const text = fs.readFileSync(standard, "utf8");
+  for (const file of [...inventory.files, ...inventory.project_files]) {
+    assert.ok(text.includes(`\`${file.target}\``), `undocumented file: ${file.target}`);
+  }
+  for (const match of text.matchAll(/\]\(([^)]+)\)/g)) {
+    assert.ok(fs.existsSync(path.resolve(path.dirname(standard), match[1])), `broken reference: ${match[1]}`);
+  }
+});
 
 test("new project preview is read-only and apply creates the minimal workspace", () => {
   const project = tempProject();
@@ -347,13 +407,13 @@ test("connection and profile gates unlock writes in order", () => {
     );
     const profile = readJson(profilePath);
     completeConnection(profile);
-    writeJson(profilePath, profile);
+    saveProfile(profilePath, profile);
 
     assert.equal(inspectState(project).state, "profile_required");
 
     completeProfile(profile);
     completeStoreRole(profile);
-    writeJson(profilePath, profile);
+    saveProfile(profilePath, profile);
     completeBlogData(project);
 
     const ready = inspectValidatedState(project);
@@ -395,7 +455,7 @@ test("Blog uses accepted FAQ question cold-start until local GSC and GA4 dataset
     completeConnection(profile);
     completeProfile(profile);
     completeStoreRole(profile);
-    writeJson(profilePath, profile);
+    saveProfile(profilePath, profile);
 
     const blocked = inspectValidatedState(project);
     assert.equal(blocked.state, "write_ready");
@@ -446,7 +506,7 @@ test("profile status strings cannot unlock writes without required evidence", ()
     completeConnection(profile);
     profile.profile.status = "complete";
     profile.profile.verified_at = "2026-07-29T00:10:00Z";
-    writeJson(profilePath, profile);
+    saveProfile(profilePath, profile);
 
     const state = inspectState(project);
     assert.equal(state.state, "profile_required");
@@ -473,7 +533,7 @@ test("connection store domain must match the profiled store", () => {
     completeConnection(profile);
     completeProfile(profile);
     profile.connection.store_domain = "other.myshopify.com";
-    writeJson(profilePath, profile);
+    saveProfile(profilePath, profile);
 
     const state = inspectState(project);
     assert.equal(state.state, "connection_required");
@@ -501,7 +561,7 @@ test("connection evidence requires explicit ISO timestamps", () => {
     completeConnection(profile);
     completeProfile(profile);
     profile.connection.verified_at = "yesterday";
-    writeJson(profilePath, profile);
+    saveProfile(profilePath, profile);
 
     const state = inspectState(project);
     assert.equal(state.state, "connection_required");
@@ -526,7 +586,7 @@ test("missing store role blocks buyer-facing writes but not redirects", () => {
     const profile = readJson(profilePath);
     completeConnection(profile);
     completeProfile(profile);
-    writeJson(profilePath, profile);
+    saveProfile(profilePath, profile);
 
     const state = inspectState(project);
     assert.equal(state.state, "write_ready");
@@ -560,7 +620,7 @@ test("an unconfirmed seller voice warns and still blocks buyer-facing writes", (
     completeProfile(profile);
     completeStoreRole(profile);
     profile.profile.content_voice.status = "not_started";
-    writeJson(profilePath, profile);
+    saveProfile(profilePath, profile);
 
     const state = inspectState(project);
     assert.equal(state.store_role.status, "ready_with_warnings");
@@ -595,7 +655,7 @@ test("DTC and unsupported business models are rejected by Opsy B2B", () => {
     completeStoreRole(profile);
     for (const businessModel of ["b2c_dtc", "hybrid", "marketplace"]) {
       profile.profile.store_role.business_model = businessModel;
-      writeJson(profilePath, profile);
+      saveProfile(profilePath, profile);
 
       const state = inspectState(project);
       assert.equal(state.store_role.status, "blocked", businessModel);

@@ -162,7 +162,7 @@ Before drafting any buyer-visible description, read
   intake from [workflow-connection-profile.md](workflow-connection-profile.md);
   route a checkout-led store to Opsy DTC, and never assume the audience,
   market, content language, or conversion goal.
-- `profile.content_voice.status` is `ready`. If not, run voice intake from
+- The effective voice passes [content-voice-contract.md](content-voice-contract.md) validation and is ready. If not, run voice intake from
   [workflow-blog-content.md](workflow-blog-content.md). The same seller role
   serves Blog and PDP.
 
